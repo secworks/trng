@@ -159,7 +159,7 @@ Normal operation:
 
 
 Config parameters:
-* Length of number of blocks in warm-up.
+* Number of blocks in warm-up.
 * Number of keystream blocks before reseeding.
 
 
