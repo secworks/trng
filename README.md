@@ -93,7 +93,10 @@ The hash function used is SHA-512 (NIST FIPS 180-4).
 
 When at least 256 blocks have been processed the current 512 bit digest
 from SHA-512 is possible to extract from the entropy accumulator as seed
-for the random generator.
+for the random generator. When a seed value has been extracted the
+entropy message is discarded and a new message shall be started. This
+means that no entropy collected is allowed to affect more than one seed
+value.
 
 Note that the number of 256 bit blocks used to generate the digest can
 and probably will be much higher. The 256 block limit is the lower
@@ -122,6 +125,16 @@ rounds. Possibly 32 rounds. Given the performance in HW for ChaCha and
 the size of the keystream block, the TRNG should be able to generate
 plentiful of random values even with 32 rounds.
 
+The random generator shall support the ability to test its functionality
+by seeding it with a user supplied value and then generate a number of
+values in a specific debug mode. The normal access to generated random
+values MUST NOT be allowed during the debug mode. The random generator
+MUST also set an error flag during debug mode. Finally, when exiting the
+debug mode, reseeding MUST be done.
+
+Finally the random generator provides random numbers as 32-bit
+values. the 512 bit keystream blocks from ChaCha are divided into 16
+32-bit words and provided in sequence.
 
 
 ## Implementation details ##
@@ -141,8 +154,31 @@ suggest and provide info on how to design at least one such source.
 
 ## API ##
 
+Normal operation:
+* Extract 32-bit random words.
+
+
+Config parameters:
+* Length of number of blocks in warm-up.
+* Number of keystream blocks before reseeding.
+
+
+Debug access
+* Enable/disable entropy generator X
+* Check health of entropy generator X
+* Read raw entropy from entropy generator X as 32-bit word.
+* Write 256 bit seed value as 8 32-bit words
+* Read out one or more 512 bit keystream blocks as 32-bit words.
+
+
 
 ## Status ##
+
+***(2014-03-08)***
+
+Adding a lot of text in the README to describe the ideas for the
+TRNG. This to allow discussions about the TRNG to be started.
+
 
 ***(2014-03-05)***
 
