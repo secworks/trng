@@ -71,14 +71,6 @@ class XChaCha():
         self.rounds = rounds
         self.verbose = verbose
 
-        
-    def __init__(self, key, iv, rounds = 8, verbose = 0):
-        self.state = [0] * 16
-        self.x = [0] * 16
-        self.rounds = rounds
-        self.verbose = verbose
-        self.set_key_iv(key, iv)
-        
 
     #---------------------------------------------------------------
     # set_key_iv()

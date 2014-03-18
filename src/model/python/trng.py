@@ -69,7 +69,7 @@ class TRNG():
         self.iv     = [0x00] * 8
         self.rounds = 24
         self.mixer  = hashlib.sha512()
-        self.csprng = xchacha.XChaCha(self.key, self.iv, self.rounds, self.verbosity)
+        self.csprng = xchacha.XChaCha(self.rounds, self.verbosity)
         
         if self.verbosity > 0:
             print("TRNG started...")
