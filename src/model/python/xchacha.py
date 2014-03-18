@@ -64,12 +64,14 @@ class XChaCha():
     
     #---------------------------------------------------------------
     # __init__()
-    #
-    # Given the key, iv initializes the state of the cipher.
-    # The number of rounds used can be set. By default 8 rounds
-    # are used. Accepts a list of either 16 or 32 bytes as key.
-    # Accepts a list of 8 bytes as IV.
     #---------------------------------------------------------------
+    def __init__(self, rounds = 8, verbose = 0):
+        self.state = [0] * 16
+        self.x = [0] * 16
+        self.rounds = rounds
+        self.verbose = verbose
+
+        
     def __init__(self, key, iv, rounds = 8, verbose = 0):
         self.state = [0] * 16
         self.x = [0] * 16
