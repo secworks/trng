@@ -65,11 +65,12 @@ class TRNG():
     #---------------------------------------------------------------
     def __init__(self, verbosity = 0):
         self.verbosity = verbosity
-        self.key = [0x00] * 32
-        self.iv = [0x00] * 8
+        self.key    = [0x00] * 32
+        self.iv     = [0x00] * 8
         self.rounds = 24
-        self.my_xchacha = xchacha.XChaCha(self.key, self.iv, self.rounds, self.verbosity)
-
+        self.mixer  = hashlib.sha512()
+        self.csprng = xchacha.XChaCha(self.key, self.iv, self.rounds, self.verbosity)
+        
         if self.verbosity > 0:
             print("TRNG started...")
             print("")
