@@ -61,28 +61,46 @@ module trng(
   parameter ADDR_NAME0         = 8'h00;
   parameter ADDR_NAME1         = 8'h01;
   parameter ADDR_VERSION       = 8'h02;
-  
-  parameter CORE_NAME0         = 32'h73686132; // "sha2"
-  parameter CORE_NAME1         = 32'h2d323536; // "-512"
-  parameter CORE_VERSION       = 32'h302e3830; // "0.80"
 
+  parameter CSPRNG_NUM_ROUNDS  = 8'h80;
+  
+  parameter TRNG_NAME0         = 32'h74726e67; // "trng"
+  parameter TRNG_NAME1         = 32'h20202020; // "    "
+  parameter TRNG_VERSION       = 32'h302e3031; // "0.01"
+
+  parameter CSPRNG_DEFAULT_NUM_ROUNDS = 6'h18;
+  
   
   //----------------------------------------------------------------
   // Registers including update variables and write enable.
   //----------------------------------------------------------------
+  reg [5 : 0] csprng_num_rounds_reg;
+  reg [5 : 0] csprng_num_rounds_new;
+  reg         csprng_num_rounds_we;
 
   
   //----------------------------------------------------------------
   // Wires.
   //----------------------------------------------------------------
-  wire            core_init;
-  wire            core_next;
-  wire [1 : 0]    core_mode;
-  wire            core_ready;
-  wire [1023 : 0] core_block;
-  wire [511 : 0]  core_digest;
-  wire            core_digest_valid;
+  wire           mixer_init;
+  wire [7 : 0]   mixer_num;
+  wire           mixer_error;
+  wire           entropy0_syn;
+  wire [31 : 0]  entropy0_data;
+  wire           entropy0_ack;
+  wire           entropy1_syn;
+  wire [31 : 0]  entropy1_data;
+  wire           entropy1_ack;
+  wire           mixer_seed_syn;
+  wire [383 : 0] mixer_seed_data;
 
+
+  wire           csprng_num_rounds;
+  wire           csprng_reseed;
+  wire           csprng_seed_ack;
+
+  wire           ctrl_rng_ack;
+  
   reg [31 : 0] tmp_read_data;
   reg          tmp_error;
   
@@ -95,9 +113,46 @@ module trng(
   
              
   //----------------------------------------------------------------
-  // core instantiation.
+  // core instantiations.
   //----------------------------------------------------------------
+  trng_collector_mixer mixer(
+                             .clk(),
+                             .reset_n(),
+                             
+                             .num_blocks(mixer_num_blocks),
+                             .init(mixer_init),
+                             .error(mixer_error),
+                            
+                             .entropy0_syn(),
+                             .entropy0_data(),
+                             .entropy0_ack(),
+
+                             .entropy1_syn(),
+                             .entropy1_data(),
+                             .entropy1_ack(),
+                             
+                             .seed_syn(mixer_seed_syn),
+                             .seed_data(mixer_seed_data),
+                             .seed_ack(mixer_seed_ack)
+                            );
   
+  trng_csprng csprng(
+                     .clk(clk),
+                     .reset_n(reset_n),
+                     
+                     .num_rounds(csprng_num_rounds),
+                     .reseed(csprng_reseed),
+                     .error(csprng_error),
+                     
+                     .seed_syn(mixer_seed_syn),
+                     .seed_data(mixer_seed_data),
+                     .seed_ack(csprng_seed_ack),
+
+                     .rng_syn(csprng_rng_syn),
+                     .rng_data(csprng_rng_data),
+                     .rng_ack(ctrl_rng_ack)
+                    );
+
   
   //----------------------------------------------------------------
   // reg_update
@@ -110,11 +165,14 @@ module trng(
     begin
       if (!reset_n)
         begin
-
+          csprng_num_rounds_reg <= CSPRNG_DEFAULT_NUM_ROUNDS;
         end
       else
         begin
-
+          if (csprng_num_rounds_we)
+            begin
+              csprng_num_rounds_reg <= csprng_num_rounds_new;
+            end
         end
     end // reg_update
 
@@ -127,8 +185,11 @@ module trng(
   //----------------------------------------------------------------
   always @*
     begin : api_logic
-      tmp_read_data = 32'h00000000;
-      tmp_error     = 0;
+      csprng_num_rounds_new = 6'h00;
+      csprng_num_rounds_we  = 0;
+
+      tmp_read_data         = 32'h00000000;
+      tmp_error             = 0;
       
       if (cs)
         begin
@@ -136,6 +197,11 @@ module trng(
             begin
               case (address)
                 // Write operations.
+                CSPRNG_NUM_ROUNDS:
+                  begin
+                    csprng_num_rounds_new = write_data[5 : 0];
+                    csprng_num_rounds_we  = 1;
+                  end
                 
                 default:
                   begin
@@ -150,17 +216,22 @@ module trng(
                 // Read operations.
                 ADDR_NAME0:
                   begin
-                    tmp_read_data = CORE_NAME0;
+                    tmp_read_data = TRNG_NAME0;
                   end
 
                 ADDR_NAME1:
                   begin
-                    tmp_read_data = CORE_NAME1;
+                    tmp_read_data = TRNG_NAME1;
                   end
                 
                 ADDR_VERSION:
                   begin
-                    tmp_read_data = CORE_VERSION;
+                    tmp_read_data = TRNG_VERSION;
+                  end
+                
+                CSPRNG_NUM_ROUNDS:
+                  begin
+                    tmp_read_data = {26'h0000000, csprng_num_rounds_reg};
                   end
                 
                 default:
