@@ -65,27 +65,27 @@ module trng_collector_mixer(
   //----------------------------------------------------------------
   // Internal constant and parameter definitions.
   //----------------------------------------------------------------
+  parameter SEED_BUFFER_SIZE = 2;
   
   
   //----------------------------------------------------------------
   // Registers including update variables and write enable.
   //----------------------------------------------------------------
-
+  reg [383 : 0] seed_buffer_mem [0 : (SEED_BUFFER_SIZE - 1)];
+  reg [383 : 0] seed_buffer_mem_data;
+  reg [383 : 0] seed_buffer_mem_new;
+  reg           seed_buffer_mem_we;
+  
   
   //----------------------------------------------------------------
   // Wires.
   //----------------------------------------------------------------
   
-
-  reg [31 : 0] tmp_read_data;
-  reg          tmp_error;
-  
   
   //----------------------------------------------------------------
   // Concurrent connectivity for ports etc.
   //----------------------------------------------------------------
-  assign read_data = tmp_read_data;
-  assign error     = tmp_error;
+  assign seed_data reg = seed_buffer_mem_data;
   
              
   //----------------------------------------------------------------
