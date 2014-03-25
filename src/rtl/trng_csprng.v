@@ -45,15 +45,6 @@ module trng_csprng(
                    input wire [5 : 0]   num_rounds,
                    input wire           reseed,
                    output               error,
-
-                   // Debug access
-                   input wire           debug_mode,
-                   input wire           debug_seed_syn,
-                   input [383 : 0]      debug_seed_data,
-                   output wire          debug_seed_ack,
-                   output wire          debug_rng_syn,
-                   output wire [31 : 0] debug_rng_data,
-                   input wire           debug_rng_ack
                    
                    // Seed input
                    input wire           seed_syn,
