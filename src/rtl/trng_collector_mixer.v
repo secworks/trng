@@ -71,10 +71,10 @@ module trng_collector_mixer(
   //----------------------------------------------------------------
   // Registers including update variables and write enable.
   //----------------------------------------------------------------
-  reg [383 : 0] seed_buffer_mem [0 : (SEED_BUFFER_SIZE - 1)];
-  reg [383 : 0] seed_buffer_mem_data;
-  reg [383 : 0] seed_buffer_mem_new;
-  reg           seed_buffer_mem_we;
+  reg [383 : 0]  seed_buffer_mem [0 : (SEED_BUFFER_SIZE - 1)];
+  reg [383 : 0]  seed_buffer_mem_data;
+  wire [383 : 0] seed_buffer_mem_new;
+  reg            seed_buffer_mem_we;
   
   
   //----------------------------------------------------------------
@@ -85,7 +85,7 @@ module trng_collector_mixer(
   //----------------------------------------------------------------
   // Concurrent connectivity for ports etc.
   //----------------------------------------------------------------
-  assign seed_data reg = seed_buffer_mem_data;
+  assign seed_data = seed_buffer_mem_data;
   
              
   //----------------------------------------------------------------
@@ -102,7 +102,7 @@ module trng_collector_mixer(
                    
                      .ready(sha512_ready),
                      
-                     .digest(sha512_digest),
+                     .digest(seed_buffer_mem_new),
                      .digest_valid(sha512_digest_valid)
                     );
   
