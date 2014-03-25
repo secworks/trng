@@ -40,10 +40,6 @@ module trng_collector_mixer(
                             // Clock and reset.
                             input wire           clk,
                             input wire           reset_n,
-            
-                            // Control.
-                            input wire           cs,
-                            input wire           we,
                                  
                             // Control, config and status.
                             input wire [7 : 0]   num_blocks,
@@ -69,14 +65,7 @@ module trng_collector_mixer(
   //----------------------------------------------------------------
   // Internal constant and parameter definitions.
   //----------------------------------------------------------------
-  parameter ADDR_NAME0         = 8'h00;
-  parameter ADDR_NAME1         = 8'h01;
-  parameter ADDR_VERSION       = 8'h02;
   
-  parameter CORE_NAME0         = 32'h73686132; // "sha2"
-  parameter CORE_NAME1         = 32'h2d323536; // "-512"
-  parameter CORE_VERSION       = 32'h302e3830; // "0.80"
-
   
   //----------------------------------------------------------------
   // Registers including update variables and write enable.
@@ -86,6 +75,8 @@ module trng_collector_mixer(
   //----------------------------------------------------------------
   // Wires.
   //----------------------------------------------------------------
+  
+
   reg [31 : 0] tmp_read_data;
   reg          tmp_error;
   
@@ -100,6 +91,20 @@ module trng_collector_mixer(
   //----------------------------------------------------------------
   // core instantiation.
   //----------------------------------------------------------------
+  sha256_core sha512(
+                     .clk(clk),
+                     .reset_n(reset_n),
+                 
+                     .init(sha512_init),
+                     .next(sha512_next),
+                     
+                     .block(sha512_block),
+                   
+                     .ready(sha512_ready),
+                     
+                     .digest(sha512_digest),
+                     .digest_valid(sha512_digest_valid)
+                    );
   
   
   //----------------------------------------------------------------
