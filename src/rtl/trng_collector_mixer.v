@@ -174,8 +174,8 @@ module trng_collector_mixer(
             end
         end
     end // addr_decoder
-endmodule // trng
+endmodule // trng_collector_mixer
 
 //======================================================================
-// EOF trng.v
+// EOF trng_collector_mixer.v
 //======================================================================
