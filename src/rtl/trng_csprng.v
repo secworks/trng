@@ -42,7 +42,7 @@ module trng_csprng(
                    input wire           reset_n,
                    
                    // Control, config and status.
-                   input wire [5 : 0]   num_rounds,
+                   input wire [4 : 0]   num_rounds,
                    input wire           reseed,
                    output               error,
                    
@@ -69,6 +69,8 @@ module trng_csprng(
   parameter CORE_NAME1         = 32'h2d323536; // "-512"
   parameter CORE_VERSION       = 32'h302e3830; // "0.80"
 
+  parameter CHACHA_KEYLENGTH   = 1'b1; // 256 bit key.
+
   
   //----------------------------------------------------------------
   // Registers including update variables and write enable.
@@ -78,6 +80,8 @@ module trng_csprng(
   //----------------------------------------------------------------
   // Wires.
   //----------------------------------------------------------------
+  wire [511 : 0] chacha_data;
+
   reg [31 : 0] tmp_read_data;
   reg          tmp_error;
   
@@ -85,6 +89,8 @@ module trng_csprng(
   //----------------------------------------------------------------
   // Concurrent connectivity for ports etc.
   //----------------------------------------------------------------
+  assign chacha_data = {16{32'h00000000}};
+
   assign read_data = tmp_read_data;
   assign error     = tmp_error;
   
@@ -92,6 +98,25 @@ module trng_csprng(
   //----------------------------------------------------------------
   // core instantiation.
   //----------------------------------------------------------------
+  chacha_core chacha(
+                     .clk(clk),
+                     .reset_n(reset_n),
+                     
+                     .init(chacha_init),
+                     .next(chacha_next),
+
+                     .key(seed_data[255 : 0]),
+                     .keylen(CHACHA_KEYLENGTH),
+                     .iv(seed_data[319 : 256]),
+                     .rounds(rounds),
+                   
+                     .data_in(chacha_data),
+                     
+                     .ready(chacha_ready),
+                    
+                     .data_out(chacha_data_out),
+                     .data_out_valid(chacha_data_out_valid)
+                    );
   
   
   //----------------------------------------------------------------
