@@ -42,6 +42,7 @@ module trng_csprng(
                    input wire           reset_n,
                    
                    // Control, config and status.
+                   input                debug_mode,
                    input wire [4 : 0]   num_rounds,
                    input wire           reseed,
                    output               error,
