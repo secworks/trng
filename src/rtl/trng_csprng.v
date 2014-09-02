@@ -43,7 +43,8 @@ module trng_csprng(
 
                    // Control, config and status.
                    input                debug_mode,
-                   input wire [4 : 0]   num_rounds,
+                   input wire [5 : 0]   num_rounds,
+                   input wire [63 : 0]  num_blocks;
                    input wire           reseed,
                    output               error,
 
@@ -73,6 +74,7 @@ module trng_csprng(
 
   parameter CHACHA_KEYLEN256      = 1'b1; // 256 bit key.
   parameter CHACHA_DEFAULT_ROUNDS = 5'b18; // 24 rounds.
+  parameter MAX_BLOCKS            = 64'h1000000000000000;
 
   parameter CTRL_IDLE     = 3'h0;
   parameter CTRL_SEED     = 3'h1;
@@ -95,10 +97,6 @@ module trng_csprng(
   reg           block_ctr_inc;
   reg           block_ctr_set;
   reg           block_ctr_we;
-
-  reg [4 : 0]   rounds_reg;
-  reg [4 : 0]   rounds_new;
-  reg           rounds_we;
 
   reg [2 : 0]   csprng_ctrl_reg;
   reg [2 : 0]   csprng_ctrl_new;
@@ -161,7 +159,6 @@ module trng_csprng(
           iv_reg          <= {2{32'h00000000}};
           block_reg       <= {16{32'h00000000}};
           block_ctr_reg   <= {2{32'h00000000}};
-          rounds_reg      <= CHACHA_DEFAULT_ROUNDS;
           csprng_ctrl_reg <= CTRL_IDLE;
         end
       else
@@ -186,83 +183,12 @@ module trng_csprng(
               block_ctr_reg <= block_ctr_new;
             end
 
-          if (rounds_we)
-            begin
-              rounds_reg <= rounds_new;
-            end
-
           if (csprng_ctrl_we)
             begin
               csprng_ctrl_reg <= csprng_ctrl_new;
             end
         end
     end // reg_update
-
-
-  //----------------------------------------------------------------
-  // api_logic
-  //
-  // Implementation of the api logic. If cs is enabled will either
-  // try to write to or read from the internal registers.
-  //----------------------------------------------------------------
-  always @*
-    begin : api_logic
-      rounds_new    = 5'h00;
-      rounds_we     = 0;
-      tmp_read_data = 32'h00000000;
-      tmp_error     = 0;
-
-      if (cs)
-        begin
-          if (we)
-            begin
-              case (address)
-                // Write operations.
-                ADDR_ROUNDS:
-                  begin
-                    rounds_new = api_write_data[4 :0];
-                    rounds_we  = 1;
-                  end
-
-                default:
-                  begin
-                    tmp_error = 1;
-                  end
-              endcase // case (address)
-            end // if (we)
-
-          else
-            begin
-              case (address)
-                // Read operations.
-                ADDR_NAME0:
-                  begin
-                    tmp_read_data = CORE_NAME0;
-                  end
-
-                ADDR_NAME1:
-                  begin
-                    tmp_read_data = CORE_NAME1;
-                  end
-
-                ADDR_VERSION:
-                  begin
-                    tmp_read_data = CORE_VERSION;
-                  end
-
-                ADDR_ROUNDS:
-                  begin
-                    tmp_read_data = {27'h0000000, rounds_reg};
-                  end
-
-                default:
-                  begin
-                    tmp_error = 1;
-                  end
-              endcase // case (address)
-            end
-        end
-    end // addr_decoder
 
 
   //----------------------------------------------------------------
