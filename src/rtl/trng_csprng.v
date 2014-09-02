@@ -49,7 +49,7 @@ module trng_csprng(
 
                    // Seed input
                    input wire           seed_syn,
-                   input [383 : 0]      seed_data,
+                   input [511 : 0]      seed_data,
                    output wire          seed_ack,
 
                    // RNG output
@@ -65,23 +65,51 @@ module trng_csprng(
   parameter ADDR_NAME0         = 8'h00;
   parameter ADDR_NAME1         = 8'h01;
   parameter ADDR_VERSION       = 8'h02;
+  parameter ADDR_ROUNDS        = 8'h11;
 
   parameter CORE_NAME0         = 32'h73686132; // "sha2"
   parameter CORE_NAME1         = 32'h2d323536; // "-512"
   parameter CORE_VERSION       = 32'h302e3830; // "0.80"
 
-  parameter CHACHA_KEYLENGTH   = 1'b1; // 256 bit key.
+  parameter CHACHA_KEYLEN256      = 1'b1; // 256 bit key.
+  parameter CHACHA_DEFAULT_ROUNDS = 5'b18; // 24 rounds.
+
+  parameter CTRL_IDLE     = 3'h0;
+  parameter CTRL_SEED     = 3'h1;
 
 
   //----------------------------------------------------------------
   // Registers including update variables and write enable.
   //----------------------------------------------------------------
+  reg [255 : 0] key_reg;
+  reg           key_we;
+
+  reg [63 : 0]  iv_reg;
+  reg           iv_we;
+
+  reg [511 : 0] block_reg;
+  reg           block_we;
+
+  reg [63 : 0]  block_ctr_reg;
+  reg [63 : 0]  block_ctr_new;
+  reg           block_ctr_inc;
+  reg           block_ctr_set;
+  reg           block_ctr_we;
+
+  reg [4 : 0]   rounds_reg;
+  reg [4 : 0]   rounds_new;
+  reg           rounds_we;
+
+  reg [2 : 0]   csprng_ctrl_reg;
+  reg [2 : 0]   csprng_ctrl_new;
+  reg           csprng_ctrl_we;
 
 
   //----------------------------------------------------------------
   // Wires.
   //----------------------------------------------------------------
-  wire [511 : 0] chacha_data;
+  reg [511 : 0] chacha_data_out;
+  reg           chacha_data_out_valid;
 
   reg [31 : 0] tmp_read_data;
   reg          tmp_error;
@@ -90,8 +118,6 @@ module trng_csprng(
   //----------------------------------------------------------------
   // Concurrent connectivity for ports etc.
   //----------------------------------------------------------------
-  assign chacha_data = {16{32'h00000000}};
-
   assign read_data = tmp_read_data;
   assign error     = tmp_error;
 
@@ -106,12 +132,12 @@ module trng_csprng(
                      .init(chacha_init),
                      .next(chacha_next),
 
-                     .key(seed_data[255 : 0]),
-                     .keylen(CHACHA_KEYLENGTH),
-                     .iv(seed_data[319 : 256]),
-                     .rounds(rounds),
+                     .key(key_reg),
+                     .keylen(CHACHA_KEYLEN256),
+                     .iv(iv_reg),
+                     .rounds(rounds_reg),
 
-                     .data_in(chacha_data),
+                     .data_in(block_reg),
 
                      .ready(chacha_ready),
 
@@ -127,15 +153,48 @@ module trng_csprng(
   // All registers are positive edge triggered with synchronous
   // active low reset. All registers have write enable.
   //----------------------------------------------------------------
-  always @ (posedge clk)
+  always @ (posedge clk or negedge reset_n)
     begin
       if (!reset_n)
         begin
-
+          key_reg         <= {8{32'h00000000}};
+          iv_reg          <= {2{32'h00000000}};
+          block_reg       <= {16{32'h00000000}};
+          block_ctr_reg   <= {2{32'h00000000}};
+          rounds_reg      <= CHACHA_DEFAULT_ROUNDS;
+          csprng_ctrl_reg <= CTRL_IDLE;
         end
       else
         begin
+          if (key_we)
+            begin
+              key_reg <= seed_data[255 : 0];
+            end
 
+          if (iv_we)
+            begin
+              key_reg <= seed_data[319 : 256];
+            end
+
+          if (block_we)
+            begin
+              block_reg <= seed_data;
+            end
+
+          if (block_ctr_we)
+            begin
+              block_ctr_reg <= block_ctr_new;
+            end
+
+          if (rounds_we)
+            begin
+              rounds_reg <= rounds_new;
+            end
+
+          if (csprng_ctrl_we)
+            begin
+              csprng_ctrl_reg <= csprng_ctrl_new;
+            end
         end
     end // reg_update
 
@@ -148,6 +207,8 @@ module trng_csprng(
   //----------------------------------------------------------------
   always @*
     begin : api_logic
+      rounds_new    = 5'h00;
+      rounds_we     = 0;
       tmp_read_data = 32'h00000000;
       tmp_error     = 0;
 
@@ -157,6 +218,11 @@ module trng_csprng(
             begin
               case (address)
                 // Write operations.
+                ADDR_ROUNDS:
+                  begin
+                    rounds_new = api_write_data[4 :0];
+                    rounds_we  = 1;
+                  end
 
                 default:
                   begin
@@ -184,6 +250,11 @@ module trng_csprng(
                     tmp_read_data = CORE_VERSION;
                   end
 
+                ADDR_ROUNDS:
+                  begin
+                    tmp_read_data = {27'h0000000, rounds_reg};
+                  end
+
                 default:
                   begin
                     tmp_error = 1;
@@ -192,6 +263,35 @@ module trng_csprng(
             end
         end
     end // addr_decoder
+
+
+  //----------------------------------------------------------------
+  // csprng_ctrl_fsm
+  //
+  // Control FSM for the CSPRNG.
+  //----------------------------------------------------------------
+  always @*
+    begin : csprng_ctrl_fsm
+      key_we   = 0;
+      iv_we    = 0;
+      block_we = 0;
+
+      csprng_ctrl_new    = CTRL_IDLE;
+      csprng_ctrl_we     = 0;
+
+
+      case (cspng_ctrl_reg)
+        CTRL_IDLE:
+          begin
+          end
+
+
+        CTRL_SEED:
+          begin
+          end
+      endcase // case (cspng_ctrl_reg)
+    end // csprng_ctrl_fsm
+
 endmodule // trng_csprng
 
 //======================================================================
