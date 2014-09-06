@@ -46,7 +46,7 @@ module trng_csprng(
                    input wire [5 : 0]   num_rounds,
                    input wire [63 : 0]  num_blocks;
                    input wire           seed,
-                   input wire           next,
+                   input wire           enable,
                    output wire          ready,
                    output wire          error,
 
@@ -232,7 +232,7 @@ module trng_csprng(
           block_ctr_max = 1;
         end
 
-      if ((block_ctr_inc) && (!block_ctr_max)
+      if ((block_ctr_inc) && (!block_ctr_max))
         begin
           block_ctr_new = 64'h0000000000000001;
           block_ctr_we  = 1;
@@ -261,13 +261,17 @@ module trng_csprng(
       csprng_ctrl_new = CTRL_IDLE;
       csprng_ctrl_we  = 0;
 
-
       case (cspng_ctrl_reg)
         CTRL_IDLE:
           begin
-            if (seed)
+            if (enable)
               begin
                 csprng_ctrl_new = CTRL_SEED0;
+                csprng_ctrl_we  = 1;
+              end
+            else if (!enable)
+              begin
+                csprng_ctrl_new = CTRL_IDLE;
                 csprng_ctrl_we  = 1;
               end
           end
