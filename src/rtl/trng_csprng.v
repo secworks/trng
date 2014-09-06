@@ -64,18 +64,8 @@ module trng_csprng(
   //----------------------------------------------------------------
   // Internal constant and parameter definitions.
   //----------------------------------------------------------------
-  parameter ADDR_NAME0         = 8'h00;
-  parameter ADDR_NAME1         = 8'h01;
-  parameter ADDR_VERSION       = 8'h02;
-  parameter ADDR_ROUNDS        = 8'h11;
-
-  parameter CORE_NAME0         = 32'h73686132; // "sha2"
-  parameter CORE_NAME1         = 32'h2d323536; // "-512"
-  parameter CORE_VERSION       = 32'h302e3830; // "0.80"
-
-  parameter CHACHA_KEYLEN256      = 1'b1; // 256 bit key.
-  parameter CHACHA_DEFAULT_ROUNDS = 5'b18; // 24 rounds.
-  parameter MAX_BLOCKS            = 64'h1000000000000000;
+  parameter CHACHA_KEYLEN256  = 1'b1; // 256 bit key.
+  parameter CHACHA_MAX_BLOCKS = 64'h1000000000000000;
 
   parameter CTRL_IDLE      = 3'h0;
   parameter CTRL_SEED0     = 3'h1;
@@ -88,14 +78,17 @@ module trng_csprng(
   //----------------------------------------------------------------
   // Registers including update variables and write enable.
   //----------------------------------------------------------------
-  reg [255 : 0] key_reg;
-  reg           key_we;
+  reg [255 : 0] cipher_key_reg;
+  reg           cipher_key_we;
 
-  reg [63 : 0]  iv_reg;
-  reg           iv_we;
+  reg [63 : 0]  cipher_iv_reg;
+  reg           cipher_iv_we;
 
-  reg [511 : 0] block_reg;
-  reg           block_we;
+  reg [63 : 0]  cipher_ctr_reg;
+  reg           cipher_ctr_we;
+
+  reg [511 : 0] cipher_block_reg;
+  reg           cipher_block_we;
 
   reg [63 : 0]  block_ctr_reg;
   reg [63 : 0]  block_ctr_new;
@@ -111,8 +104,11 @@ module trng_csprng(
   //----------------------------------------------------------------
   // Wires.
   //----------------------------------------------------------------
-  reg [511 : 0] chacha_data_out;
-  reg           chacha_data_out_valid;
+  reg           cipher_init;
+  reg           cipher_next;
+
+  reg [511 : 0] cipher_data_out;
+  reg           cipher_data_out_valid;
 
   reg [31 : 0] tmp_read_data;
   reg          tmp_error;
@@ -211,11 +207,13 @@ module trng_csprng(
       cipher_iv_we    = 0;
       cipher_ctr_we   = 0;
       cipher_block_we = 0;
+      cipher_init     = 0;
+      cipher_next     = 0;
 
-      tmp_seed_ack = 0;
+      tmp_seed_ack    = 0;
 
-      csprng_ctrl_new    = CTRL_IDLE;
-      csprng_ctrl_we     = 0;
+      csprng_ctrl_new = CTRL_IDLE;
+      csprng_ctrl_we  = 0;
 
 
       case (cspng_ctrl_reg)
