@@ -64,8 +64,8 @@ module trng_csprng(
   //----------------------------------------------------------------
   // Internal constant and parameter definitions.
   //----------------------------------------------------------------
-  parameter CHACHA_KEYLEN256  = 1'b1; // 256 bit key.
-  parameter CHACHA_MAX_BLOCKS = 64'h1000000000000000;
+  parameter CIPHER_KEYLEN256  = 1'b1; // 256 bit key.
+  parameter CIPHER_MAX_BLOCKS = 64'h1000000000000000;
 
   parameter CTRL_IDLE      = 4'h0;
   parameter CTRL_SEED0     = 4'h1;
@@ -96,8 +96,9 @@ module trng_csprng(
   reg [63 : 0]  block_ctr_reg;
   reg [63 : 0]  block_ctr_new;
   reg           block_ctr_inc;
-  reg           block_ctr_set;
+  reg           block_ctr_rst;
   reg           block_ctr_we;
+  reg           block_ctr_max;
 
   reg [3 : 0]   csprng_ctrl_reg;
   reg [3 : 0]   csprng_ctrl_new;
@@ -206,6 +207,39 @@ module trng_csprng(
 
 
   //----------------------------------------------------------------
+  // block_ctr
+  //
+  // Logic to implement the block counter. This includes the
+  // ability to detect that maximum allowed number of blocks
+  // has been reached. Either as defined by the application
+  // or the hard coded CIPHER_MAX_BLOCKS value.
+  //----------------------------------------------------------------
+  always @*
+    begin : block_ctr
+      block_ctr_new = 64'h0000000000000000;
+      block_ctr_we  = 0;
+      block_ctr_max = 0;
+
+      if (block_ctr_rst)
+        begin
+          block_ctr_new = 64'h0000000000000000;
+          block_ctr_we  = 1;
+        end
+
+      if ((block_ctr_reg == num_blocks) || (block_ctr_reg == CIPHER_MAX_BLOCKS))
+        begin
+          block_ctr_max = 1;
+        end
+
+      if ((block_ctr_inc) && (!block_ctr_max)
+        begin
+          block_ctr_new = 64'h0000000000000001;
+          block_ctr_we  = 1;
+        end
+    end // block_ctr
+
+
+  //----------------------------------------------------------------
   // csprng_ctrl_fsm
   //
   // Control FSM for the CSPRNG.
@@ -302,5 +336,5 @@ module trng_csprng(
 endmodule // trng_csprng
 
 //======================================================================
-// EOF trng_csprng.
+// EOF trng_csprng
 //======================================================================
