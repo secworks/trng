@@ -91,7 +91,7 @@ module tb_csprng();
                   .num_rounds(tb_num_rounds),
                   .num_blocks(tb_num_blocks),
                   .seed(tb_seed),
-                  .next(tb_next),
+                  .enable(tb_enable),
                   .ready(tb_ready),
                   .error(tb_error),
 
@@ -182,7 +182,7 @@ module tb_csprng();
       tb_num_rounds = 5'h00;
       tb_num_blocks = 64'h0000000000000000;
       tb_seed       = 0;
-      tb_next       = 0;
+      tb_enable     = 0;
       tb_seed_syn   = 0;
       tb_seed_data  = {16{32'h00000000}};
       tb_rnd_ack    = 0;

@@ -144,7 +144,7 @@ module trng(
                      .num_rounds(csprng_num_rounds),
                      .num_rounds(csprng_num_blocks),
                      .seed(csprng_seed),
-                     .next(csprng_next),
+                     .enable(csprng_enable),
                      .ready(csprng_ready),
                      .error(csprng_error),
                      
