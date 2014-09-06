@@ -43,8 +43,8 @@ module trng_csprng(
 
                    // Control, config and status.
                    input                debug_mode,
-                   input wire [5 : 0]   num_rounds,
-                   input wire [63 : 0]  num_blocks;
+                   input wire [4 : 0]   num_rounds,
+                   input wire [63 : 0]  num_blocks,
                    input wire           seed,
                    input wire           enable,
                    output wire          ready,
@@ -101,10 +101,6 @@ module trng_csprng(
   reg           block_ctr_we;
   reg           block_ctr_max;
 
-  reg [3 : 0]   csprng_ctrl_reg;
-  reg [3 : 0]   csprng_ctrl_new;
-  reg           csprng_ctrl_we;
-
   reg           rnd_syn_reg;
   reg           rnd_syn_new;
   reg           rnd_syn_we;
@@ -121,20 +117,24 @@ module trng_csprng(
   reg           error_new;
   reg           error_we;
 
+  reg [3 : 0]   csprng_ctrl_reg;
+  reg [3 : 0]   csprng_ctrl_new;
+  reg           csprng_ctrl_we;
+
 
   //----------------------------------------------------------------
   // Wires.
   //----------------------------------------------------------------
-  reg           cipher_init;
-  reg           cipher_next;
+  reg            cipher_init;
+  reg            cipher_next;
 
-  reg [511 : 0] cipher_data_out;
-  reg           cipher_data_out_valid;
+  wire [511 : 0] cipher_data_out;
+  wire           cipher_data_out_valid;
 
-  reg [31 : 0]  tmp_read_data;
-  reg           tmp_error;
+  reg [31 : 0]   tmp_read_data;
+  reg            tmp_error;
 
-  reg           tmp_seed_ack;
+  reg            tmp_seed_ack;
 
 
   //----------------------------------------------------------------
@@ -159,8 +159,8 @@ module trng_csprng(
                      .clk(clk),
                      .reset_n(reset_n),
 
-                     .init(chacha_init),
-                     .next(chacha_next),
+                     .init(cipher_init),
+                     .next(cipher_next),
 
                      .key(cipher_key_reg),
                      .keylen(CHACHA_KEYLEN256),
@@ -309,7 +309,7 @@ module trng_csprng(
       csprng_ctrl_new = CTRL_IDLE;
       csprng_ctrl_we  = 0;
 
-      case (cspng_ctrl_reg)
+      case (csprng_ctrl_reg)
         CTRL_IDLE:
           begin
             if (enable)
