@@ -63,21 +63,21 @@ module tb_csprng();
   reg [31 : 0] error_ctr;
   reg [31 : 0] tc_ctr;
 
-  reg            tb_clk;
-  reg            tb_reset_n;
-  reg            tb_debug_mode;
-  reg [5 : 0]    tb_num_rounds;
-  reg [63 : 0]   tb_num_blocks;
-  reg            tb_seed;
-  reg            tb_next;
-  wire           tb_ready;
-  wire           tb_error;
-  reg            tb_seed_syn;
-  reg [511 : 0]  tb_seed_data;
-  wire           tb_seed_ack;
-  wire           tb_rnd_syn;
-  wire [511 : 0] tb_rnd_data;
-  reg            tb_rnd_ack;
+  reg           tb_clk;
+  reg           tb_reset_n;
+  reg           tb_debug_mode;
+  reg [4 : 0]   tb_num_rounds;
+  reg [63 : 0]  tb_num_blocks;
+  reg           tb_seed;
+  reg           tb_enable;
+  wire          tb_ready;
+  wire          tb_error;
+  reg           tb_seed_syn;
+  reg [511 : 0] tb_seed_data;
+  wire          tb_seed_ack;
+  wire          tb_rnd_syn;
+  wire [31: 0]  tb_rnd_data;
+  reg           tb_rnd_ack;
 
 
   //----------------------------------------------------------------
@@ -143,6 +143,28 @@ module tb_csprng();
     begin
       $display("State of DUT");
       $display("------------");
+      $display("Inputs:");
+      $display("debug_mode = 0x%01x, seed = 0x%01x, enable = 0x%01x",
+               dut.debug_mode, dut.seed, dut.enable);
+      $display("ready = 0x%01x, error = 0x%01x",
+               dut.ready, dut.error);
+      $display("num_rounds = 0x%02x, num_blocks = 0x%016x",
+               dut.num_rounds, dut.num_blocks);
+      $display("seed_syn = 0x%01x, seed_ack = 0x%01x, seed_data = 0x%064x",
+               dut.seed_syn, dut.seed_ack, dut.seed_data);
+      $display("");
+
+      $display("Internal states:");
+      $display("cipher_key   = 0x%032x", dut.cipher_key_reg);
+      $display("cipher_iv    = 0x%08x, cipher_ctr = 0x%08x",
+               dut.cipher_iv_reg, dut.cipher_ctr_reg);
+      $display("cipher_block = 0x%064x", dut.cipher_block_reg);
+      $display("csprng_ctrl  = 0x%02x", dut.csprng_ctrl_reg);
+      $display("");
+
+      $display("Outputs:");
+      $display("rnd_syn = 0x%01x, rnd_ack = 0x%01x, rnd_data = 0x%08x",
+               dut.rnd_syn, dut.rnd_ack, dut.rnd_data);
       $display("");
     end
   endtask // dump_dut_state
@@ -160,8 +182,29 @@ module tb_csprng();
 
       #(2 * CLK_PERIOD);
       tb_reset_n = 1;
+      $display("");
     end
   endtask // reset_dut
+
+
+  //----------------------------------------------------------------
+  // display_test_results()
+  //
+  // Display the accumulated test results.
+  //----------------------------------------------------------------
+  task display_test_results();
+    begin
+      if (error_ctr == 0)
+        begin
+          $display("*** All %02d test cases completed successfully", tc_ctr);
+        end
+      else
+        begin
+          $display("*** %02d tests completed - %02d test cases did not complete successfully.",
+                   tc_ctr, error_ctr);
+        end
+    end
+  endtask // display_test_results
 
 
   //----------------------------------------------------------------
@@ -199,7 +242,7 @@ module tb_csprng();
     begin : csprng_test
 
       $display("   -= Testbench for csprng started =-");
-      $display("     ================================");
+      $display("    ================================");
       $display("");
 
       init_sim();
@@ -209,7 +252,7 @@ module tb_csprng();
 
       // Test code goes here.
 
-      display_test_result();
+      display_test_results();
 
       $display("");
       $display("*** CSPRNG simulation done. ***");
