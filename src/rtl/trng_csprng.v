@@ -67,12 +67,15 @@ module trng_csprng(
   parameter CHACHA_KEYLEN256  = 1'b1; // 256 bit key.
   parameter CHACHA_MAX_BLOCKS = 64'h1000000000000000;
 
-  parameter CTRL_IDLE      = 3'h0;
-  parameter CTRL_SEED0     = 3'h1;
-  parameter CTRL_SEED0_ACK = 3'h2;
-  parameter CTRL_SEED1     = 3'h3;
-  parameter CTRL_SEED1_ACK = 3'h4;
-  parameter CTRL_GENERATE  = 3'h5;
+  parameter CTRL_IDLE      = 4'h0;
+  parameter CTRL_SEED0     = 4'h1;
+  parameter CTRL_SEED0_ACK = 4'h2;
+  parameter CTRL_SEED1     = 4'h3;
+  parameter CTRL_SEED1_ACK = 4'h4;
+  parameter CTRL_INIT0     = 4'h5;
+  parameter CTRL_INIT1     = 4'h6;
+  parameter CTRL_NEXT0     = 4'h7;
+  parameter CTRL_NEXT1     = 4'h8;
 
 
   //----------------------------------------------------------------
@@ -96,8 +99,8 @@ module trng_csprng(
   reg           block_ctr_set;
   reg           block_ctr_we;
 
-  reg [2 : 0]   csprng_ctrl_reg;
-  reg [2 : 0]   csprng_ctrl_new;
+  reg [3 : 0]   csprng_ctrl_reg;
+  reg [3 : 0]   csprng_ctrl_new;
   reg           csprng_ctrl_we;
 
 
@@ -110,10 +113,10 @@ module trng_csprng(
   reg [511 : 0] cipher_data_out;
   reg           cipher_data_out_valid;
 
-  reg [31 : 0] tmp_read_data;
-  reg          tmp_error;
+  reg [31 : 0]  tmp_read_data;
+  reg           tmp_error;
 
-  reg          tmp_seed_ack;
+  reg           tmp_seed_ack;
 
 
   //----------------------------------------------------------------
@@ -135,17 +138,17 @@ module trng_csprng(
                      .init(chacha_init),
                      .next(chacha_next),
 
-                     .key(key_reg),
+                     .key(cipher_key_reg),
                      .keylen(CHACHA_KEYLEN256),
-                     .iv(iv_reg),
-                     .rounds(rounds_reg),
+                     .iv(cipher_iv_reg),
+                     .ctr(cipher_ctr_reg),
+                     .rounds(num_rounds),
 
-                     .data_in(block_reg),
+                     .data_in(cipher_block_reg),
+                     .ready(cipher_ready),
 
-                     .ready(chacha_ready),
-
-                     .data_out(chacha_data_out),
-                     .data_out_valid(chacha_data_out_valid)
+                     .data_out(cipher_data_out),
+                     .data_out_valid(cipher_data_out_valid)
                     );
 
 
@@ -160,27 +163,33 @@ module trng_csprng(
     begin
       if (!reset_n)
         begin
-          key_reg         <= {8{32'h00000000}};
-          iv_reg          <= {2{32'h00000000}};
-          block_reg       <= {16{32'h00000000}};
-          block_ctr_reg   <= {2{32'h00000000}};
-          csprng_ctrl_reg <= CTRL_IDLE;
+          cipher_key_reg   <= {8{32'h00000000}};
+          cipher_iv_reg    <= {2{32'h00000000}};
+          cipher_ctr_reg   <= {2{32'h00000000}};
+          cipher_block_reg <= {16{32'h00000000}};
+          block_ctr_reg    <= {2{32'h00000000}};
+          csprng_ctrl_reg  <= CTRL_IDLE;
         end
       else
         begin
-          if (key_we)
+          if (cipher_key_we)
             begin
-              key_reg <= seed_data[255 : 0];
+              cipher_key_reg <= seed_data[255 : 0];
             end
 
-          if (iv_we)
+          if (cipher_iv_we)
             begin
-              key_reg <= seed_data[319 : 256];
+              cipher_iv_reg <= seed_data[319 : 256];
             end
 
-          if (block_we)
+          if (cipher_ctr_we)
             begin
-              block_reg <= seed_data;
+              cipher_ctr_reg <= seed_data[383 : 320];
+            end
+
+          if (cipher_block_we)
+            begin
+              cipher_block_reg <= seed_data;
             end
 
           if (block_ctr_we)
@@ -209,6 +218,8 @@ module trng_csprng(
       cipher_block_we = 0;
       cipher_init     = 0;
       cipher_next     = 0;
+      block_ctr_rst   = 0;
+      block_ctr_inc   = 0;
 
       tmp_seed_ack    = 0;
 
@@ -222,7 +233,7 @@ module trng_csprng(
             if (seed)
               begin
                 csprng_ctrl_new = CTRL_SEED0;
-                csprng_ctrl_we    = 1;
+                csprng_ctrl_we  = 1;
               end
           end
 
@@ -258,13 +269,30 @@ module trng_csprng(
         CTRL_SEED1_ACK:
           begin
             tmp_seed_ack    = 1;
-            csprng_ctrl_new = CTRL_GENERATE;
+            csprng_ctrl_new = CTRL_INIT0;
             csprng_ctrl_we  = 1;
           end
 
-        CTRL_GENERATE:
+        CTRL_INIT0:
           begin
-            csprng_ctrl_new = CTRL_GENERATE;
+            cipher_init     = 1;
+            block_ctr_rst   = 1;
+            csprng_ctrl_new = CTRL_INIT1;
+            csprng_ctrl_we  = 1;
+          end
+
+        CTRL_INIT1:
+          begin
+            if (cipher_ready)
+              begin
+                csprng_ctrl_new = CTRL_NEXT0;
+                csprng_ctrl_we  = 1;
+              end
+          end
+
+        CTRL_NEXT0:
+          begin
+            csprng_ctrl_new = CTRL_NEXT0;
             csprng_ctrl_we  = 1;
           end
 
