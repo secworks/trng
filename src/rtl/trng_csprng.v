@@ -105,6 +105,22 @@ module trng_csprng(
   reg [3 : 0]   csprng_ctrl_new;
   reg           csprng_ctrl_we;
 
+  reg           rnd_syn_reg;
+  reg           rnd_syn_new;
+  reg           rnd_syn_we;
+
+  reg [31 : 0]  rnd_data_reg;
+  reg [31 : 0]  rnd_data_new;
+  reg           rnd_data_we;
+
+  reg           ready_reg;
+  reg           ready_new;
+  reg           ready_we;
+
+  reg           error_reg;
+  reg           error_new;
+  reg           error_we;
+
 
   //----------------------------------------------------------------
   // Wires.
@@ -128,6 +144,12 @@ module trng_csprng(
   assign error     = tmp_error;
 
   assign seed_ack  = tmp_seed_ack;
+
+  assign ready     = ready_reg;
+  assign error     = error_reg;
+
+  assign rnd_syn   = rnd_syn_reg;
+  assign rnd_data  = rnd_data_reg;
 
 
   //----------------------------------------------------------------
@@ -170,6 +192,10 @@ module trng_csprng(
           cipher_ctr_reg   <= {2{32'h00000000}};
           cipher_block_reg <= {16{32'h00000000}};
           block_ctr_reg    <= {2{32'h00000000}};
+          ready_reg        <= 0;
+          error_reg        <= 0;
+          rnd_syn_reg      <= 0;
+          rnd_data_reg     <= 32'h00000000;
           csprng_ctrl_reg  <= CTRL_IDLE;
         end
       else
@@ -197,6 +223,26 @@ module trng_csprng(
           if (block_ctr_we)
             begin
               block_ctr_reg <= block_ctr_new;
+            end
+
+          if (ready_we)
+            begin
+              ready_reg <= ready_new;
+            end
+
+          if (error_we)
+            begin
+              error_reg <= error_new;
+            end
+
+          if (rnd_syn_we)
+            begin
+              rnd_syn_reg <= rnd_syn_new;
+            end
+
+          if (rnd_data_we)
+            begin
+              rnd_data_reg <= rnd_data_new;
             end
 
           if (csprng_ctrl_we)
@@ -255,9 +301,11 @@ module trng_csprng(
       cipher_next     = 0;
       block_ctr_rst   = 0;
       block_ctr_inc   = 0;
-
+      ready_new       = 0;
+      ready_we        = 0;
+      error_new       = 0;
+      error_we        = 0;
       tmp_seed_ack    = 0;
-
       csprng_ctrl_new = CTRL_IDLE;
       csprng_ctrl_we  = 0;
 
