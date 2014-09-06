@@ -45,7 +45,8 @@ module trng_csprng(
                    input                debug_mode,
                    input wire [5 : 0]   num_rounds,
                    input wire [63 : 0]  num_blocks;
-                   input wire           reseed,
+                   input wire           seed,
+                   input wire           generate,
                    output               error,
 
                    // Seed input
@@ -76,8 +77,11 @@ module trng_csprng(
   parameter CHACHA_DEFAULT_ROUNDS = 5'b18; // 24 rounds.
   parameter MAX_BLOCKS            = 64'h1000000000000000;
 
-  parameter CTRL_IDLE     = 3'h0;
-  parameter CTRL_SEED     = 3'h1;
+  parameter CTRL_IDLE      = 3'h0;
+  parameter CTRL_SEED0     = 3'h1;
+  parameter CTRL_SEED0_ACK = 3'h2;
+  parameter CTRL_SEED1     = 3'h3;
+  parameter CTRL_SEED1_ACK = 3'h4;
 
 
   //----------------------------------------------------------------
@@ -112,12 +116,16 @@ module trng_csprng(
   reg [31 : 0] tmp_read_data;
   reg          tmp_error;
 
+  reg          tmp_seed_ack;
+
 
   //----------------------------------------------------------------
   // Concurrent connectivity for ports etc.
   //----------------------------------------------------------------
   assign read_data = tmp_read_data;
   assign error     = tmp_error;
+
+  assign seed_ack  = tmp_seed_ack;
 
 
   //----------------------------------------------------------------
@@ -202,6 +210,8 @@ module trng_csprng(
       iv_we    = 0;
       block_we = 0;
 
+      tmp_seed_ack = 0;
+
       csprng_ctrl_new    = CTRL_IDLE;
       csprng_ctrl_we     = 0;
 
@@ -209,12 +219,30 @@ module trng_csprng(
       case (cspng_ctrl_reg)
         CTRL_IDLE:
           begin
+            if (seed)
+              begin
+                csprng_ctrl_new = CTRL_SEED0;
+                csprng_ctrl_we    = 1;
+              end
           end
 
-
-        CTRL_SEED:
+        CTRL_SEED0:
           begin
+            if (seed_syn)
+              begin
+                block_we        = 1;
+                csprng_ctrl_new = CTRL_SEED0_ACK;
+                csprng_ctrl_we  = 1;
+              end
           end
+
+        CTRL_SEED0_ACK:
+          begin
+            tmp_seed_ack    = 1;
+            csprng_ctrl_new = CTRL_SEED1;
+            csprng_ctrl_we  = 1;
+          end
+
       endcase // case (cspng_ctrl_reg)
     end // csprng_ctrl_fsm
 
