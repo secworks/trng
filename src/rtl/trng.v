@@ -115,33 +115,37 @@ module trng(
   //----------------------------------------------------------------
   // core instantiations.
   //----------------------------------------------------------------
-  trng_collector_mixer mixer(
-                             .clk(),
-                             .reset_n(),
-                             
-                             .num_blocks(mixer_num_blocks),
-                             .init(mixer_init),
-                             .error(mixer_error),
+  trng_mixer mixer(
+                   .clk(clk),
+                   .reset_n(reset_n),
+                   
+                   .num_blocks(mixer_num_blocks),
+                   .init(mixer_init),
+                   .error(mixer_error),
                             
-                             .entropy0_syn(),
-                             .entropy0_data(),
-                             .entropy0_ack(),
-
-                             .entropy1_syn(),
-                             .entropy1_data(),
-                             .entropy1_ack(),
+                   .entropy0_syn(),
+                   .entropy0_data(),
+                   .entropy0_ack(),
+                   
+                   .entropy1_syn(),
+                   .entropy1_data(),
+                   .entropy1_ack(),
                              
-                             .seed_syn(mixer_seed_syn),
-                             .seed_data(mixer_seed_data),
-                             .seed_ack(mixer_seed_ack)
-                            );
+                   .seed_syn(mixer_seed_syn),
+                   .seed_data(mixer_seed_data),
+                   .seed_ack(mixer_seed_ack)
+                  );
   
   trng_csprng csprng(
                      .clk(clk),
                      .reset_n(reset_n),
-                     
+
+                     .debug_mode(csprng_debug_mode),
                      .num_rounds(csprng_num_rounds),
-                     .reseed(csprng_reseed),
+                     .num_rounds(csprng_num_blocks),
+                     .seed(csprng_seed),
+                     .next(csprng_next),
+                     .ready(csprng_ready),
                      .error(csprng_error),
                      
                      .seed_syn(mixer_seed_syn),
