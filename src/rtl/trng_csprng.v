@@ -82,6 +82,7 @@ module trng_csprng(
   parameter CTRL_SEED0_ACK = 3'h2;
   parameter CTRL_SEED1     = 3'h3;
   parameter CTRL_SEED1_ACK = 3'h4;
+  parameter CTRL_GENERATE  = 3'h5;
 
 
   //----------------------------------------------------------------
@@ -206,9 +207,10 @@ module trng_csprng(
   //----------------------------------------------------------------
   always @*
     begin : csprng_ctrl_fsm
-      key_we   = 0;
-      iv_we    = 0;
-      block_we = 0;
+      cipher_key_we   = 0;
+      cipher_iv_we    = 0;
+      cipher_ctr_we   = 0;
+      cipher_block_we = 0;
 
       tmp_seed_ack = 0;
 
@@ -230,7 +232,7 @@ module trng_csprng(
           begin
             if (seed_syn)
               begin
-                block_we        = 1;
+                cipher_block_we = 1;
                 csprng_ctrl_new = CTRL_SEED0_ACK;
                 csprng_ctrl_we  = 1;
               end
@@ -240,6 +242,31 @@ module trng_csprng(
           begin
             tmp_seed_ack    = 1;
             csprng_ctrl_new = CTRL_SEED1;
+            csprng_ctrl_we  = 1;
+          end
+
+        CTRL_SEED1:
+          begin
+            if (seed_syn)
+              begin
+                cipher_key_we   = 1;
+                cipher_iv_we    = 1;
+                cipher_ctr_we   = 1;
+                csprng_ctrl_new = CTRL_SEED1_ACK;
+                csprng_ctrl_we  = 1;
+              end
+          end
+
+        CTRL_SEED1_ACK:
+          begin
+            tmp_seed_ack    = 1;
+            csprng_ctrl_new = CTRL_GENERATE;
+            csprng_ctrl_we  = 1;
+          end
+
+        CTRL_GENERATE:
+          begin
+            csprng_ctrl_new = CTRL_GENERATE;
             csprng_ctrl_we  = 1;
           end
 
