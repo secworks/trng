@@ -46,18 +46,19 @@ module trng_csprng(
                    input wire [5 : 0]   num_rounds,
                    input wire [63 : 0]  num_blocks;
                    input wire           seed,
-                   input wire           generate,
-                   output               error,
+                   input wire           next,
+                   output wire          ready,
+                   output wire          error,
 
                    // Seed input
                    input wire           seed_syn,
                    input [511 : 0]      seed_data,
                    output wire          seed_ack,
 
-                   // RNG output
-                   output wire          rng_syn,
-                   output wire [31 : 0] rng_data,
-                   input wire           rng_ack
+                   // Random data output
+                   output wire          rnd_syn,
+                   output wire [31 : 0] rnd_data,
+                   input wire           rnd_ack
                   );
 
 
