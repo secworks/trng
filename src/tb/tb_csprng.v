@@ -234,6 +234,27 @@ module tb_csprng();
 
 
   //----------------------------------------------------------------
+  // tc1_test_init_cipher()
+  //
+  // TC1: Test that the DUT automatically starts initialize when
+  // enable is set.
+  //----------------------------------------------------------------
+  task tc1_test_init_cipher();
+    begin
+      $display("*** TC1: Test automatic init of cipher started");
+      tb_seed_syn   = 1;
+      tb_seed_data  = {8{64'haaaaaaaa55555555}};
+      tb_enable     = 1;
+
+      #(100 * CLK_PERIOD);
+
+      $display("*** TC1: Test automatic init of cipher started");
+
+    end
+  endtask // tc1_test_init_cipher
+
+
+  //----------------------------------------------------------------
   // csprng_test
   //
   // The main test functionality.
@@ -251,6 +272,7 @@ module tb_csprng();
       dump_dut_state();
 
       // Test code goes here.
+      tc1_test_init_cipher();
 
       display_test_results();
 
