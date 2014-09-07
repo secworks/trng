@@ -77,6 +77,7 @@ module trng_csprng(
   parameter CTRL_INIT1     = 4'h6;
   parameter CTRL_NEXT0     = 4'h7;
   parameter CTRL_NEXT1     = 4'h8;
+  parameter CTRL_CANCEL    = 4'hf;
 
 
   //----------------------------------------------------------------
@@ -315,7 +316,7 @@ module trng_csprng(
       ready_we         = 0;
       error_new        = 0;
       error_we         = 0;
-      discard_state    = 0;
+      discard_outputs  = 0;
       tmp_seed_ack     = 0;
       csprng_ctrl_new  = CTRL_IDLE;
       csprng_ctrl_we   = 0;
