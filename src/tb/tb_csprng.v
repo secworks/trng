@@ -167,7 +167,7 @@ module tb_csprng();
       $display("Cipher states:");
       $display("cipher init: 0x%01x, cipher next: 0x%01x",
                dut.chacha.init, dut.chacha.next);
-      $display("cipher ctrl: 0x%01x, qr ctr: 0x%01x, dr ctr: 0x%01x",
+      $display("cipher ctrl: 0x%01x, qr ctr: 0x%01x, dr ctr: 0x%02x",
                dut.chacha.chacha_ctrl_reg, dut.chacha.qr_ctr_reg, dut.chacha.dr_ctr_reg);
       $display("cipher ready: 0x%01x, cipher data out valud: 0x%01x",
                dut.chacha.ready, dut.chacha.data_out_valid);
@@ -257,8 +257,9 @@ module tb_csprng();
       tb_seed_syn   = 1;
       tb_seed_data  = {8{64'haaaaaaaa55555555}};
       tb_enable     = 1;
+      tb_num_rounds = 5'h04;
 
-      #(200 * CLK_PERIOD);
+      #(1000 * CLK_PERIOD);
 
       $display("*** TC1: Test automatic init of cipher done.");
 
