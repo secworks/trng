@@ -161,6 +161,13 @@ module tb_csprng();
       $display("cipher_block = 0x%064x", dut.cipher_block_reg);
       $display("csprng_ctrl  = 0x%02x", dut.csprng_ctrl_reg);
       $display("");
+      $display("Cipher states:");
+      $display("cipher init: 0x%01x, cipher next: 0x%01x",
+               dut.chacha.init, dut.chacha.next);
+      $display("cipher ready: 0x%01x, cipher data out valud: 0x%01x",
+               dut.chacha.ready, dut.chacha.data_out_valid);
+      $display("cipher data out: 0x%064x", dut.chacha.data_out);
+      $display("");
 
       $display("Outputs:");
       $display("rnd_syn = 0x%01x, rnd_ack = 0x%01x, rnd_data = 0x%08x",
@@ -241,14 +248,14 @@ module tb_csprng();
   //----------------------------------------------------------------
   task tc1_test_init_cipher();
     begin
-      $display("*** TC1: Test automatic init of cipher started");
+      $display("*** TC1: Test automatic init of cipher started.");
       tb_seed_syn   = 1;
       tb_seed_data  = {8{64'haaaaaaaa55555555}};
       tb_enable     = 1;
 
-      #(100 * CLK_PERIOD);
+      #(200 * CLK_PERIOD);
 
-      $display("*** TC1: Test automatic init of cipher started");
+      $display("*** TC1: Test automatic init of cipher done.");
 
     end
   endtask // tc1_test_init_cipher
