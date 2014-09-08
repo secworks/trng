@@ -43,7 +43,7 @@ module trng_csprng_fifo(
 
                         input wire [511 : 0] csprng_data,
                         input wire           csprng_data_valid,
-                        input wire           clear,
+                        input wire           discard,
                         output wire          more_data,
 
                         output wire          rnd_syn,
@@ -56,12 +56,20 @@ module trng_csprng_fifo(
   // Internal constant and parameter definitions.
   //----------------------------------------------------------------
   parameter FIFO_DEPTH = 64;
-  
-                             
+  parameter FIFO_MAX = FIFO_DEPTH - 1;
+
+
   //----------------------------------------------------------------
   // Registers including update variables and write enable.
   //----------------------------------------------------------------
-  reg [31 : 0] fifo_mem[0 : (FIFO_DEPTH - 1)];
+  reg [31 : 0] fifo_mem [0 : FIFO_MAX];
+  reg          fifo_mem_we;
+
+  reg [3 : 0] mux_data_ptr_reg;
+  reg [3 : 0] mux_data_ptr_new;
+  reg         mux_data_ptr_inc;
+  reg         mux_data_ptr_rst;
+  reg         mux_data_ptr_we;
 
   reg [7 : 0] wr_ptr_reg;
   reg [7 : 0] wr_ptr_new;
@@ -74,7 +82,12 @@ module trng_csprng_fifo(
   reg         rd_ptr_inc;
   reg         rd_ptr_rst;
   reg         rd_ptr_we;
-  
+
+  reg [31 : 0] rnd_data_reg;
+
+  reg          rnd_syn_reg;
+  reg          rnd_syn_new;
+
 
   //----------------------------------------------------------------
   // Wires.
@@ -84,6 +97,8 @@ module trng_csprng_fifo(
   //----------------------------------------------------------------
   // Concurrent connectivity for ports etc.
   //----------------------------------------------------------------
+  assign rnd_data = rnd_data_reg;
+  assign rnd_syn  = rnd_syn_reg;
 
 
   //----------------------------------------------------------------
@@ -93,19 +108,125 @@ module trng_csprng_fifo(
     begin
       if (!reset_n)
         begin
-
+          mux_data_ptr_reg <= 4'h0;
+          wr_ptr_reg       <= 8'h00;
+          rd_ptr_reg       <= 8'h00;
+          rnd_data_reg     <= 32'h00000000;
+          rnd_syn_reg      <= 0;
         end
       else
         begin
+          rnd_data_reg <= fifo_mem[rd_ptr_reg];
+          rnd_syn_reg  <= rnd_syn_new;
 
+          if (fifo_mem_we)
+            begin
+              fifo_mem[wr_ptr_reg] <= muxed_data;
+            end
+
+          if (mux_data_ptr_we)
+            begin
+              mux_data_ptr_reg <= mux_data_ptr_new;
+            end
+
+          if (wr_ptr_we)
+            begin
+              wr_ptr_reg <= wr_ptr_new;
+            end
+
+          if (rd_ptr_we)
+            begin
+              rd_ptr_reg <= rd_ptr_new;
+            end
         end
     end // reg_update
 
+
+  //----------------------------------------------------------------
+  // data_mux
+  //----------------------------------------------------------------
   always @*
-    begin : fifo_rd_ctr
-      
-    end
-  
+    begin : data_mux
+      case(mux_data_ptr_reg)
+        00: muxed_data = csprng_data[031 : 000];
+        01: muxed_data = csprng_data[063 : 032];
+        02: muxed_data = csprng_data[097 : 064];
+      endcase // case (mux_data_ptr_reg)
+    end // data_mux
+
+
+  //----------------------------------------------------------------
+  // fifo_rd_ptr
+  //----------------------------------------------------------------
+  always @*
+    begin : fifo_rd_ptr
+      rd_ptr_new = 8'h00;
+      rd_ptr_we  = 0;
+
+      if (rd_ptr_rst)
+        begin
+          rd_ptr_new = 8'h00;
+          rd_ptr_we  = 1;
+        end
+
+      if (rd_ptr_inc)
+        begin
+          if (rd_ptr_reg == FIFO_MAX)
+            begin
+              rd_ptr_new = 8'h00;
+              rd_ptr_we  = 1;
+            end
+          else
+            begin
+              rd_ptr_new = rd_ptr_reg + 1'b1
+              rd_ptr_we  = 1;
+            end
+        end
+    end // fifo_rd_ptr
+
+
+  //----------------------------------------------------------------
+  // fifo_wr_ptr
+  //----------------------------------------------------------------
+  always @*
+    begin : fifo_wr_ptr
+      wr_ptr_new = 8'h00;
+      wr_ptr_we  = 0;
+
+      if (wr_ptr_rst)
+        begin
+          wr_ptr_new = 8'h00;
+          wr_ptr_we  = 1;
+        end
+
+      if (wr_ptr_inc)
+        begin
+          if (wrd_ptr_reg == FIFO_MAX)
+            begin
+              wr_ptr_new = 8'h00;
+              wr_ptr_we  = 1;
+            end
+          else
+            begin
+              wr_ptr_new = wr_ptr_reg + 1'b1
+              wr_ptr_we  = 1;
+            end
+        end
+    end // fifo_wr_ptr
+
+
+  //----------------------------------------------------------------
+  //----------------------------------------------------------------
+  always @*
+    begin : rd_ctrl
+    end // rd_ctrl
+
+
+  //----------------------------------------------------------------
+  //----------------------------------------------------------------
+  always @*
+    begin : wr_ctrl
+    end // wr_ctrl
 endmodule // trng_csprng_fifo
 
 //======================================================================
