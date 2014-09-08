@@ -318,6 +318,10 @@ module trng_csprng(
       error_we         = 0;
       discard_outputs  = 0;
       tmp_seed_ack     = 0;
+      rnd_data_new     = 0;
+      rnd_data_we      = 0;
+      rnd_syn_new      = 0;
+      rnd_syn_we       = 0;
       csprng_ctrl_new  = CTRL_IDLE;
       csprng_ctrl_we   = 0;
 
@@ -436,7 +440,29 @@ module trng_csprng(
               end
             else
               begin
-                // We stay here for now.
+                rnd_syn_new     = 0;
+                rnd_syn_we      = 1;
+                cipher_next     = 1;
+                csprng_ctrl_new = CTRL_NEXT1;
+                csprng_ctrl_we  = 1;
+              end
+          end
+
+        CTRL_NEXT1:
+          begin
+            if ((!enable) || (seed))
+              begin
+                csprng_ctrl_new = CTRL_CANCEL;
+                csprng_ctrl_we  = 1;
+              end
+            else if (cipher_ready)
+              begin
+                rnd_syn_new     = 1;
+                rnd_syn_we      = 1;
+                rnd_data_new    = cipher_data_out[31 : 0];
+                rnd_data_we     = 1;
+                csprng_ctrl_new = CTRL_NEXT0;
+                csprng_ctrl_we  = 1;
               end
           end
 
