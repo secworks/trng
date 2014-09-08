@@ -126,7 +126,9 @@ module tb_csprng();
   always
     begin : sys_monitor
       cycle_ctr = cycle_ctr + 1;
+
       #(CLK_PERIOD);
+
       if (DEBUG)
         begin
           dump_dut_state();
@@ -141,6 +143,7 @@ module tb_csprng();
   //----------------------------------------------------------------
   task dump_dut_state();
     begin
+      $display("cycle: 0x%016x", cycle_ctr);
       $display("State of DUT");
       $display("------------");
       $display("Inputs:");
@@ -164,6 +167,8 @@ module tb_csprng();
       $display("Cipher states:");
       $display("cipher init: 0x%01x, cipher next: 0x%01x",
                dut.chacha.init, dut.chacha.next);
+      $display("cipher ctrl: 0x%01x, qr ctr: 0x%01x, dr ctr: 0x%01x",
+               dut.chacha.chacha_ctrl_reg, dut.chacha.qr_ctr_reg, dut.chacha.dr_ctr_reg);
       $display("cipher ready: 0x%01x, cipher data out valud: 0x%01x",
                dut.chacha.ready, dut.chacha.data_out_valid);
       $display("cipher data out: 0x%064x", dut.chacha.data_out);
