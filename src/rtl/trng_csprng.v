@@ -333,7 +333,7 @@ module trng_csprng(
 
         CTRL_SEED0:
           begin
-            if (!enable)
+            if ((!enable) || (seed))
               begin
                 csprng_ctrl_new = CTRL_CANCEL;
                 csprng_ctrl_we  = 1;
@@ -349,7 +349,7 @@ module trng_csprng(
 
         CTRL_SEED0_ACK:
           begin
-            if (!enable)
+            if ((!enable) || (seed))
               begin
                 csprng_ctrl_new = CTRL_CANCEL;
                 csprng_ctrl_we  = 1;
@@ -364,7 +364,7 @@ module trng_csprng(
 
         CTRL_SEED1:
           begin
-            if (!enable)
+            if ((!enable) || (seed))
               begin
                 csprng_ctrl_new = CTRL_CANCEL;
                 csprng_ctrl_we  = 1;
@@ -384,7 +384,7 @@ module trng_csprng(
 
         CTRL_SEED1_ACK:
           begin
-            if (!enable)
+            if ((!enable) || (seed))
               begin
                 csprng_ctrl_new = CTRL_CANCEL;
                 csprng_ctrl_we  = 1;
@@ -399,7 +399,7 @@ module trng_csprng(
 
         CTRL_INIT0:
           begin
-            if (!enable)
+            if ((!enable) || (seed))
               begin
                 csprng_ctrl_new = CTRL_CANCEL;
                 csprng_ctrl_we  = 1;
@@ -415,7 +415,7 @@ module trng_csprng(
 
         CTRL_INIT1:
           begin
-            if (!enable)
+            if ((!enable) || (seed))
               begin
                 csprng_ctrl_new = CTRL_CANCEL;
                 csprng_ctrl_we  = 1;
@@ -429,7 +429,7 @@ module trng_csprng(
 
         CTRL_NEXT0:
           begin
-            if (!enable)
+            if ((!enable) || (seed))
               begin
                 csprng_ctrl_new = CTRL_CANCEL;
                 csprng_ctrl_we  = 1;
