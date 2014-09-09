@@ -100,6 +100,7 @@ module trng_csprng_fifo(
   //----------------------------------------------------------------
   // Wires.
   //----------------------------------------------------------------
+  reg [31 : 0] muxed_data;
 
 
   //----------------------------------------------------------------
@@ -244,7 +245,7 @@ module trng_csprng_fifo(
 
       if (wr_ptr_inc)
         begin
-          if (wrd_ptr_reg == FIFO_MAX)
+          if (wr_ptr_reg == FIFO_MAX)
             begin
               wr_ptr_new = 8'h00;
               wr_ptr_we  = 1;
