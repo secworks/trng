@@ -59,7 +59,8 @@ module trng_csprng_fifo(
   parameter FIFO_MAX = FIFO_DEPTH - 1;
 
   parameter WR_IDLE    = 0;
-  parameter WR_MORE    = 1;
+  parameter WR_WAIT    = 1;
+  parameter WR_WRITE   = 2;
   parameter WR_DISCARD = 7;
 
   parameter RD_IDLE    = 0;
@@ -104,6 +105,19 @@ module trng_csprng_fifo(
   reg [2 : 0]  rd_ctrl_new;
   reg          rd_ctrl_we;
 
+  reg [5 : 0]  fifo_ctr_reg;
+  reg [5 : 0]  fifo_ctr_new;
+  reg          fifo_ctr_inc;
+  reg          fifo_ctr_dec;
+  reg          fifo_ctr_rst;
+  reg          fifo_ctr_we;
+  reg          fifo_empty;
+  reg          fifo_full;
+
+  reg          more_data_reg;
+  reg          more_data_new;
+  reg          more_data_we;
+
 
   //----------------------------------------------------------------
   // Wires.
@@ -116,6 +130,7 @@ module trng_csprng_fifo(
   //----------------------------------------------------------------
   assign rnd_data = rnd_data_reg;
   assign rnd_syn  = rnd_syn_reg;
+  assign more_data = more_data_reg;
 
 
   //----------------------------------------------------------------
@@ -128,8 +143,10 @@ module trng_csprng_fifo(
           mux_data_ptr_reg <= 4'h0;
           wr_ptr_reg       <= 8'h00;
           rd_ptr_reg       <= 8'h00;
+          fifo_ctr_reg     <= 6'h00;
           rnd_data_reg     <= 32'h00000000;
           rnd_syn_reg      <= 0;
+          more_data_reg    <= 0;
           wr_ctrl_reg      <= 3'h0;
           rd_ctrl_reg      <= 3'h0;
         end
@@ -156,6 +173,16 @@ module trng_csprng_fifo(
           if (rd_ptr_we)
             begin
               rd_ptr_reg <= rd_ptr_new;
+            end
+
+          if (fifo_ctr_we)
+            begin
+              fifo_ctr_reg <= fifo_ctr_new;
+            end
+
+          if (more_data_we)
+            begin
+              more_data_reg <= more_data_new;
             end
 
           if (wr_ctrl_we)
@@ -280,6 +307,47 @@ module trng_csprng_fifo(
 
 
   //----------------------------------------------------------------
+  // fifo_ctr
+  //
+  // fifo counter tracks the number of elements and provides
+  // signals for full and empty fifo.
+  //----------------------------------------------------------------
+  always @*
+    begin : fifo_ctr
+      fifo_empty = 0;
+      fifo_full = 0;
+      fifo_ctr_new = 6'h00;
+      fifo_ctr_we  = 0;
+
+      if (fifo_ctr_reg == 6'h3f)
+        begin
+          fifo_full = 1;
+        end
+
+      if (fifo_ctr_reg == 6'h0f)
+        begin
+          fifo_empty = 1;
+        end
+
+      if (fifo_ctr_inc)
+        begin
+          fifo_ctr_new = fifo_ctr_reg + 1'b1;
+        end
+
+      if (fifo_ctr_dec)
+        begin
+          fifo_ctr_new = fifo_ctr_reg - 1'b1;
+        end
+
+      if (fifo_ctr_rst)
+        begin
+          fifo_ctr_new = 6'h00;
+          fifo_ctr_we  = 1;
+        end
+    end // fifo_ctr
+
+
+  //----------------------------------------------------------------
   // rd_ctrl
   //----------------------------------------------------------------
   always @*
@@ -300,12 +368,77 @@ module trng_csprng_fifo(
   //----------------------------------------------------------------
   always @*
     begin : wr_ctrl
+      more_data_new    = 0;
+      more_data_we     = 0;
+      mux_data_ptr_rst = 0;
+      mux_data_ptr_inc = 0;
+      wr_ptr_inc       = 0;
+      wr_ptr_rst       = 0;
+      fifo_mem_we      = 0;
+      fifo_ctr_inc     = 0;
+      fifo_ctr_rst     = 0;
+      wr_ctrl_new      = WR_IDLE;
+      wr_ctrl_we       = 0;
 
       case (wr_ctrl_reg)
         WR_IDLE:
           begin
+            more_data_new = 1;
+            more_data_we  = 1;
+            wr_ctrl_new   = WR_WAIT;
+            wr_ctrl_we    = 1;
           end
 
+        WR_WAIT:
+          begin
+            if (discard)
+              begin
+                wr_ctrl_new      = WR_DISCARD;
+                wr_ctrl_we       = 1;
+              end
+            else if (csprng_data_valid)
+              begin
+                more_data_new    = 0;
+                more_data_we     = 1;
+                mux_data_ptr_rst = 1;
+                wr_ctrl_new      = WR_WRITE;
+                wr_ctrl_we       = 1;
+              end
+          end
+
+        WR_WRITE:
+          begin
+            if (discard)
+              begin
+                wr_ctrl_new      = WR_DISCARD;
+                wr_ctrl_we       = 1;
+              end
+
+            else if (!fifo_full)
+              begin
+                fifo_mem_we      = 1;
+                wr_ptr_inc       = 1;
+                mux_data_ptr_inc = 1;
+                fifo_ctr_inc     = 1;
+
+                if (mux_data_ptr_new == 4'h0)
+                  begin
+                    wr_ctrl_new = WR_IDLE;
+                    wr_ctrl_we  = 1;
+                  end
+              end
+          end
+
+        WR_DISCARD:
+          begin
+            fifo_ctr_rst     = 1;
+            more_data_new    = 0;
+            more_data_we     = 1;
+            mux_data_ptr_rst = 1;
+            wr_ptr_rst       = 1;
+            wr_ctrl_new      = WR_IDLE;
+            wr_ctrl_we       = 1;
+          end
       endcase // case (wr_ctrl_reg)
 
     end // wr_ctrl
