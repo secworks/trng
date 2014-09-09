@@ -96,6 +96,7 @@ module trng_csprng_fifo(
 
   reg          rnd_syn_reg;
   reg          rnd_syn_new;
+  reg          rnd_syn_we;
 
   reg [2 : 0]  wr_ctrl_reg;
   reg [2 : 0]  wr_ctrl_new;
@@ -153,7 +154,11 @@ module trng_csprng_fifo(
       else
         begin
           rnd_data_reg <= fifo_mem[rd_ptr_reg];
-          rnd_syn_reg  <= rnd_syn_new;
+
+          if (rd_syn_we)
+            begin
+              rnd_syn_reg  <= rnd_syn_new;
+            end
 
           if (fifo_mem_we)
             begin
@@ -352,10 +357,61 @@ module trng_csprng_fifo(
   //----------------------------------------------------------------
   always @*
     begin : rd_ctrl
+      rd_syn_new  = 0;
+      rd_syn_we   = 0;
+      rd_ptr_inc  = 0;
+      rd_ptr_rst  = 0;
+      rd_ctrl_new = RD_IDLE;
+      rd_ctrl_we  = 0;
 
       case (rd_ctrl_reg)
         RD_IDLE:
           begin
+            if (discard)
+              begin
+                rd_ctrl_new = RD_DISCARD;
+                rd_ctrl_we  = 1;
+              end
+            else
+              begin
+                if (!fifo_empty)
+                  begin
+                    rd_syn_new  = 1;
+                    rd_syn_we   = 1;
+                    rd_ctrl_new = RD_ACK;
+                    rd_ctrl_we  = 1;
+                  end
+              end
+          end
+
+        RD_ACK:
+          begin
+            if (discard)
+              begin
+                rd_ctrl_new = RD_DISCARD;
+                rd_ctrl_we  = 1;
+              end
+            else
+              begin
+                if (rnd_ack)
+                  begin
+                    rd_ptr_inc = 1;
+                    rd_syn_new = 0;
+                    rd_syn_we  = 1;
+                    rd_ctrl_new = RD_IDLE;
+                    rd_ctrl_we  = 1;
+                  end
+              end
+          end
+
+        RD_DISCARD:
+          begin
+            rd_syn_new  = 0;
+            rd_syn_we   = 1;
+            rd_ptr_rst  = 1;
+            rd_ctrl_new = RD_IDLE;
+            rd_ctrl_we  = 1;
+
           end
 
       endcase // case (rd_ctrl_reg)
@@ -383,10 +439,18 @@ module trng_csprng_fifo(
       case (wr_ctrl_reg)
         WR_IDLE:
           begin
-            more_data_new = 1;
-            more_data_we  = 1;
-            wr_ctrl_new   = WR_WAIT;
-            wr_ctrl_we    = 1;
+            if (discard)
+              begin
+                wr_ctrl_new = WR_DISCARD;
+                wr_ctrl_we  = 1;
+              end
+            else
+              begin
+                more_data_new = 1;
+                more_data_we  = 1;
+                wr_ctrl_new   = WR_WAIT;
+                wr_ctrl_we    = 1;
+              end
           end
 
         WR_WAIT:
