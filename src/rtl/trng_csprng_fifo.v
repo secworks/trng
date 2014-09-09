@@ -221,7 +221,7 @@ module trng_csprng_fifo(
             end
           else
             begin
-              rd_ptr_new = rd_ptr_reg + 1'b1
+              rd_ptr_new = rd_ptr_reg + 1'b1;
               rd_ptr_we  = 1;
             end
         end
@@ -251,7 +251,7 @@ module trng_csprng_fifo(
             end
           else
             begin
-              wr_ptr_new = wr_ptr_reg + 1'b1
+              wr_ptr_new = wr_ptr_reg + 1'b1;
               wr_ptr_we  = 1;
             end
         end
@@ -259,17 +259,22 @@ module trng_csprng_fifo(
 
 
   //----------------------------------------------------------------
+  // rd_ctrl
   //----------------------------------------------------------------
   always @*
     begin : rd_ctrl
+
     end // rd_ctrl
 
 
   //----------------------------------------------------------------
+  // wr_ctrl
   //----------------------------------------------------------------
   always @*
     begin : wr_ctrl
+
     end // wr_ctrl
+
 endmodule // trng_csprng_fifo
 
 //======================================================================
