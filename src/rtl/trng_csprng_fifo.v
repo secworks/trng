@@ -58,6 +58,14 @@ module trng_csprng_fifo(
   parameter FIFO_DEPTH = 64;
   parameter FIFO_MAX = FIFO_DEPTH - 1;
 
+  parameter WR_IDLE    = 0;
+  parameter WR_MORE    = 1;
+  parameter WR_DISCARD = 7;
+
+  parameter RD_IDLE    = 0;
+  parameter RD_MORE    = 1;
+  parameter RD_DISCARD = 7;
+
 
   //----------------------------------------------------------------
   // Registers including update variables and write enable.
@@ -88,12 +96,12 @@ module trng_csprng_fifo(
   reg          rnd_syn_reg;
   reg          rnd_syn_new;
 
-  reg [1 : 0]  wr_ctrl_reg;
-  reg [1 : 0]  wr_ctrl_new;
+  reg [2 : 0]  wr_ctrl_reg;
+  reg [2 : 0]  wr_ctrl_new;
   reg          wr_ctrl_we;
 
-  reg [1 : 0]  rd_ctrl_reg;
-  reg [1 : 0]  rd_ctrl_new;
+  reg [2 : 0]  rd_ctrl_reg;
+  reg [2 : 0]  rd_ctrl_new;
   reg          rd_ctrl_we;
 
 
@@ -122,6 +130,8 @@ module trng_csprng_fifo(
           rd_ptr_reg       <= 8'h00;
           rnd_data_reg     <= 32'h00000000;
           rnd_syn_reg      <= 0;
+          wr_ctrl_reg      <= 3'h0;
+          rd_ctrl_reg      <= 3'h0;
         end
       else
         begin
@@ -146,6 +156,16 @@ module trng_csprng_fifo(
           if (rd_ptr_we)
             begin
               rd_ptr_reg <= rd_ptr_new;
+            end
+
+          if (wr_ctrl_we)
+            begin
+              wr_ctrl_reg <= wr_ctrl_new;
+            end
+
+          if (rd_ctrl_we)
+            begin
+              rd_ctrl_reg <= rd_ctrl_new;
             end
         end
     end // reg_update
@@ -265,6 +285,13 @@ module trng_csprng_fifo(
   always @*
     begin : rd_ctrl
 
+      case (rd_ctrl_reg)
+        RD_IDLE:
+          begin
+          end
+
+      endcase // case (rd_ctrl_reg)
+
     end // rd_ctrl
 
 
@@ -273,6 +300,13 @@ module trng_csprng_fifo(
   //----------------------------------------------------------------
   always @*
     begin : wr_ctrl
+
+      case (wr_ctrl_reg)
+        WR_IDLE:
+          begin
+          end
+
+      endcase // case (wr_ctrl_reg)
 
     end // wr_ctrl
 
