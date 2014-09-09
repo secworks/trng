@@ -88,6 +88,14 @@ module trng_csprng_fifo(
   reg          rnd_syn_reg;
   reg          rnd_syn_new;
 
+  reg [1 : 0]  wr_ctrl_reg;
+  reg [1 : 0]  wr_ctrl_new;
+  reg          wr_ctrl_we;
+
+  reg [1 : 0]  rd_ctrl_reg;
+  reg [1 : 0]  rd_ctrl_new;
+  reg          rd_ctrl_we;
+
 
   //----------------------------------------------------------------
   // Wires.
@@ -150,9 +158,44 @@ module trng_csprng_fifo(
       case(mux_data_ptr_reg)
         00: muxed_data = csprng_data[031 : 000];
         01: muxed_data = csprng_data[063 : 032];
-        02: muxed_data = csprng_data[097 : 064];
+        02: muxed_data = csprng_data[095 : 064];
+        03: muxed_data = csprng_data[127 : 096];
+        04: muxed_data = csprng_data[159 : 128];
+        05: muxed_data = csprng_data[191 : 160];
+        06: muxed_data = csprng_data[223 : 192];
+        07: muxed_data = csprng_data[255 : 224];
+        08: muxed_data = csprng_data[287 : 256];
+        09: muxed_data = csprng_data[313 : 282];
+        10: muxed_data = csprng_data[351 : 320];
+        11: muxed_data = csprng_data[383 : 351];
+        12: muxed_data = csprng_data[415 : 384];
+        13: muxed_data = csprng_data[447 : 416];
+        14: muxed_data = csprng_data[479 : 448];
+        15: muxed_data = csprng_data[511 : 480];
       endcase // case (mux_data_ptr_reg)
     end // data_mux
+
+
+  //----------------------------------------------------------------
+  // mux_data_ptr
+  //----------------------------------------------------------------
+  always @*
+    begin : mux_data_ptr
+      mux_data_ptr_new = 4'h0;
+      mux_data_ptr_we  = 0;
+
+      if (mux_data_ptr_rst)
+        begin
+          mux_data_ptr_new = 4'h0;
+          mux_data_ptr_we  = 1;
+        end
+
+      if (mux_data_ptr_inc)
+        begin
+          mux_data_ptr_new = mux_data_ptr_reg + 1'b1;
+          mux_data_ptr_we  = 1;
+        end
+    end // mux_data_ptr
 
 
   //----------------------------------------------------------------
