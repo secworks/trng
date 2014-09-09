@@ -37,7 +37,7 @@
 #===================================================================
 
 CHACHA_SRC=../../chacha/src/rtl/chacha_core.v ../../chacha/src/rtl/chacha_qr.v
-CSPRNG_SRC=../src/rtl/trng_csprng.v
+CSPRNG_SRC=../src/rtl/trng_csprng.v ../src/rtl/trng_csprng_fifo.v
 TB_CSPRNG_SRC=../src/tb/tb_csprng.v
 
 CC=iverilog
