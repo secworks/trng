@@ -162,7 +162,7 @@ module trng_csprng(
   //----------------------------------------------------------------
   // core instantiation.
   //----------------------------------------------------------------
-  chacha_core chacha(
+  chacha_core cipher(
                      .clk(clk),
                      .reset_n(reset_n),
 
@@ -183,6 +183,21 @@ module trng_csprng(
                     );
 
 
+  trng_csprng_fifo fifo(
+                        .clk(clk),
+                        .reset_n(reset_n),
+
+                        .csprng_data(),
+                        .csprng_data_valid(),
+                        .discard(),
+                        .more_data(),
+
+                        .rnd_syn(),
+                        .rnd_data(),
+                        .rnd_ack()
+                       );
+
+  
   //----------------------------------------------------------------
   // reg_update
   //

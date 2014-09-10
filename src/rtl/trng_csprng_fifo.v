@@ -48,7 +48,7 @@ module trng_csprng_fifo(
 
                         output wire          rnd_syn,
                         output wire [31 : 0] rnd_data,
-                        output wire          rnd_ack
+                        input wire           rnd_ack
                        );
 
 
