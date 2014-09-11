@@ -40,22 +40,35 @@ CHACHA_SRC=../../chacha/src/rtl/chacha_core.v ../../chacha/src/rtl/chacha_qr.v
 CSPRNG_SRC=../src/rtl/trng_csprng.v ../src/rtl/trng_csprng_fifo.v
 TB_CSPRNG_SRC=../src/tb/tb_csprng.v
 
+SHA512_SRC=../../sha512/src/rtl/sha512_core.v ../../sha512/src/rtl/sha512_h_constants.v  ../../sha512/src/rtl/sha512_k_constants.v  ../../sha512/src/rtl/sha512_w_mem.v
+MIXER_SRC=../src/rtl/trng_mixer.v
+TB_MIXER_SRC=../src/tb/tb_mixer.v
+
 CC=iverilog
 
 
-all: csprng.sim
+all: mixer.sim csprng.sim
 
 
 csprng.sim: $(TB_CSPRNG_SRC) $(CSPRNG_SRC) $(CHACHA_SRC)
 	$(CC) -o csprng.sim $(TB_CSPRNG_SRC) $(CSPRNG_SRC) $(CHACHA_SRC)
 
 
+mixer.sim: $(TB_MIXER_SRC) $(MIXER_SRC) $(SHA512_SRC)
+	$(CC) -o mixer.sim $(TB_MIXER_SRC) $(MIXER_SRC) $(SHA512_SRC)
+
+
 sim-csprng: csprng.sim
 	./csprng.sim
 
 
+sim-mixer: mixer.sim
+	./mixer.sim
+
+
 clean:
 	rm -f csprng.sim
+	rm -f mixer.sim
 
 
 help:
@@ -65,7 +78,9 @@ help:
 	@echo "------------------"
 	@echo "all:         Build all simulation targets."
 	@echo "csprng.sim:  Build the csprng simulation target."
+	@echo "mixer.sim:   Build the mixer simulation target."
 	@echo "sim-csprng:  Run cprng simulation."
+	@echo "sim-mixer:   Run mixer simulation."
 	@echo "clean:       Delete all built files."
 
 #===================================================================
