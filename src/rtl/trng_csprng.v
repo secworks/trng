@@ -106,18 +106,6 @@ module trng_csprng(
   reg           block_ctr_we;
   reg           block_ctr_max;
 
-  reg           rnd_syn_reg;
-  reg           rnd_syn_new;
-  reg           rnd_syn_we;
-
-  reg [31 : 0]  rnd_data_reg;
-  reg [31 : 0]  rnd_data_new;
-  reg           rnd_data_we;
-
-  reg           ready_reg;
-  reg           ready_new;
-  reg           ready_we;
-
   reg           error_reg;
   reg           error_new;
   reg           error_we;
@@ -125,6 +113,10 @@ module trng_csprng(
   reg [3 : 0]   csprng_ctrl_reg;
   reg [3 : 0]   csprng_ctrl_new;
   reg           csprng_ctrl_we;
+
+  reg           ready_reg;
+  reg           ready_new;
+  reg           ready_we;
 
 
   //----------------------------------------------------------------
@@ -143,6 +135,11 @@ module trng_csprng(
 
   reg            discard_outputs;
 
+  wire           fifo_more_data;
+  reg            fifo_discard;
+  wire           fifo_rnd_syn;
+  wire [31 : 0]  fifo_rnd_data;
+
 
   //----------------------------------------------------------------
   // Concurrent connectivity for ports etc.
@@ -155,8 +152,8 @@ module trng_csprng(
   assign ready     = ready_reg;
   assign error     = error_reg;
 
-  assign rnd_syn   = rnd_syn_reg;
-  assign rnd_data  = rnd_data_reg;
+  assign rnd_syn   = fifo_rnd_syn;
+  assign rnd_data  = fifo_rnd_data;
 
 
   //----------------------------------------------------------------
@@ -187,17 +184,17 @@ module trng_csprng(
                         .clk(clk),
                         .reset_n(reset_n),
 
-                        .csprng_data(),
-                        .csprng_data_valid(),
-                        .discard(),
-                        .more_data(),
+                        .csprng_data(cipher_data_out),
+                        .csprng_data_valid(cipher_data_out_valid),
+                        .discard(fifo_discard),
+                        .more_data(fifo_more_data),
 
-                        .rnd_syn(),
-                        .rnd_data(),
-                        .rnd_ack()
+                        .rnd_syn(fifo_rnd_syn),
+                        .rnd_data(fifo_rnd_data),
+                        .rnd_ack(rnd_ack)
                        );
 
-  
+
   //----------------------------------------------------------------
   // reg_update
   //
@@ -216,8 +213,6 @@ module trng_csprng(
           block_ctr_reg    <= {2{32'h00000000}};
           ready_reg        <= 0;
           error_reg        <= 0;
-          rnd_syn_reg      <= 0;
-          rnd_data_reg     <= 32'h00000000;
           csprng_ctrl_reg  <= CTRL_IDLE;
         end
       else
@@ -255,16 +250,6 @@ module trng_csprng(
           if (error_we)
             begin
               error_reg <= error_new;
-            end
-
-          if (rnd_syn_we)
-            begin
-              rnd_syn_reg <= rnd_syn_new;
-            end
-
-          if (rnd_data_we)
-            begin
-              rnd_data_reg <= rnd_data_new;
             end
 
           if (csprng_ctrl_we)
@@ -333,10 +318,6 @@ module trng_csprng(
       error_we         = 0;
       discard_outputs  = 0;
       tmp_seed_ack     = 0;
-      rnd_data_new     = 0;
-      rnd_data_we      = 0;
-      rnd_syn_new      = 0;
-      rnd_syn_we       = 0;
       csprng_ctrl_new  = CTRL_IDLE;
       csprng_ctrl_we   = 0;
 
@@ -455,8 +436,6 @@ module trng_csprng(
               end
             else
               begin
-                rnd_syn_new     = 0;
-                rnd_syn_we      = 1;
                 cipher_next     = 1;
                 csprng_ctrl_new = CTRL_NEXT1;
                 csprng_ctrl_we  = 1;
@@ -472,10 +451,6 @@ module trng_csprng(
               end
             else if (cipher_ready)
               begin
-                rnd_syn_new     = 1;
-                rnd_syn_we      = 1;
-                rnd_data_new    = cipher_data_out[31 : 0];
-                rnd_data_we     = 1;
                 csprng_ctrl_new = CTRL_NEXT0;
                 csprng_ctrl_we  = 1;
               end

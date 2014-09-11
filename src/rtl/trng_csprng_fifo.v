@@ -64,7 +64,7 @@ module trng_csprng_fifo(
   parameter WR_DISCARD = 7;
 
   parameter RD_IDLE    = 0;
-  parameter RD_MORE    = 1;
+  parameter RD_ACK     = 1;
   parameter RD_DISCARD = 7;
 
 
@@ -155,7 +155,7 @@ module trng_csprng_fifo(
         begin
           rnd_data_reg <= fifo_mem[rd_ptr_reg];
 
-          if (rd_syn_we)
+          if (rnd_syn_we)
             begin
               rnd_syn_reg  <= rnd_syn_new;
             end
@@ -357,8 +357,8 @@ module trng_csprng_fifo(
   //----------------------------------------------------------------
   always @*
     begin : rd_ctrl
-      rd_syn_new  = 0;
-      rd_syn_we   = 0;
+      rnd_syn_new = 0;
+      rnd_syn_we  = 0;
       rd_ptr_inc  = 0;
       rd_ptr_rst  = 0;
       rd_ctrl_new = RD_IDLE;
@@ -376,8 +376,8 @@ module trng_csprng_fifo(
               begin
                 if (!fifo_empty)
                   begin
-                    rd_syn_new  = 1;
-                    rd_syn_we   = 1;
+                    rnd_syn_new = 1;
+                    rnd_syn_we  = 1;
                     rd_ctrl_new = RD_ACK;
                     rd_ctrl_we  = 1;
                   end
@@ -395,9 +395,9 @@ module trng_csprng_fifo(
               begin
                 if (rnd_ack)
                   begin
-                    rd_ptr_inc = 1;
-                    rd_syn_new = 0;
-                    rd_syn_we  = 1;
+                    rd_ptr_inc  = 1;
+                    rnd_syn_new = 0;
+                    rnd_syn_we  = 1;
                     rd_ctrl_new = RD_IDLE;
                     rd_ctrl_we  = 1;
                   end
@@ -406,8 +406,8 @@ module trng_csprng_fifo(
 
         RD_DISCARD:
           begin
-            rd_syn_new  = 0;
-            rd_syn_we   = 1;
+            rnd_syn_new = 0;
+            rnd_syn_we  = 1;
             rd_ptr_rst  = 1;
             rd_ctrl_new = RD_IDLE;
             rd_ctrl_we  = 1;

@@ -166,12 +166,12 @@ module tb_csprng();
       $display("");
       $display("Cipher states:");
       $display("cipher init: 0x%01x, cipher next: 0x%01x",
-               dut.chacha.init, dut.chacha.next);
+               dut.cipher.init, dut.cipher.next);
       $display("cipher ctrl: 0x%01x, qr ctr: 0x%01x, dr ctr: 0x%02x",
-               dut.chacha.chacha_ctrl_reg, dut.chacha.qr_ctr_reg, dut.chacha.dr_ctr_reg);
+               dut.cipher.chacha_ctrl_reg, dut.cipher.qr_ctr_reg, dut.cipher.dr_ctr_reg);
       $display("cipher ready: 0x%01x, cipher data out valud: 0x%01x",
-               dut.chacha.ready, dut.chacha.data_out_valid);
-      $display("cipher data out: 0x%064x", dut.chacha.data_out);
+               dut.cipher.ready, dut.cipher.data_out_valid);
+      $display("cipher data out: 0x%064x", dut.cipher.data_out);
       $display("");
 
       $display("Outputs:");
