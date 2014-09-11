@@ -47,6 +47,7 @@ module trng_csprng(
                    input wire [63 : 0]  num_blocks,
                    input wire           seed,
                    input wire           enable,
+                   output wire          more_seed,
                    output wire          ready,
                    output wire          error,
 
@@ -70,14 +71,12 @@ module trng_csprng(
 
   parameter CTRL_IDLE      = 4'h0;
   parameter CTRL_SEED0     = 4'h1;
-  parameter CTRL_SEED0_ACK = 4'h2;
-  parameter CTRL_SEED1     = 4'h3;
-  parameter CTRL_SEED1_ACK = 4'h4;
-  parameter CTRL_INIT0     = 4'h5;
-  parameter CTRL_INIT1     = 4'h6;
-  parameter CTRL_NEXT0     = 4'h7;
-  parameter CTRL_NEXT1     = 4'h8;
-  parameter CTRL_CANCEL    = 4'hf;
+  parameter CTRL_SEED1     = 4'h2;
+  parameter CTRL_INIT0     = 4'h3;
+  parameter CTRL_INIT1     = 4'h4;
+  parameter CTRL_NEXT0     = 4'h5;
+  parameter CTRL_NEXT1     = 4'h6;
+  parameter CTRL_CANCEL    = 4'h7;
 
 
   //----------------------------------------------------------------
@@ -118,6 +117,12 @@ module trng_csprng(
   reg           ready_new;
   reg           ready_we;
 
+  reg           more_seed_reg;
+  reg           more_seed_new;
+
+  reg           seed_ack_reg;
+  reg           seed_ack_new;
+
 
   //----------------------------------------------------------------
   // Wires.
@@ -147,7 +152,8 @@ module trng_csprng(
   assign read_data = tmp_read_data;
   assign error     = tmp_error;
 
-  assign seed_ack  = tmp_seed_ack;
+  assign seed_ack  = seed_ack_reg;
+  assign more_seed = more_seed_reg;
 
   assign ready     = ready_reg;
   assign error     = error_reg;
@@ -211,12 +217,17 @@ module trng_csprng(
           cipher_ctr_reg   <= {2{32'h00000000}};
           cipher_block_reg <= {16{32'h00000000}};
           block_ctr_reg    <= {2{32'h00000000}};
+          more_seed_reg    <= 0;
+          seed_ack_reg     <= 0;
           ready_reg        <= 0;
           error_reg        <= 0;
           csprng_ctrl_reg  <= CTRL_IDLE;
         end
       else
         begin
+          more_seed_reg <= more_seed_new;
+          seed_ack_reg  <= seed_ack_new;
+
           if (cipher_key_we)
             begin
               cipher_key_reg <= cipher_key_new;
@@ -317,15 +328,22 @@ module trng_csprng(
       error_new        = 0;
       error_we         = 0;
       discard_outputs  = 0;
-      tmp_seed_ack     = 0;
+      seed_ack_new     = 0;
+      more_seed_new    = 0;
       csprng_ctrl_new  = CTRL_IDLE;
       csprng_ctrl_we   = 0;
 
       case (csprng_ctrl_reg)
         CTRL_IDLE:
           begin
-            if (enable)
+            if (!enable)
               begin
+                csprng_ctrl_new = CTRL_CANCEL;
+                csprng_ctrl_we  = 1;
+              end
+            else if (fifo_more_data)
+              begin
+                more_seed_new   = 1;
                 csprng_ctrl_new = CTRL_SEED0;
                 csprng_ctrl_we  = 1;
               end
@@ -340,25 +358,12 @@ module trng_csprng(
               end
             else if (seed_syn)
               begin
+                more_seed_new    = 1;
+                seed_ack_new     = 1;
                 cipher_block_new = seed_data;
                 cipher_block_we  = 1;
-                csprng_ctrl_new  = CTRL_SEED0_ACK;
+                csprng_ctrl_new  = CTRL_SEED1;
                 csprng_ctrl_we   = 1;
-              end
-          end
-
-        CTRL_SEED0_ACK:
-          begin
-            if ((!enable) || (seed))
-              begin
-                csprng_ctrl_new = CTRL_CANCEL;
-                csprng_ctrl_we  = 1;
-              end
-            else
-              begin
-                tmp_seed_ack    = 1;
-                csprng_ctrl_new = CTRL_SEED1;
-                csprng_ctrl_we  = 1;
               end
           end
 
@@ -371,29 +376,18 @@ module trng_csprng(
               end
             else if (seed_syn)
               begin
+                seed_ack_new    = 1;
                 cipher_key_new  = seed_data[255 : 0];
                 cipher_key_we   = 1;
                 cipher_iv_new   = seed_data[319 : 256];
                 cipher_iv_we    = 1;
                 cipher_ctr_new  = seed_data[383 : 320];
                 cipher_ctr_we   = 1;
-                csprng_ctrl_new = CTRL_SEED1_ACK;
-                csprng_ctrl_we  = 1;
-              end
-          end
-
-        CTRL_SEED1_ACK:
-          begin
-            if ((!enable) || (seed))
-              begin
-                csprng_ctrl_new = CTRL_CANCEL;
-                csprng_ctrl_we  = 1;
+                csprng_ctrl_new = CTRL_INIT0;
               end
             else
               begin
-                tmp_seed_ack    = 1;
-                csprng_ctrl_new = CTRL_INIT0;
-                csprng_ctrl_we  = 1;
+                more_seed_new = 1;
               end
           end
 
@@ -436,6 +430,7 @@ module trng_csprng(
               end
             else
               begin
+                block_ctr_inc   = 1;
                 cipher_next     = 1;
                 csprng_ctrl_new = CTRL_NEXT1;
                 csprng_ctrl_we  = 1;
@@ -449,7 +444,13 @@ module trng_csprng(
                 csprng_ctrl_new = CTRL_CANCEL;
                 csprng_ctrl_we  = 1;
               end
-            else if (cipher_ready)
+            else if (block_ctr_max)
+              begin
+                more_seed_new   = 1;
+                csprng_ctrl_new = CTRL_SEED0;
+                csprng_ctrl_we  = 1;
+              end
+            else if (fifo_more_data)
               begin
                 csprng_ctrl_new = CTRL_NEXT0;
                 csprng_ctrl_we  = 1;
