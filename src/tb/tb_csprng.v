@@ -169,13 +169,14 @@ module tb_csprng();
                dut.cipher.init, dut.cipher.next);
       $display("cipher ctrl: 0x%01x, qr ctr: 0x%01x, dr ctr: 0x%02x",
                dut.cipher.chacha_ctrl_reg, dut.cipher.qr_ctr_reg, dut.cipher.dr_ctr_reg);
-      $display("cipher ready: 0x%01x, cipher data out valud: 0x%01x",
+      $display("cipher ready: 0x%01x, cipher data out valid: 0x%01x",
                dut.cipher.ready, dut.cipher.data_out_valid);
       $display("cipher data out: 0x%064x", dut.cipher.data_out);
       $display("");
       $display("Cipher states:");
       $display("mux ctr: 0x%02x, fifo ctr: 0x%02x, fifo_wr_ptr = 0x%02x, fifo_rd_ptr = 0x%02x",
                dut.fifo.mux_data_ptr_reg, dut.fifo.fifo_ctr_reg, dut.fifo.wr_ptr_reg, dut.fifo.rd_ptr_reg,);
+      $display("fifo wr ctrl: 0x%02x, fifo rd ctrl: 0x%02x", dut.fifo.wr_ctrl_reg, dut.fifo.rd_ctrl_reg);
       $display("");
 
       $display("Outputs:");
@@ -264,7 +265,7 @@ module tb_csprng();
       tb_num_rounds = 5'h02;
       tb_rnd_ack    = 1;
 
-      #(1000 * CLK_PERIOD);
+      #(2000 * CLK_PERIOD);
 
       $display("*** TC1: Test automatic init of cipher done.");
 
