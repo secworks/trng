@@ -173,6 +173,10 @@ module tb_csprng();
                dut.cipher.ready, dut.cipher.data_out_valid);
       $display("cipher data out: 0x%064x", dut.cipher.data_out);
       $display("");
+      $display("Cipher states:");
+      $display("mux ctr: 0x%02x, fifo ctr: 0x%02x, fifo_wr_ptr = 0x%02x, fifo_rd_ptr = 0x%02x",
+               dut.fifo.mux_data_ptr_reg, dut.fifo.fifo_ctr_reg, dut.fifo.wr_ptr_reg, dut.fifo.rd_ptr_reg,);
+      $display("");
 
       $display("Outputs:");
       $display("rnd_syn = 0x%01x, rnd_ack = 0x%01x, rnd_data = 0x%08x",
@@ -257,7 +261,8 @@ module tb_csprng();
       tb_seed_syn   = 1;
       tb_seed_data  = {8{64'haaaaaaaa55555555}};
       tb_enable     = 1;
-      tb_num_rounds = 5'h04;
+      tb_num_rounds = 5'h02;
+      tb_rnd_ack    = 1;
 
       #(1000 * CLK_PERIOD);
 
