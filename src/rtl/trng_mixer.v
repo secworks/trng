@@ -75,7 +75,6 @@ module trng_mixer(
   parameter CTRL_SYN     = 4'h3;
   parameter CTRL_ACK     = 4'h4;
   parameter CTRL_NEXT    = 4'h5;
-  parameter CTRL_CANCEL  = 4'hf;
 
   parameter ENTROPY_IDLE     = 4'h0;
   parameter ENTROPY_SRC0     = 4'h1;
@@ -181,11 +180,8 @@ module trng_mixer(
   // Wires.
   //----------------------------------------------------------------
   reg [31 : 0]    muxed_entropy;
-  reg             muxed_entropy_syn;
   reg             collect_block;
-
   reg             update_block;
-  reg             mux_entropy;
   reg             block_done;
 
   reg             hash_init;
@@ -204,6 +200,7 @@ module trng_mixer(
   //----------------------------------------------------------------
   // Concurrent connectivity for ports etc.
   //----------------------------------------------------------------
+  assign seed_syn  = seed_syn_reg;
   assign seed_data = hash_digest;
 
   assign hash_block = {block00_reg, block01_reg, block02_reg, block03_reg,
@@ -284,6 +281,8 @@ module trng_mixer(
           block29_reg              <= 32'h00000000;
           block30_reg              <= 32'h00000000;
           block31_reg              <= 32'h00000000;
+          init_done_reg            <= 0;
+          word_ctr_reg             <= 5'h00;
           seed_syn_reg             <= 0;
           entropy_collect_ctrl_reg <= CTRL_IDLE;
           mixer_ctrl_reg           <= CTRL_IDLE;
@@ -450,14 +449,19 @@ module trng_mixer(
               block31_reg <= muxed_entropy;
             end
 
-          if (seed_syn_we)
-            begin
-              seed_syn_reg <= seed_syn_we;
-            end
-
           if (init_done_we)
             begin
-              init_done_reg <= init_done_we;
+              init_done_reg <= init_done_new;
+            end
+
+          if (word_ctr_we)
+            begin
+              word_ctr_reg <= word_ctr_new;
+            end
+
+          if (seed_syn_we)
+            begin
+              seed_syn_reg <= seed_syn_new;
             end
 
           if (entropy_collect_ctrl_we)
@@ -790,15 +794,9 @@ module trng_mixer(
       case (mixer_ctrl_reg)
         CTRL_IDLE:
           begin
-            if (!enable)
-              begin
-                mixer_ctrl_new = CTRL_CANCEL;
-                mixer_ctrl_we  = 1;
-              end
-            else if (more_seed)
+            if (more_seed)
               begin
                 collect_block  = 1;
-                word_ctr_rst   = 1;
                 init_done_new  = 0;
                 init_done_we   = 1;
                 mixer_ctrl_new = CTRL_COLLECT;
@@ -810,7 +808,7 @@ module trng_mixer(
           begin
             if ((!enable))
               begin
-                mixer_ctrl_new = CTRL_CANCEL;
+                mixer_ctrl_new = CTRL_IDLE;
                 mixer_ctrl_we  = 1;
               end
             else
@@ -827,7 +825,7 @@ module trng_mixer(
           begin
             if ((!enable))
               begin
-                mixer_ctrl_new = CTRL_CANCEL;
+                mixer_ctrl_new = CTRL_IDLE;
                 mixer_ctrl_we  = 1;
               end
             else
@@ -849,7 +847,7 @@ module trng_mixer(
           begin
             if ((!enable))
               begin
-                mixer_ctrl_new = CTRL_CANCEL;
+                mixer_ctrl_new = CTRL_IDLE;
                 mixer_ctrl_we  = 1;
               end
             else if (hash_ready)
@@ -866,7 +864,7 @@ module trng_mixer(
           begin
             if ((!enable))
               begin
-                mixer_ctrl_new = CTRL_CANCEL;
+                mixer_ctrl_new = CTRL_IDLE;
                 mixer_ctrl_we  = 1;
               end
             else if (seed_ack)
@@ -882,23 +880,17 @@ module trng_mixer(
           begin
             if ((!enable))
               begin
-                mixer_ctrl_new = CTRL_CANCEL;
+                mixer_ctrl_new = CTRL_IDLE;
                 mixer_ctrl_we  = 1;
               end
             else if (more_seed)
               begin
-                word_ctr_rst   = 1;
+                collect_block  = 1;
                 init_done_new  = 1;
                 init_done_we   = 1;
                 mixer_ctrl_new = CTRL_COLLECT;
                 mixer_ctrl_we  = 1;
               end
-          end
-
-        CTRL_CANCEL:
-          begin
-            mixer_ctrl_new  = CTRL_IDLE;
-            mixer_ctrl_we   = 1;
           end
 
       endcase // case (cspng_ctrl_reg)

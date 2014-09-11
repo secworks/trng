@@ -103,7 +103,7 @@ module tb_mixer();
                  .entropy0_data(tb_entropy0_data),
                  .entropy0_ack(tb_entropy0_ack),
 
-                 .entropy1_enabled(tb_entropy0_enabled),
+                 .entropy1_enabled(tb_entropy1_enabled),
                  .entropy1_syn(tb_entropy1_syn),
                  .entropy1_data(tb_entropy1_data),
                  .entropy1_ack(tb_entropy1_ack),
@@ -258,7 +258,7 @@ module tb_mixer();
       tb_more_seed        = 1;
       tb_ack              = 1;
 
-      #(20000 * CLK_PERIOD);
+      #(50000 * CLK_PERIOD);
       $display("*** TC1 done.");
     end
   endtask // tc1_gen_seeds
