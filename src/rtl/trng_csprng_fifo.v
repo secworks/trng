@@ -55,7 +55,7 @@ module trng_csprng_fifo(
   //----------------------------------------------------------------
   // Internal constant and parameter definitions.
   //----------------------------------------------------------------
-  parameter FIFO_DEPTH = 64;
+  parameter FIFO_DEPTH = 32;
   parameter FIFO_MAX = FIFO_DEPTH - 1;
 
   parameter WR_IDLE    = 0;
@@ -141,6 +141,39 @@ module trng_csprng_fifo(
     begin
       if (!reset_n)
         begin
+          fifo_mem[00]     <= 32'h00000000;
+          fifo_mem[01]     <= 32'h00000000;
+          fifo_mem[02]     <= 32'h00000000;
+          fifo_mem[03]     <= 32'h00000000;
+          fifo_mem[04]     <= 32'h00000000;
+          fifo_mem[05]     <= 32'h00000000;
+          fifo_mem[06]     <= 32'h00000000;
+          fifo_mem[07]     <= 32'h00000000;
+          fifo_mem[08]     <= 32'h00000000;
+          fifo_mem[09]     <= 32'h00000000;
+          fifo_mem[10]     <= 32'h00000000;
+          fifo_mem[11]     <= 32'h00000000;
+          fifo_mem[12]     <= 32'h00000000;
+          fifo_mem[13]     <= 32'h00000000;
+          fifo_mem[14]     <= 32'h00000000;
+          fifo_mem[15]     <= 32'h00000000;
+          fifo_mem[16]     <= 32'h00000000;
+          fifo_mem[17]     <= 32'h00000000;
+          fifo_mem[18]     <= 32'h00000000;
+          fifo_mem[19]     <= 32'h00000000;
+          fifo_mem[20]     <= 32'h00000000;
+          fifo_mem[21]     <= 32'h00000000;
+          fifo_mem[22]     <= 32'h00000000;
+          fifo_mem[23]     <= 32'h00000000;
+          fifo_mem[24]     <= 32'h00000000;
+          fifo_mem[25]     <= 32'h00000000;
+          fifo_mem[26]     <= 32'h00000000;
+          fifo_mem[27]     <= 32'h00000000;
+          fifo_mem[28]     <= 32'h00000000;
+          fifo_mem[29]     <= 32'h00000000;
+          fifo_mem[30]     <= 32'h00000000;
+          fifo_mem[31]     <= 32'h00000000;
+
           mux_data_ptr_reg <= 4'h0;
           wr_ptr_reg       <= 8'h00;
           rd_ptr_reg       <= 8'h00;

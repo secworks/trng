@@ -291,15 +291,15 @@ module trng_csprng(
           block_ctr_we  = 1;
         end
 
+      if (block_ctr_inc))
+        begin
+          block_ctr_new = block_ctr_reg + 1'b1;
+          block_ctr_we  = 1;
+        end
+
       if ((block_ctr_reg == num_blocks) || (block_ctr_reg == CIPHER_MAX_BLOCKS))
         begin
           block_ctr_max = 1;
-        end
-
-      if ((block_ctr_inc) && (!block_ctr_max))
-        begin
-          block_ctr_new = 64'h0000000000000001;
-          block_ctr_we  = 1;
         end
     end // block_ctr
 
@@ -384,6 +384,7 @@ module trng_csprng(
                 cipher_ctr_new  = seed_data[383 : 320];
                 cipher_ctr_we   = 1;
                 csprng_ctrl_new = CTRL_INIT0;
+                csprng_ctrl_we  = 1;
               end
             else
               begin
