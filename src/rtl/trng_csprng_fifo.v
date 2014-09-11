@@ -444,7 +444,7 @@ module trng_csprng_fifo(
                 wr_ctrl_new = WR_DISCARD;
                 wr_ctrl_we  = 1;
               end
-            else
+            else if (!fifo_full)
               begin
                 more_data_new = 1;
                 more_data_we  = 1;
