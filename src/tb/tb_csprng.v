@@ -265,7 +265,7 @@ module tb_csprng();
       tb_seed_syn   = 1;
       tb_seed_data  = {8{64'haaaaaaaa55555555}};
       tb_enable     = 1;
-      tb_num_rounds = 5'h02;
+      tb_num_rounds = 5'h08;
       tb_rnd_ack    = 1;
 
       #(2000 * CLK_PERIOD);

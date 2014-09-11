@@ -357,12 +357,12 @@ module trng_csprng_fifo(
       fifo_ctr_new = 6'h00;
       fifo_ctr_we  = 0;
 
-      if (fifo_ctr_reg == 6'h3f)
+      if (fifo_ctr_reg == FIFO_DEPTH)
         begin
           fifo_full = 1;
         end
 
-      if (fifo_ctr_reg == 6'h0f)
+      if (fifo_ctr_reg < 6'h0f)
         begin
           fifo_empty = 1;
         end
@@ -370,11 +370,13 @@ module trng_csprng_fifo(
       if (fifo_ctr_inc)
         begin
           fifo_ctr_new = fifo_ctr_reg + 1'b1;
+          fifo_ctr_we  = 1;
         end
 
       if (fifo_ctr_dec)
         begin
           fifo_ctr_new = fifo_ctr_reg - 1'b1;
+          fifo_ctr_we  = 1;
         end
 
       if (fifo_ctr_rst)
@@ -390,12 +392,13 @@ module trng_csprng_fifo(
   //----------------------------------------------------------------
   always @*
     begin : rd_ctrl
-      rnd_syn_new = 0;
-      rnd_syn_we  = 0;
-      rd_ptr_inc  = 0;
-      rd_ptr_rst  = 0;
-      rd_ctrl_new = RD_IDLE;
-      rd_ctrl_we  = 0;
+      fifo_ctr_dec = 0;
+      rnd_syn_new  = 0;
+      rnd_syn_we   = 0;
+      rd_ptr_inc   = 0;
+      rd_ptr_rst   = 0;
+      rd_ctrl_new  = RD_IDLE;
+      rd_ctrl_we   = 0;
 
       case (rd_ctrl_reg)
         RD_IDLE:
@@ -428,11 +431,12 @@ module trng_csprng_fifo(
               begin
                 if (rnd_ack)
                   begin
-                    rd_ptr_inc  = 1;
-                    rnd_syn_new = 0;
-                    rnd_syn_we  = 1;
-                    rd_ctrl_new = RD_IDLE;
-                    rd_ctrl_we  = 1;
+                    fifo_ctr_dec = 1;
+                    rd_ptr_inc   = 1;
+                    rnd_syn_new  = 0;
+                    rnd_syn_we   = 1;
+                    rd_ctrl_new  = RD_IDLE;
+                    rd_ctrl_we   = 1;
                   end
               end
           end
@@ -510,7 +514,6 @@ module trng_csprng_fifo(
                 wr_ctrl_new      = WR_DISCARD;
                 wr_ctrl_we       = 1;
               end
-
             else if (!fifo_full)
               begin
                 fifo_mem_we      = 1;
