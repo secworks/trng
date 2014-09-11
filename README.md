@@ -174,6 +174,12 @@ Debug access
 
 ## Status ##
 
+*** (2014-09-10) ***
+
+The CSPRNG is close to completion and can now generate random numbers
+after reading two 512 bit seed values.
+
+
 ***(2014-03-08)***
 
 Adding a lot of text in the README to describe the ideas for the
