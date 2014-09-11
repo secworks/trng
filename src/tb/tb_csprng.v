@@ -71,6 +71,7 @@ module tb_csprng();
   reg           tb_seed;
   reg           tb_enable;
   wire          tb_ready;
+  wire          tb_more_seed;
   wire          tb_error;
   reg           tb_seed_syn;
   reg [511 : 0] tb_seed_data;
@@ -92,6 +93,7 @@ module tb_csprng();
                   .num_blocks(tb_num_blocks),
                   .seed(tb_seed),
                   .enable(tb_enable),
+                  .more_seed(tb_more_seed),
                   .ready(tb_ready),
                   .error(tb_error),
 
@@ -259,6 +261,7 @@ module tb_csprng();
   task tc1_test_init_cipher();
     begin
       $display("*** TC1: Test automatic init of cipher started.");
+      tb_num_blocks = 64'h0000000000000004;
       tb_seed_syn   = 1;
       tb_seed_data  = {8{64'haaaaaaaa55555555}};
       tb_enable     = 1;
