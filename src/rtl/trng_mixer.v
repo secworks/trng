@@ -169,6 +169,17 @@ module trng_mixer(
   //----------------------------------------------------------------
   assign seed_data = hash_digest;
 
+  assign hash_block = {block00_reg, block01_reg, block02_reg, block03_reg,
+                       block04_reg, block05_reg, block06_reg, block07_reg,
+                       block08_reg, block09_reg,
+                       block10_reg, block11_reg, block12_reg, block13_reg,
+                       block14_reg, block15_reg, block16_reg, block17_reg,
+                       block18_reg, block19_reg,
+                       block20_reg, block21_reg, block22_reg, block23_reg,
+                       block24_reg, block25_reg, block26_reg, block27_reg,
+                       block28_reg, block29_reg,
+                       block30_reg, block31_reg};
+
 
   //----------------------------------------------------------------
   // core instantiation.
