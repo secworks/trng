@@ -37,25 +37,26 @@
 //======================================================================
 
 module trng_mixer(
-                  // Clock and reset.
                   input wire           clk,
                   input wire           reset_n,
 
-                  // Controls.
-                  input wire           enable,
-                  input wire           more_seed,
+                  input wire            enable,
+                  input wire            more_seed,
 
-                  input wire           entropy0_enabled,
-                  input wire           entropy0_syn,
-                  output wire          entropy0_ack,
+                  input wire            entropy0_enabled,
+                  input wire            entropy0_syn,
+                  input wire [31 : 0]   entropy0_data,
+                  output wire           entropy0_ack,
 
-                  input wire           entropy1_enabled,
-                  input wire           entropy1_syn,
-                  output wire          entropy1_ack,
+                  input wire            entropy1_enabled,
+                  input wire            entropy1_syn,
+                  input wire [31 : 0]   entropy1_data,
+                  output wire           entropy1_ack,
 
-                  input wire           entropy2_enabled,
-                  input wire           entropy2_syn,
-                  output wire          entropy2_ack,
+                  input wire            entropy2_enabled,
+                  input wire            entropy2_syn,
+                  input wire [31 : 0]   entropy2_data,
+                  output wire           entropy2_ack,
 
                   output wire [511 : 0] seed_data,
                   output wire           seed_syn,
@@ -75,6 +76,14 @@ module trng_mixer(
   parameter CTRL_ACK     = 4'h4;
   parameter CTRL_NEXT    = 4'h5;
   parameter CTRL_CANCEL  = 4'hf;
+
+  parameter ENTROPY_IDLE     = 4'h0;
+  parameter ENTROPY_SRC0     = 4'h1;
+  parameter ENTROPY_SRC0_ACK = 4'h2;
+  parameter ENTROPY_SRC1     = 4'h3;
+  parameter ENTROPY_SRC1_ACK = 4'h4;
+  parameter ENTROPY_SRC2     = 4'h5;
+  parameter ENTROPY_SRC2_ACK = 4'h6;
 
 
   //----------------------------------------------------------------
@@ -151,6 +160,10 @@ module trng_mixer(
   reg         word_ctr_rst;
   reg         word_ctr_we;
 
+  reg [3 : 0] entropy_collect_ctrl_reg;
+  reg [3 : 0] entropy_collect_ctrl_new;
+  reg         entropy_collect_ctrl_we;
+
   reg [3 : 0] mixer_ctrl_reg;
   reg [3 : 0] mixer_ctrl_new;
   reg         mixer_ctrl_we;
@@ -169,8 +182,11 @@ module trng_mixer(
   //----------------------------------------------------------------
   reg [31 : 0]    muxed_entropy;
   reg             muxed_entropy_syn;
+  reg             collect_block;
+
   reg             update_block;
   reg             mux_entropy;
+  reg             block_done;
 
   reg             hash_init;
   reg             hash_next;
@@ -179,6 +195,10 @@ module trng_mixer(
   wire            hash_ready;
   wire [511 : 0]  hash_digest;
   wire            hash_digest_valid;
+
+  reg             tmp_entropy0_ack;
+  reg             tmp_entropy1_ack;
+  reg             tmp_entropy2_ack;
 
 
   //----------------------------------------------------------------
@@ -196,6 +216,10 @@ module trng_mixer(
                        block24_reg, block25_reg, block26_reg, block27_reg,
                        block28_reg, block29_reg,
                        block30_reg, block31_reg};
+
+  assign entropy0_ack = tmp_entropy0_ack;
+  assign entropy1_ack = tmp_entropy1_ack;
+  assign entropy2_ack = tmp_entropy2_ack;
 
 
   //----------------------------------------------------------------
@@ -228,40 +252,41 @@ module trng_mixer(
     begin
       if (!reset_n)
         begin
-          block00_reg    <= 32'h00000000;
-          block01_reg    <= 32'h00000000;
-          block02_reg    <= 32'h00000000;
-          block03_reg    <= 32'h00000000;
-          block04_reg    <= 32'h00000000;
-          block05_reg    <= 32'h00000000;
-          block06_reg    <= 32'h00000000;
-          block07_reg    <= 32'h00000000;
-          block08_reg    <= 32'h00000000;
-          block09_reg    <= 32'h00000000;
-          block10_reg    <= 32'h00000000;
-          block11_reg    <= 32'h00000000;
-          block12_reg    <= 32'h00000000;
-          block13_reg    <= 32'h00000000;
-          block14_reg    <= 32'h00000000;
-          block15_reg    <= 32'h00000000;
-          block16_reg    <= 32'h00000000;
-          block17_reg    <= 32'h00000000;
-          block18_reg    <= 32'h00000000;
-          block19_reg    <= 32'h00000000;
-          block20_reg    <= 32'h00000000;
-          block21_reg    <= 32'h00000000;
-          block22_reg    <= 32'h00000000;
-          block23_reg    <= 32'h00000000;
-          block24_reg    <= 32'h00000000;
-          block25_reg    <= 32'h00000000;
-          block26_reg    <= 32'h00000000;
-          block27_reg    <= 32'h00000000;
-          block28_reg    <= 32'h00000000;
-          block29_reg    <= 32'h00000000;
-          block30_reg    <= 32'h00000000;
-          block31_reg    <= 32'h00000000;
-          seed_syn_reg   <= 0;
-          mixer_ctrl_reg <= CTRL_IDLE;
+          block00_reg              <= 32'h00000000;
+          block01_reg              <= 32'h00000000;
+          block02_reg              <= 32'h00000000;
+          block03_reg              <= 32'h00000000;
+          block04_reg              <= 32'h00000000;
+          block05_reg              <= 32'h00000000;
+          block06_reg              <= 32'h00000000;
+          block07_reg              <= 32'h00000000;
+          block08_reg              <= 32'h00000000;
+          block09_reg              <= 32'h00000000;
+          block10_reg              <= 32'h00000000;
+          block11_reg              <= 32'h00000000;
+          block12_reg              <= 32'h00000000;
+          block13_reg              <= 32'h00000000;
+          block14_reg              <= 32'h00000000;
+          block15_reg              <= 32'h00000000;
+          block16_reg              <= 32'h00000000;
+          block17_reg              <= 32'h00000000;
+          block18_reg              <= 32'h00000000;
+          block19_reg              <= 32'h00000000;
+          block20_reg              <= 32'h00000000;
+          block21_reg              <= 32'h00000000;
+          block22_reg              <= 32'h00000000;
+          block23_reg              <= 32'h00000000;
+          block24_reg              <= 32'h00000000;
+          block25_reg              <= 32'h00000000;
+          block26_reg              <= 32'h00000000;
+          block27_reg              <= 32'h00000000;
+          block28_reg              <= 32'h00000000;
+          block29_reg              <= 32'h00000000;
+          block30_reg              <= 32'h00000000;
+          block31_reg              <= 32'h00000000;
+          seed_syn_reg             <= 0;
+          entropy_collect_ctrl_reg <= CTRL_IDLE;
+          mixer_ctrl_reg           <= CTRL_IDLE;
         end
       else
         begin
@@ -425,11 +450,6 @@ module trng_mixer(
               block31_reg <= muxed_entropy;
             end
 
-          if (mixer_ctrl_we)
-            begin
-              mixer_ctrl_reg <= mixer_ctrl_new;
-            end
-
           if (seed_syn_we)
             begin
               seed_syn_reg <= seed_syn_we;
@@ -439,17 +459,214 @@ module trng_mixer(
             begin
               init_done_reg <= init_done_we;
             end
+
+          if (entropy_collect_ctrl_we)
+            begin
+              entropy_collect_ctrl_reg <= entropy_collect_ctrl_new;
+            end
+
+          if (mixer_ctrl_we)
+            begin
+              mixer_ctrl_reg <= mixer_ctrl_new;
+            end
         end
     end // reg_update
 
   //----------------------------------------------------------------
-  // entropy_mux
+  // entropy_collect_ctrl
   //
-  // This is a round-robin mux that muxes the signals from
-  // the entropy sources that are enabled.
+  // This FSM implements a round-robin mux for signals from the
+  // entropy sources and updates the block until a block has
+  // been filled.
   //----------------------------------------------------------------
   always @*
     begin : entropy_mux
+      tmp_entropy0_ack         = 0;
+      tmp_entropy1_ack         = 0;
+      tmp_entropy2_ack         = 0;
+      word_ctr_inc             = 0;
+      word_ctr_rst             = 0;
+      update_block             = 0;
+      block_done               = 0;
+      muxed_entropy            = 32'h00000000;
+      entropy_collect_ctrl_new = ENTROPY_IDLE;
+      entropy_collect_ctrl_we  = 0;
+
+      case (entropy_collect_ctrl_reg)
+        ENTROPY_IDLE:
+          begin
+            if (collect_block)
+              begin
+                word_ctr_rst             = 1;
+                entropy_collect_ctrl_new = ENTROPY_SRC0;
+                entropy_collect_ctrl_we  = 1;
+              end
+          end
+
+        ENTROPY_SRC0:
+          begin
+            if (!enable)
+              begin
+                word_ctr_rst             = 1;
+                entropy_collect_ctrl_new = ENTROPY_IDLE;
+                entropy_collect_ctrl_we  = 1;
+              end
+            else
+              begin
+                if (entropy0_enabled)
+                  begin
+                    if (entropy0_syn)
+                      begin
+                        muxed_entropy            = entropy0_data;
+                        update_block             = 1;
+                        entropy_collect_ctrl_new = ENTROPY_SRC0_ACK;
+                        entropy_collect_ctrl_we  = 1;
+                      end
+                  end
+                else
+                  begin
+                    entropy_collect_ctrl_new = ENTROPY_SRC1;
+                    entropy_collect_ctrl_we  = 1;
+                  end
+              end
+          end
+
+        ENTROPY_SRC0_ACK:
+          begin
+            tmp_entropy0_ack = 1;
+            if (!enable)
+              begin
+                word_ctr_rst             = 1;
+                entropy_collect_ctrl_new = ENTROPY_IDLE;
+                entropy_collect_ctrl_we  = 1;
+              end
+            else
+              begin
+                if (word_ctr_reg == 5'h1f)
+                  begin
+                    block_done               = 1;
+                    entropy_collect_ctrl_new = ENTROPY_IDLE;
+                    entropy_collect_ctrl_we  = 1;
+                  end
+                else
+                  begin
+                    word_ctr_inc             = 1;
+                    entropy_collect_ctrl_new = ENTROPY_SRC1;
+                    entropy_collect_ctrl_we  = 1;
+                  end
+              end
+          end
+
+
+        ENTROPY_SRC1:
+          begin
+            if (!enable)
+              begin
+                word_ctr_rst             = 1;
+                entropy_collect_ctrl_new = ENTROPY_IDLE;
+                entropy_collect_ctrl_we  = 1;
+              end
+            else
+              begin
+                if (entropy1_enabled)
+                  begin
+                    if (entropy1_syn)
+                      begin
+                        muxed_entropy            = entropy1_data;
+                        update_block             = 1;
+                        entropy_collect_ctrl_new = ENTROPY_SRC1_ACK;
+                        entropy_collect_ctrl_we  = 1;
+                      end
+                  end
+                else
+                  begin
+                    entropy_collect_ctrl_new = ENTROPY_SRC2;
+                    entropy_collect_ctrl_we  = 1;
+                  end
+              end
+          end
+
+        ENTROPY_SRC1_ACK:
+          begin
+            tmp_entropy1_ack = 1;
+            if (!enable)
+              begin
+                word_ctr_rst             = 1;
+                entropy_collect_ctrl_new = ENTROPY_IDLE;
+                entropy_collect_ctrl_we  = 1;
+              end
+            else
+              begin
+                if (word_ctr_reg == 5'h1f)
+                  begin
+                    block_done               = 1;
+                    entropy_collect_ctrl_new = ENTROPY_IDLE;
+                    entropy_collect_ctrl_we  = 1;
+                  end
+                else
+                  begin
+                    word_ctr_inc             = 1;
+                    entropy_collect_ctrl_new = ENTROPY_SRC2;
+                    entropy_collect_ctrl_we  = 1;
+                  end
+              end
+          end
+
+        ENTROPY_SRC2:
+          begin
+            if (!enable)
+              begin
+                word_ctr_rst             = 1;
+                entropy_collect_ctrl_new = ENTROPY_IDLE;
+                entropy_collect_ctrl_we  = 1;
+              end
+            else
+              begin
+                if (entropy2_enabled)
+                  begin
+                    if (entropy2_syn)
+                      begin
+                        muxed_entropy            = entropy2_data;
+                        update_block             = 1;
+                        entropy_collect_ctrl_new = ENTROPY_SRC2_ACK;
+                        entropy_collect_ctrl_we  = 1;
+                      end
+                  end
+                else
+                  begin
+                    entropy_collect_ctrl_new = ENTROPY_SRC0;
+                    entropy_collect_ctrl_we  = 1;
+                  end
+              end
+          end
+
+        ENTROPY_SRC2_ACK:
+          begin
+            tmp_entropy2_ack = 1;
+            if (!enable)
+              begin
+                word_ctr_rst             = 1;
+                entropy_collect_ctrl_new = ENTROPY_IDLE;
+                entropy_collect_ctrl_we  = 1;
+              end
+            else
+              begin
+                if (word_ctr_reg == 5'h1f)
+                  begin
+                    block_done               = 1;
+                    entropy_collect_ctrl_new = ENTROPY_IDLE;
+                    entropy_collect_ctrl_we  = 1;
+                  end
+                else
+                  begin
+                    word_ctr_inc             = 1;
+                    entropy_collect_ctrl_new = ENTROPY_SRC0;
+                    entropy_collect_ctrl_we  = 1;
+                  end
+              end
+          end
+
+      endcase // case (entropy_collect_ctrl_reg)
     end // entropy_mux
 
 
@@ -560,16 +777,13 @@ module trng_mixer(
   //----------------------------------------------------------------
   always @*
     begin : mixer_ctrl_fsm
-      word_ctr_inc   = 0;
-      word_ctr_rst   = 0;
       seed_syn_new   = 0;
       seed_syn_we    = 0;
       init_done_new  = 0;
       init_done_we   = 0;
       hash_init      = 0;
       hash_next      = 0;
-      mux_entropy    = 0;
-      update_block   = 0;
+      collect_block  = 0;
       mixer_ctrl_new = CTRL_IDLE;
       mixer_ctrl_we  = 0;
 
@@ -583,6 +797,7 @@ module trng_mixer(
               end
             else if (more_seed)
               begin
+                collect_block  = 1;
                 word_ctr_rst   = 1;
                 init_done_new  = 0;
                 init_done_we   = 1;
@@ -600,18 +815,10 @@ module trng_mixer(
               end
             else
               begin
-                mux_entropy = 1;
-                if (word_ctr_reg == 5'h1f)
+                if (block_done)
                   begin
                     mixer_ctrl_new = CTRL_MIX;
                     mixer_ctrl_we  = 1;
-                  end
-                else
-                  begin
-                    if (muxed_entropy_syn)
-                      begin
-                        word_ctr_inc = 1;
-                      end
                   end
               end
           end
