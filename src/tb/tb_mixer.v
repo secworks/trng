@@ -59,14 +59,34 @@ module tb_mixer();
   //----------------------------------------------------------------
   // Register and Wire declarations.
   //----------------------------------------------------------------
-  reg [31 : 0] cycle_ctr;
-  reg [31 : 0] error_ctr;
-  reg [31 : 0] tc_ctr;
+  reg [31 : 0]  cycle_ctr;
+  reg [31 : 0]  error_ctr;
+  reg [31 : 0]  tc_ctr;
 
-  reg           tb_clk;
-  reg           tb_reset_n;
-  reg           tb_enable;
-  
+  reg            tb_clk;
+  reg            tb_reset_n;
+  reg            tb_enable;
+  reg            tb_more_seed;
+
+  reg            tb_entropy0_enabled;
+  reg            tb_entropy0_syn;
+  reg [31 : 0]   tb_entropy0_data;
+  wire           tb_entropy0_ack;
+
+  reg            tb_entropy1_enabled;
+  reg            tb_entropy1_syn;
+  reg [31 : 0]   tb_entropy1_data;
+  wire           tb_entropy1_ack;
+
+  reg            tb_entropy2_enabled;
+  reg            tb_entropy2_syn;
+  reg [31 : 0]   tb_entropy2_data;
+  wire           tb_entropy2_ack;
+
+  wire [511 : 0] tb_seed_data;
+  wire           tb_syn;
+  reg            tb_ack;
+
 
   //----------------------------------------------------------------
   // Device Under Test.
@@ -74,20 +94,28 @@ module tb_mixer();
   trng_mixer dut(
                  .clk(tb_clk),
                  .reset_n(tb_reset_n),
-                 .enable(),
-                 .more_seed(),
-                 .entropy0_enabled(),
-                 .entropy0_syn(),
-                 .entropy0_ack(),
-                 .entropy1_enabled(),
-                 .entropy1_syn(),
-                 .entropy1_ack(),
-                 .entropy2_enabled(),
-                 .entropy2_syn(),
-                 .entropy2_ack(),
-                 .seed_data(),
-                 .seed_syn(),
-                 .seed_ack()
+
+                 .enable(tb_enable),
+                 .more_seed(tb_more_seed),
+
+                 .entropy0_enabled(tb_entropy0_enabled),
+                 .entropy0_syn(tb_entropy0_syn),
+                 .entropy0_data(tb_entropy0_data),
+                 .entropy0_ack(tb_entropy0_ack),
+
+                 .entropy1_enabled(tb_entropy0_enabled),
+                 .entropy1_syn(tb_entropy1_syn),
+                 .entropy1_data(tb_entropy1_data),
+                 .entropy1_ack(tb_entropy1_ack),
+
+                 .entropy2_enabled(tb_entropy2_enabled),
+                 .entropy2_syn(tb_entropy2_syn),
+                 .entropy2_data(tb_entropy2_data),
+                 .entropy2_ack(tb_entropy2_ack),
+
+                 .seed_data(tb_seed_data),
+                 .seed_syn(tb_syn),
+                 .seed_ack(tb_ack)
                 );
 
 
@@ -182,15 +210,58 @@ module tb_mixer();
   //----------------------------------------------------------------
   task init_sim();
     begin
-      cycle_ctr     = 0;
-      error_ctr     = 0;
-      tc_ctr        = 0;
+      cycle_ctr           = 0;
+      error_ctr           = 0;
+      tc_ctr              = 0;
 
-      tb_clk        = 0;
-      tb_reset_n    = 1;
-      tb_enable     = 0;
+      tb_clk              = 0;
+      tb_reset_n          = 1;
+
+      tb_enable           = 0;
+      tb_more_seed        = 0;
+
+      tb_entropy0_enabled = 0;
+      tb_entropy0_syn     = 0;
+      tb_entropy0_data    = 32'h00000000;
+
+      tb_entropy1_enabled = 0;
+      tb_entropy1_syn     = 0;
+      tb_entropy1_data    = 32'h00000000;
+
+      tb_entropy2_enabled = 0;
+      tb_entropy2_syn     = 0;
+      tb_entropy2_data    = 32'h00000000;
+
+      tb_ack              = 0;
     end
   endtask // init_sim
+
+
+  //----------------------------------------------------------------
+  // tc1_gen_seeds()
+  //
+  // A simple first testcase that tries to make the DUT generate
+  // a number of seeds based on entropy from source 0 and 2.
+  //----------------------------------------------------------------
+  task tc1_gen_seeds();
+    begin
+      $display("*** Starting TC1: Setting continious seed generation.");
+      tb_entropy0_enabled = 1;
+      tb_entropy0_syn     = 1;
+      tb_entropy0_data    = 32'h01010202;
+
+      tb_entropy2_enabled = 1;
+      tb_entropy2_syn     = 1;
+      tb_entropy2_data    = 32'haa55aa55;
+
+      tb_enable           = 1;
+      tb_more_seed        = 1;
+      tb_ack              = 1;
+
+      #(20000 * CLK_PERIOD);
+      $display("*** TC1 done.");
+    end
+  endtask // tc1_gen_seeds
 
 
   //----------------------------------------------------------------
@@ -209,6 +280,8 @@ module tb_mixer();
       dump_dut_state();
       reset_dut();
       dump_dut_state();
+
+      tc1_gen_seeds();
 
       display_test_results();
 
