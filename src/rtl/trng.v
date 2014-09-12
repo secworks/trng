@@ -482,26 +482,32 @@ module trng(
 
                 ADDR_ENTROPY0_RAW:
                   begin
+                    tmp_read_data = entropy0_raw;
                   end
 
                 ADDR_ENTROPY0_STATS:
                   begin
+                    tmp_read_data = entropy0_stats;
                   end
 
                 ADDR_ENTROPY1_RAW:
                   begin
+                    tmp_read_data = entropy1_raw;
                   end
 
                 ADDR_ENTROPY1_STATS:
                   begin
+                    tmp_read_data = entropy1_stats;
                   end
 
                 ADDR_ENTROPY2_RAW:
                   begin
+                    tmp_read_data = entropy2_raw;
                   end
 
                 ADDR_ENTROPY2_STATS:
                   begin
+                    tmp_read_data = entropy2_stats;
                   end
 
                 default:
