@@ -248,6 +248,8 @@ module trng(
                             .raw_entropy(entropy1_raw),
                             .stats(entropy1_stats),
 
+                            .noise(entropy1_noise),
+
                             .enabled(entropy1_enabled),
                             .entropy_syn(entropy1_syn),
                             .entropy_data(entropy1_data),
