@@ -78,18 +78,18 @@ module tb_trng();
   //----------------------------------------------------------------
   // Device Under Test.
   //----------------------------------------------------------------
-  trng_trng dut(
-                .clk(),
-                .reset_n(),
-                .avalanche_noise(tb_avalanche_noise),
-                .cs(tb_cs),
-                .we(tb_we),
-                .address(tba_address),
-                .write_data(tb_write_data),
-                .read_data(tb_read_data),
-                .error(tb_error),
-                .security_error(tb_security_error)
-               );
+  trng dut(
+           .clk(tb_ckl),
+           .reset_n(tb_reset_n),
+           .avalanche_noise(tb_avalanche_noise),
+           .cs(tb_cs),
+           .we(tb_we),
+           .address(tb_address),
+           .write_data(tb_write_data),
+           .read_data(tb_read_data),
+           .error(tb_error),
+           .security_error(tb_security_error)
+          );
 
 
   //----------------------------------------------------------------
