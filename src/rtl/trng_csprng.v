@@ -42,18 +42,18 @@ module trng_csprng(
                    input wire           reset_n,
 
                    // Control, config and status.
+                   input wire           enable,
                    input                debug_mode,
                    input wire [4 : 0]   num_rounds,
                    input wire [63 : 0]  num_blocks,
                    input wire           seed,
-                   input wire           enable,
                    output wire          more_seed,
                    output wire          ready,
                    output wire          error,
 
                    // Seed input
-                   input wire           seed_syn,
                    input [511 : 0]      seed_data,
+                   input wire           seed_syn,
                    output wire          seed_ack,
 
                    // Random data output
