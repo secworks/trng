@@ -82,23 +82,40 @@ module trng(
   //----------------------------------------------------------------
   // Wires.
   //----------------------------------------------------------------
-  wire           mixer_init;
-  wire [7 : 0]   mixer_num;
-  wire           mixer_error;
+
+  reg            mixer_enable;
+
+  wire           entropy0_enabled;
   wire           entropy0_syn;
   wire [31 : 0]  entropy0_data;
   wire           entropy0_ack;
+
+  wire           entropy1_enabled;
   wire           entropy1_syn;
   wire [31 : 0]  entropy1_data;
   wire           entropy1_ack;
+
+  wire           entropy2_enabled;
+  wire           entropy2_syn;
+  wire [31 : 0]  entropy2_data;
+  wire           entropy2_ack;
+
+  wire [511 : 0] mixer_seed_data;
   wire           mixer_seed_syn;
-  wire [383 : 0] mixer_seed_data;
-
-
+  wire           mixer_seed_ack;
+  
+  wire           csprng_enable;
+  wire           csprng_debug_mode;
   wire           csprng_num_rounds;
-  wire           csprng_reseed;
-  wire           csprng_seed_ack;
+  wire           csprng_num_blocks;
+  wire           csprng_seed;
+  wire           csprng_more_seed;
+  wire           csprng_ready;
+  wire           csprng_error;
 
+  wire           csprng_rnperror;
+  wire           csprng_error;
+  
   wire           ctrl_rng_ack;
   
   reg [31 : 0] tmp_read_data;
@@ -118,21 +135,27 @@ module trng(
   trng_mixer mixer(
                    .clk(clk),
                    .reset_n(reset_n),
+
+                   .enable(mixer_enable),
+                   .more_seed(csprng_more_seed),
                    
-                   .num_blocks(mixer_num_blocks),
-                   .init(mixer_init),
-                   .error(mixer_error),
-                            
-                   .entropy0_syn(),
-                   .entropy0_data(),
-                   .entropy0_ack(),
+                   .entropy0_enabled(entropy0_enabled),
+                   .entropy0_syn(entropy0_syn),
+                   .entropy0_data(entropy0_data),
+                   .entropy0_ack(entropy0_ack),
                    
-                   .entropy1_syn(),
-                   .entropy1_data(),
-                   .entropy1_ack(),
-                             
-                   .seed_syn(mixer_seed_syn),
+                   .entropy1_enabled(entropy1_enabled),
+                   .entropy1_syn(entropy1_syn),
+                   .entropy1_data(entropy1_data),
+                   .entropy1_ack(entropy1_ack),
+                   
+                   .entropy2_enabled(entropy2_enabled),
+                   .entropy2_syn(entropy2_syn),
+                   .entropy2_data(entropy2_data),
+                   .entropy2_ack(entropy2_ack),
+                   
                    .seed_data(mixer_seed_data),
+                   .seed_syn(mixer_seed_syn),
                    .seed_ack(mixer_seed_ack)
                   );
   
@@ -140,21 +163,22 @@ module trng(
                      .clk(clk),
                      .reset_n(reset_n),
 
+                     .enable(csprng_enable),
                      .debug_mode(csprng_debug_mode),
                      .num_rounds(csprng_num_rounds),
                      .num_rounds(csprng_num_blocks),
                      .seed(csprng_seed),
-                     .enable(csprng_enable),
+                     .more_seed(csprng_more_seed),
                      .ready(csprng_ready),
                      .error(csprng_error),
                      
-                     .seed_syn(mixer_seed_syn),
                      .seed_data(mixer_seed_data),
+                     .seed_syn(mixer_seed_syn),
                      .seed_ack(csprng_seed_ack),
 
-                     .rng_syn(csprng_rng_syn),
-                     .rng_data(csprng_rng_data),
-                     .rng_ack(ctrl_rng_ack)
+                     .rnd_data(csprng_rng_data),
+                     .rnd_syn(csprng_rng_syn),
+                     .rnd_ack(ctrl_rng_ack)
                     );
 
   
