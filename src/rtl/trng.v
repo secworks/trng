@@ -62,8 +62,19 @@ module trng(
   parameter ADDR_VERSION                = 8'h02;
 
   parameter ADDR_TRNG_CTRL              = 8'h10;
-  parameter ADDR_TRNG_CTRL              = 8'h10;
+  parameter TRNG_CTRL_ENABLE_BIT        = 0;
+  parameter TRNG_CTRL_ENT0_ENABLE_BIT   = 1;
+  parameter TRNG_CTRL_ENT1_ENABLE_BIT   = 2;
+  parameter TRNG_CTRL_ENT2_ENABLE_BIT   = 3;
+  parameter TRNG_CTRL_SEED              = 8;
+
   parameter ADDR_TRNG_STATUS            = 8'h11;
+  parameter TRNG_STATUS_ENABLE_BIT      = 0;
+  parameter TRNG_STATUS_ENT0_ENABLE_BIT = 1;
+  parameter TRNG_STATUS_ENT1_ENABLE_BIT = 2;
+  parameter TRNG_STATUS_ENT2_ENABLE_BIT = 3;
+  parameter TRNG_STATUS_SEED            = 8;
+  parameter TRNG_STATUS_RND_VALID_BIT   = 16;
 
   parameter ADDR_TRNG_RND_DATA          = 8'h20;
 
@@ -72,7 +83,7 @@ module trng(
   parameter ADDR_CSPRNG_NUM_BLOCKS_HIGH = 8'h32;
 
   parameter ADDR_ENTROPY0_RAW           = 8'h40;
-  parameter ADDR_ENTROPY1_STATS         = 8'h41;
+  parameter ADDR_ENTROPY0_STATS         = 8'h41;
 
   parameter ADDR_ENTROPY1_RAW           = 8'h50;
   parameter ADDR_ENTROPY1_STATS         = 8'h51;
@@ -112,6 +123,10 @@ module trng(
   reg         csprng_seed_reg;
   reg         csprng_seed_new;
 
+  reg         csprng_rnd_ack_reg;
+  reg         csprng_rnd_ack_new;
+
+
 
   //----------------------------------------------------------------
   // Wires.
@@ -147,17 +162,14 @@ module trng(
 
   wire           csprng_enable;
   wire           csprng_debug_mode;
-  wire           csprng_num_rounds;
-  wire           csprng_num_blocks;
+  wire [4 : 0]   csprng_num_rounds;
+  wire [63 : 0]  csprng_num_blocks;
   wire           csprng_seed;
   wire           csprng_more_seed;
   wire           csprng_ready;
   wire           csprng_error;
-
-  wire           csprng_rnperror;
-  wire           csprng_error;
-
-  wire           ctrl_rng_ack;
+  wire [31 : 0]  csprng_rnd_data;
+  wire           csprng_rnd_syn;
 
   reg [31 : 0]   tmp_read_data;
   reg            tmp_error;
@@ -166,9 +178,12 @@ module trng(
   //----------------------------------------------------------------
   // Concurrent connectivity for ports etc.
   //----------------------------------------------------------------
-  assign read_data = tmp_read_data;
-  assign error     = tmp_error;
-  assign           = security_error = 0;
+  assign read_data      = tmp_read_data;
+  assign error          = tmp_error;
+  assign security_error = 0;
+
+  assign csprng_num_blocks = {csprng_num_blocks_high_reg,
+                              csprng_num_blocks_low_reg};
 
 
   //----------------------------------------------------------------
@@ -208,7 +223,7 @@ module trng(
                      .enable(csprng_enable),
                      .debug_mode(csprng_debug_mode),
                      .num_rounds(csprng_num_rounds_reg),
-                     .num_blocks(csprng_num_blocks_reg),
+                     .num_blocks(csprng_num_blocks),
                      .seed(csprng_seed),
                      .more_seed(csprng_more_seed),
                      .ready(csprng_ready),
@@ -218,9 +233,9 @@ module trng(
                      .seed_syn(mixer_seed_syn),
                      .seed_ack(csprng_seed_ack),
 
-                     .rnd_data(csprng_rng_data),
-                     .rnd_syn(csprng_rng_syn),
-                     .rnd_ack(ctrl_rng_ack)
+                     .rnd_data(csprng_rnd_data),
+                     .rnd_syn(csprng_rnd_syn),
+                     .rnd_ack(csprng_rnd_ack_reg)
                     );
 
   pseudo_entropy entropy0(
@@ -283,6 +298,7 @@ module trng(
       if (!reset_n)
         begin
           enable_reg                 <= 1;
+          csprng_rnd_ack_reg         <= 0;
           csprng_seed_reg            <= 0;
           csprng_num_rounds_reg      <= CSPRNG_DEFAULT_NUM_ROUNDS;
           csprng_num_blocks_low_reg  <= CSPRNG_DEFAULT_NUM_BLOCKS[31 : 0];
@@ -291,7 +307,8 @@ module trng(
 
       else
         begin
-          csprng_seed_reg <= csprng_seed_new;
+          csprng_rnd_ack_reg <= csprng_rnd_ack_new;
+          csprng_seed_reg    <= csprng_seed_new;
 
           if (csprng_num_rounds_we)
             begin
@@ -301,6 +318,10 @@ module trng(
           if (csprng_num_blocks_low_we)
             begin
               csprng_num_blocks_low_reg <= csprng_num_blocks_low_new;
+
+          if (csprng_num_blocks_high_we)
+            begin
+              csprng_num_blocks_high_reg <= csprng_num_blocks_high_new;
             end
         end
     end // reg_update
@@ -317,6 +338,8 @@ module trng(
       enable_new                 = 0;
       enable_we                  = 0;
       csprng_seed_new            = 0;
+      csprng_rnd_ack_new         = 0;
+      csprng_seed_new            = 0;
       csprng_num_rounds_new      = 5'h00;
       csprng_num_rounds_we       = 0;
       csprng_num_blocks_low_new  = 32'h00000000;
@@ -332,11 +355,23 @@ module trng(
             begin
               case (address)
                 // Write operations.
+                ADDR_TRNG_CTRL:
+                  begin
+                    enable_new = write_data[TRNG_CTRL_ENABLE_BIT];
 
-                CSPRNG_NUM_ROUNDS:
+                  end
+
+                ADDR_CSPRNG_NUM_ROUNDS:
                   begin
                     csprng_num_rounds_new = write_data[4 : 0];
                     csprng_num_rounds_we  = 1;
+                  end
+
+                ADDR_CSPRNG_NUM_BLOCKS_LOW:
+                  begin
+                  end
+                ADDR_CSPRNG_NUM_BLOCKS_HIGH:
+                  begin
                   end
 
                 default:
@@ -365,9 +400,57 @@ module trng(
                     tmp_read_data = TRNG_VERSION;
                   end
 
-                CSPRNG_NUM_ROUNDS:
+                ADDR_TRNG_CTRL:
+                  begin
+                  end
+
+                ADDR_TRNG_STATUS:
+                  begin
+                  end
+
+                ADDR_TRNG_RND_DATA:
+                  begin
+                    csprng_rnd_ack_new = 1;
+                    tmp_read_data      = csprng_rnd_data;
+                  end
+
+                ADDR_CSPRNG_NUM_ROUNDS:
                   begin
                     tmp_read_data = {26'h0000000, csprng_num_rounds_reg};
+                  end
+
+                ADDR_CSPRNG_NUM_BLOCKS_LOW:
+                  begin
+                    tmp_read_data = csprng_num_blocks_low_reg;
+                  end
+
+                ADDR_CSPRNG_NUM_BLOCKS_HIGH:
+                  begin
+                    tmp_read_data = csprng_num_blocks_high_reg;
+                  end
+
+                ADDR_ENTROPY0_RAW:
+                  begin
+                  end
+
+                ADDR_ENTROPY0_STATS:
+                  begin
+                  end
+
+                ADDR_ENTROPY1_RAW:
+                  begin
+                  end
+
+                ADDR_ENTROPY1_STATS:
+                  begin
+                  end
+
+                ADDR_ENTROPY2_RAW:
+                  begin
+                  end
+
+                ADDR_ENTROPY2_STATS:
+                  begin
                   end
 
                 default:
