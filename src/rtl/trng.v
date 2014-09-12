@@ -45,6 +45,8 @@ module trng(
             input wire           cs,
             input wire           we,
 
+            input wire           avalanche_noise,
+
             // Data ports.
             input wire  [7 : 0]  address,
             input wire  [31 : 0] write_data,
@@ -248,7 +250,7 @@ module trng(
                             .raw_entropy(entropy1_raw),
                             .stats(entropy1_stats),
 
-                            .noise(entropy1_noise),
+                            .noise(avalanche_noise),
 
                             .enabled(entropy1_enabled),
                             .entropy_syn(entropy1_syn),
