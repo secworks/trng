@@ -318,6 +318,7 @@ module trng(
           if (csprng_num_blocks_low_we)
             begin
               csprng_num_blocks_low_reg <= csprng_num_blocks_low_new;
+            end
 
           if (csprng_num_blocks_high_we)
             begin
