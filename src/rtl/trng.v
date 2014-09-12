@@ -69,14 +69,10 @@ module trng(
   parameter TRNG_CTRL_SEED_BIT          = 8;
 
   parameter ADDR_TRNG_STATUS            = 8'h11;
-  parameter TRNG_STATUS_ENABLE_BIT      = 0;
-  parameter TRNG_STATUS_ENT0_ENABLE_BIT = 1;
-  parameter TRNG_STATUS_ENT1_ENABLE_BIT = 2;
-  parameter TRNG_STATUS_ENT2_ENABLE_BIT = 3;
-  parameter TRNG_STATUS_SEED            = 8;
-  parameter TRNG_STATUS_RND_VALID_BIT   = 16;
 
   parameter ADDR_TRNG_RND_DATA          = 8'h20;
+  parameter ADDR_TRNG_RND_DATA_VALID    = 8'h21;
+  parameter TRNG_RND_VALID_BIT          = 0;
 
   parameter ADDR_CSPRNG_NUM_ROUNDS      = 8'h30;
   parameter ADDR_CSPRNG_NUM_BLOCKS_LOW  = 8'h31;
@@ -143,6 +139,7 @@ module trng(
   //----------------------------------------------------------------
   // Wires.
   //----------------------------------------------------------------
+  wire           entropy0_enable;
   wire [31 : 0]  entropy0_raw;
   wire [31 : 0]  entropy0_stats;
   wire           entropy0_enabled;
@@ -150,6 +147,7 @@ module trng(
   wire [31 : 0]  entropy0_data;
   wire           entropy0_ack;
 
+  wire           entropy1_enable;
   wire [31 : 0]  entropy1_raw;
   wire [31 : 0]  entropy1_stats;
   wire           entropy1_enabled;
@@ -157,6 +155,7 @@ module trng(
   wire [31 : 0]  entropy1_data;
   wire           entropy1_ack;
 
+  wire           entropy2_enable;
   wire [31 : 0]  entropy2_raw;
   wire [31 : 0]  entropy2_stats;
   wire           entropy2_enabled;
@@ -193,6 +192,10 @@ module trng(
 
   assign csprng_num_blocks = {csprng_num_blocks_high_reg,
                               csprng_num_blocks_low_reg};
+
+  assign entropy0_enable = entropy0_enable_reg;
+  assign entropy1_enable = entropy1_enable_reg;
+  assign entropy2_enable = entropy2_enable_reg;
 
 
   //----------------------------------------------------------------
@@ -251,7 +254,7 @@ module trng(
                           .clk(clk),
                           .reset_n(reset_n),
 
-                          .enable(entropy0_enable_reg),
+                          .enable(entropy0_enable),
 
                           .raw_entropy(entropy0_raw),
                           .stats(entropy0_stats),
@@ -266,7 +269,7 @@ module trng(
                             .clk(clk),
                             .reset_n(reset_n),
 
-                            .enable(entropy1_enable_reg),
+                            .enable(entropy1_enable),
 
                             .noise(avalanche_noise),
 
@@ -283,7 +286,7 @@ module trng(
                            .clk(clk),
                            .reset_n(reset_n),
 
-                           .enable(entropy2_enable_reg),
+                           .enable(entropy2_enable),
 
                            .raw_entropy(entropy2_raw),
                            .stats(entropy2_stats),
@@ -453,10 +456,16 @@ module trng(
 
                 ADDR_TRNG_CTRL:
                   begin
+                    tmp_read_data[TRNG_CTRL_ENABLE_BIT]      = enable_reg;
+                    tmp_read_data[TRNG_CTRL_ENT0_ENABLE_BIT] = entropy0_enable_reg;
+                    tmp_read_data[TRNG_CTRL_ENT1_ENABLE_BIT] = entropy1_enable_reg;
+                    tmp_read_data[TRNG_CTRL_ENT2_ENABLE_BIT] = entropy2_enable_reg;
+                    tmp_read_data[TRNG_CTRL_SEED_BIT]        = csprng_seed_reg;
                   end
 
                 ADDR_TRNG_STATUS:
                   begin
+
                   end
 
                 ADDR_TRNG_RND_DATA:
@@ -465,9 +474,14 @@ module trng(
                     tmp_read_data      = csprng_rnd_data;
                   end
 
+                ADDR_TRNG_RND_DATA_VALID:
+                  begin
+                    tmp_read_data[TRNG_RND_VALID_BIT] = csprng_rnd_syn;
+                  end
+
                 ADDR_CSPRNG_NUM_ROUNDS:
                   begin
-                    tmp_read_data = {26'h0000000, csprng_num_rounds_reg};
+                    tmp_read_data[4 : 0] = csprng_num_rounds_reg;
                   end
 
                 ADDR_CSPRNG_NUM_BLOCKS_LOW:
