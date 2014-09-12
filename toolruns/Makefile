@@ -40,13 +40,13 @@ CHACHA_SRC=../../chacha/src/rtl/chacha_core.v ../../chacha/src/rtl/chacha_qr.v
 CSPRNG_SRC=../src/rtl/trng_csprng.v ../src/rtl/trng_csprng_fifo.v
 TB_CSPRNG_SRC=../src/tb/tb_csprng.v
 
-SHA512_SRC=../../sha512/src/rtl/sha512_core.v ../../sha512/src/rtl/sha512_h_constants.v  ../../sha512/src/rtl/sha512_k_constants.v  ../../sha512/src/rtl/sha512_w_mem.v
+SHA512_SRC=../../sha512/src/rtl/sha512_core.v ../../sha512/src/rtl/sha512_h_constants.v ../../sha512/src/rtl/sha512_k_constants.v ../../sha512/src/rtl/sha512_w_mem.v
 MIXER_SRC=../src/rtl/trng_mixer.v
 TB_MIXER_SRC=../src/tb/tb_mixer.v
 
 TRNG_SRC=../src/rtl/trng.v $(MIXER_SRC) $(SHA512_SRC) $(CSPRNG_SRC) $(CHACHA_SRC)
 TB_TRNG_SRC=../src/tb/tb_trng.v
-
+FAKE_ENTROPY_SRC=../src/tb/fake_modules/avalance_entropy.v ../src/tb/fake_modules/pseudo_entropy.v ../src/tb/fake_modules/ringosc_entropy.v
 
 CC=iverilog
 
@@ -62,8 +62,8 @@ mixer.sim: $(TB_MIXER_SRC) $(MIXER_SRC) $(SHA512_SRC)
 	$(CC) -o mixer.sim $(TB_MIXER_SRC) $(MIXER_SRC) $(SHA512_SRC)
 
 
-trng.sim: $(TB_TRNG_SRC) $(TRNG_SRC)
-	$(CC) -o trng.sim $(TB_TRNG_SRC) $(TRNG_SRC)
+trng.sim: $(TRNG_SRC) $(FAKE_ENTROPY_SRC)
+	$(CC) -o trng.sim $(TB_TRNG_SRC) $(TRNG_SRC) $(FAKE_ENTROPY_SRC)
 
 
 sim-csprng: csprng.sim
