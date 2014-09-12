@@ -253,7 +253,7 @@ module trng_csprng_fifo(
         08: muxed_data = csprng_data[287 : 256];
         09: muxed_data = csprng_data[313 : 282];
         10: muxed_data = csprng_data[351 : 320];
-        11: muxed_data = csprng_data[383 : 351];
+        11: muxed_data = csprng_data[383 : 352];
         12: muxed_data = csprng_data[415 : 384];
         13: muxed_data = csprng_data[447 : 416];
         14: muxed_data = csprng_data[479 : 448];
