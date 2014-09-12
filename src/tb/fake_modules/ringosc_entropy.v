@@ -59,11 +59,11 @@ module ringosc_entropy(
   //----------------------------------------------------------------
   assign enabled      = enable;
 
-  assign raw_entropy  = enable ? 32'hdeaddead : 32'h00000000;
-  assign stats        = enable ? 32'hbeefbeef : 32'h00000000;
+  assign raw_entropy  = enable ? 32'h01234567 : 32'h00000000;
+  assign stats        = enable ? 32'hfedcba98 : 32'h00000000;
 
   assign entropy_syn  = enable;
-  assign entropy_data = enable ? 32'h01020304 : 32'h00000000;
+  assign entropy_data = enable ? 32'ha5a5a5a5 : 32'h00000000;
 
 endmodule // ringosc_entropy
 
