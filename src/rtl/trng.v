@@ -41,13 +41,10 @@ module trng(
             input wire           clk,
             input wire           reset_n,
 
-            // Control.
-            input wire           cs,
-            input wire           we,
-
             input wire           avalanche_noise,
 
-            // Data ports.
+            input wire           cs,
+            input wire           we,
             input wire  [7 : 0]  address,
             input wire  [31 : 0] write_data,
             output wire [31 : 0] read_data,
@@ -119,7 +116,6 @@ module trng(
   //----------------------------------------------------------------
   // Wires.
   //----------------------------------------------------------------
-
   wire           entropy0_enable;
   wire [31 : 0]  entropy0_raw;
   wire [31 : 0]  entropy0_stats;
@@ -172,6 +168,7 @@ module trng(
   //----------------------------------------------------------------
   assign read_data = tmp_read_data;
   assign error     = tmp_error;
+  assign           = security_error = 0;
 
 
   //----------------------------------------------------------------
