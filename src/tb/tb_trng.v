@@ -63,15 +63,32 @@ module tb_trng();
   reg [31 : 0]  error_ctr;
   reg [31 : 0]  tc_ctr;
 
-  reg            tb_clk;
-  reg            tb_reset_n;
+  reg           tb_clk;
+  reg           tb_reset_n;
+  reg           tb_avalanche_noise;
+  reg           tb_cs;
+  reg           tb_we;
+  reg [7  : 0]  tb_address;
+  reg [31 : 0]  tb_write_data;
+  wire [31 : 0] tb_read_data;
+  wire          tb_error;
+  wire          tb_security_error;
 
 
   //----------------------------------------------------------------
   // Device Under Test.
   //----------------------------------------------------------------
   trng_trng dut(
-
+                .clk(),
+                .reset_n(),
+                .avalanche_noise(tb_avalanche_noise),
+                .cs(tb_cs),
+                .we(tb_we),
+                .address(tba_address),
+                .write_data(tb_write_data),
+                .read_data(tb_read_data),
+                .error(tb_error),
+                .security_error(tb_security_error)
                );
 
 
