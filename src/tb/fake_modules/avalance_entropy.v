@@ -44,10 +44,10 @@ module avalance_entropy(
 
                         input wire           enable,
 
+                        input wire           noise,
+
                         output wire [31 : 0] raw_entropy,
                         output wire [31 : 0] stats,
-
-                        input wire           noise,
 
                         output wire          enabled,
                         output wire          entropy_syn,

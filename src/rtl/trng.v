@@ -247,10 +247,10 @@ module trng(
 
                             .enable(entropy1_enable),
 
+                            .noise(avalanche_noise),
+
                             .raw_entropy(entropy1_raw),
                             .stats(entropy1_stats),
-
-                            .noise(avalanche_noise),
 
                             .enabled(entropy1_enabled),
                             .entropy_syn(entropy1_syn),
