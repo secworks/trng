@@ -58,30 +58,34 @@ module trng(
   //----------------------------------------------------------------
   // Internal constant and parameter definitions.
   //----------------------------------------------------------------
-  parameter ADDR_NAME0         = 8'h00;
-  parameter ADDR_NAME1         = 8'h01;
-  parameter ADDR_VERSION       = 8'h02;
+  parameter ADDR_NAME0                  = 8'h00;
+  parameter ADDR_NAME1                  = 8'h01;
+  parameter ADDR_VERSION                = 8'h02;
 
-  parameter TRNG_CTRL          = 8'h10;
-  parameter TRNG_STATUS        = 8'h11;
+  parameter ADDR_TRNG_CTRL              = 8'h10;
+  parameter ADDR_TRNG_CTRL              = 8'h10;
+  parameter ADDR_TRNG_STATUS            = 8'h11;
 
-  parameter TRNG_RND_DATA      = 8'h20;
+  parameter ADDR_TRNG_RND_DATA          = 8'h20;
 
-  parameter CSPRNG_NUM_ROUNDS  = 8'h30;
-  parameter CSPRNG_NUM_BLOCKS  = 8'h31;
+  parameter ADDR_CSPRNG_NUM_ROUNDS      = 8'h30;
+  parameter ADDR_CSPRNG_NUM_BLOCKS_LOW  = 8'h31;
+  parameter ADDR_CSPRNG_NUM_BLOCKS_HIGH = 8'h32;
 
-  parameter ENTROPY0_RAW       = 8'h40;
-  parameter ENTROPY1_STATS     = 8'h41;
+  parameter ADDR_ENTROPY0_RAW           = 8'h40;
+  parameter ADDR_ENTROPY1_STATS         = 8'h41;
 
-  parameter ENTROPY1_RAW       = 8'h50;
-  parameter ENTROPY1_STATS     = 8'h51;
+  parameter ADDR_ENTROPY1_RAW           = 8'h50;
+  parameter ADDR_ENTROPY1_STATS         = 8'h51;
 
-  parameter ENTROPY2_RAW       = 8'h60;
-  parameter ENTROPY2_STATS     = 8'h61;
+  parameter ADDR_ENTROPY2_RAW           = 8'h60;
+  parameter ADDR_ENTROPY2_STATS         = 8'h61;
 
-  parameter TRNG_NAME0         = 32'h74726e67; // "trng"
-  parameter TRNG_NAME1         = 32'h20202020; // "    "
-  parameter TRNG_VERSION       = 32'h302e3031; // "0.01"
+
+  parameter TRNG_NAME0   = 32'h74726e67; // "trng"
+  parameter TRNG_NAME1   = 32'h20202020; // "    "
+  parameter TRNG_VERSION = 32'h302e3031; // "0.01"
+
 
   parameter CSPRNG_DEFAULT_NUM_ROUNDS = 5'h18;
   parameter CSPRNG_DEFAULT_NUM_BLOCKS = 64'h1000000000000000;
@@ -94,9 +98,13 @@ module trng(
   reg [4 : 0] csprng_num_rounds_new;
   reg         csprng_num_rounds_we;
 
-  reg [4 : 0] csprng_num_blocks_reg;
-  reg [4 : 0] csprng_num_blocks_new;
-  reg         csprng_num_blocks_we;
+  reg [31 : 0] csprng_num_blocks_low_reg;
+  reg [31 : 0] csprng_num_blocks_low_new;
+  reg          csprng_num_blocks_low_we;
+
+  reg [31 : 0] csprng_num_blocks_high_reg;
+  reg [31 : 0] csprng_num_blocks_high_new;
+  reg          csprng_num_blocks_high_we;
 
   reg         enable_reg;
   reg         enable_new;
@@ -266,20 +274,32 @@ module trng(
   // reg_update
   //
   // Update functionality for all registers in the core.
-  // All registers are positive edge triggered with synchronous
+  // All registers are positive edge triggered with asynchronous
   // active low reset. All registers have write enable.
   //----------------------------------------------------------------
-  always @ (posedge clk)
+  always @ (posedge clk or negedge reset_n)
     begin
       if (!reset_n)
         begin
-          csprng_num_rounds_reg <= CSPRNG_DEFAULT_NUM_ROUNDS;
+          enable_reg                 <= 1;
+          csprng_seed_reg            <= 0;
+          csprng_num_rounds_reg      <= CSPRNG_DEFAULT_NUM_ROUNDS;
+          csprng_num_blocks_low_reg  <= CSPRNG_DEFAULT_NUM_BLOCKS[31 : 0];
+          csprng_num_blocks_high_reg <= CSPRNG_DEFAULT_NUM_BLOCKS[63 : 32];
         end
+
       else
         begin
+          csprng_seed_reg <= csprng_seed_new;
+
           if (csprng_num_rounds_we)
             begin
               csprng_num_rounds_reg <= csprng_num_rounds_new;
+            end
+
+          if (csprng_num_blocks_low_we)
+            begin
+              csprng_num_blocks_low_reg <= csprng_num_blocks_low_new;
             end
         end
     end // reg_update
@@ -293,11 +313,17 @@ module trng(
   //----------------------------------------------------------------
   always @*
     begin : api_logic
-      csprng_num_rounds_new = 6'h00;
-      csprng_num_rounds_we  = 0;
-
-      tmp_read_data         = 32'h00000000;
-      tmp_error             = 0;
+      enable_new                 = 0;
+      enable_we                  = 0;
+      csprng_seed_new            = 0;
+      csprng_num_rounds_new      = 5'h00;
+      csprng_num_rounds_we       = 0;
+      csprng_num_blocks_low_new  = 32'h00000000;
+      csprng_num_blocks_low_we   = 0;
+      csprng_num_blocks_high_new = 32'h00000000;
+      csprng_num_blocks_high_we  = 0;
+      tmp_read_data              = 32'h00000000;
+      tmp_error                  = 0;
 
       if (cs)
         begin
@@ -305,9 +331,10 @@ module trng(
             begin
               case (address)
                 // Write operations.
+
                 CSPRNG_NUM_ROUNDS:
                   begin
-                    csprng_num_rounds_new = write_data[5 : 0];
+                    csprng_num_rounds_new = write_data[4 : 0];
                     csprng_num_rounds_we  = 1;
                   end
 
