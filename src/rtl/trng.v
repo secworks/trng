@@ -166,7 +166,6 @@ module trng(
   reg            mixer_enable;
   wire [511 : 0] mixer_seed_data;
   wire           mixer_seed_syn;
-  wire           mixer_seed_ack;
 
   wire           csprng_enable;
   wire           csprng_debug_mode;
@@ -174,6 +173,7 @@ module trng(
   wire [63 : 0]  csprng_num_blocks;
   wire           csprng_seed;
   wire           csprng_more_seed;
+  wire           csprng_seed_ack;
   wire           csprng_ready;
   wire           csprng_error;
   wire [31 : 0]  csprng_rnd_data;
@@ -224,7 +224,7 @@ module trng(
                    .entropy2_ack(entropy2_ack),
 
                    .seed_data(mixer_seed_data),
-                   .seed_syn(mixer_seed_syn),
+                   .seed_syn(csprng_seed_ack),
                    .seed_ack(mixer_seed_ack)
                   );
 

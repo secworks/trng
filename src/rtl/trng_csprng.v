@@ -133,6 +133,7 @@ module trng_csprng(
 
   wire [511 : 0] cipher_data_out;
   wire           cipher_data_out_valid;
+  wire           cipher_ready;
 
   reg            discard_outputs;
 
