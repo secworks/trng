@@ -63,6 +63,8 @@ module tb_trng();
   reg [31 : 0]  error_ctr;
   reg [31 : 0]  tc_ctr;
 
+  reg [31 : 0]  read_data;
+
   reg           tb_clk;
   reg           tb_reset_n;
   reg           tb_avalanche_noise;
