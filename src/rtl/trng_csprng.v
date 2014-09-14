@@ -373,12 +373,9 @@ module trng_csprng(
               end
             else
               begin
-                if (!seed_syn)
-                  begin
-                    more_seed_new    = 1;
-                    csprng_ctrl_new  = CTRL_SEED1;
-                    csprng_ctrl_we   = 1;
-                  end
+                more_seed_new    = 1;
+                csprng_ctrl_new  = CTRL_SEED1;
+                csprng_ctrl_we   = 1;
               end
           end
 
