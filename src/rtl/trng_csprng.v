@@ -71,12 +71,13 @@ module trng_csprng(
 
   parameter CTRL_IDLE      = 4'h0;
   parameter CTRL_SEED0     = 4'h1;
-  parameter CTRL_SEED1     = 4'h2;
-  parameter CTRL_INIT0     = 4'h3;
-  parameter CTRL_INIT1     = 4'h4;
-  parameter CTRL_NEXT0     = 4'h5;
-  parameter CTRL_NEXT1     = 4'h6;
-  parameter CTRL_MORE      = 4'h7;
+  parameter CTRL_NSYN      = 4'h2;
+  parameter CTRL_SEED1     = 4'h3;
+  parameter CTRL_INIT0     = 4'h4;
+  parameter CTRL_INIT1     = 4'h5;
+  parameter CTRL_NEXT0     = 4'h6;
+  parameter CTRL_NEXT1     = 4'h7;
+  parameter CTRL_MORE      = 4'h8;
   parameter CTRL_CANCEL    = 4'hf;
 
 
@@ -355,12 +356,29 @@ module trng_csprng(
               end
             else if (seed_syn)
               begin
-                more_seed_new    = 1;
                 seed_ack_new     = 1;
                 cipher_block_new = seed_data;
                 cipher_block_we  = 1;
-                csprng_ctrl_new  = CTRL_SEED1;
+                csprng_ctrl_new  = CTRL_NSYN;
                 csprng_ctrl_we   = 1;
+              end
+          end
+
+        CTRL_NSYN:
+          begin
+            if ((!enable) || (seed))
+              begin
+                csprng_ctrl_new = CTRL_CANCEL;
+                csprng_ctrl_we  = 1;
+              end
+            else
+              begin
+                if (!seed_syn)
+                  begin
+                    more_seed_new    = 1;
+                    csprng_ctrl_new  = CTRL_SEED1;
+                    csprng_ctrl_we   = 1;
+                  end
               end
           end
 
