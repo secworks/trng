@@ -1,4 +1,4 @@
-//======================================================================
+ //======================================================================
 //
 // trng.v
 // --------
@@ -163,7 +163,7 @@ module trng(
   wire [31 : 0]  entropy2_data;
   wire           entropy2_ack;
 
-  reg            mixer_enable;
+  wire           mixer_enable;
   wire [511 : 0] mixer_seed_data;
   wire           mixer_seed_syn;
 
@@ -197,6 +197,12 @@ module trng(
   assign entropy1_enable = entropy1_enable_reg;
   assign entropy2_enable = entropy2_enable_reg;
 
+  assign mixer_enable  = enable_reg;
+
+  assign csprng_enable     = enable_reg;
+  assign csprng_seed       = csprng_seed_reg;
+  assign csprng_debug_mode = 0;
+
 
   //----------------------------------------------------------------
   // core instantiations.
@@ -224,8 +230,8 @@ module trng(
                    .entropy2_ack(entropy2_ack),
 
                    .seed_data(mixer_seed_data),
-                   .seed_syn(csprng_seed_ack),
-                   .seed_ack(mixer_seed_ack)
+                   .seed_syn(mixer_seed_syn),
+                   .seed_ack(csprng_seed_ack)
                   );
 
   trng_csprng csprng(
@@ -265,22 +271,23 @@ module trng(
                           .entropy_ack(entropy0_ack)
                          );
 
-  avalance_entropy entropy1(
-                            .clk(clk),
-                            .reset_n(reset_n),
+  avalance_entropy_core entropy1(
+                                 .clk(clk),
+                                 .reset_n(reset_n),
 
-                            .enable(entropy1_enable),
+                                 .enable(entropy1_enable),
 
-                            .noise(avalanche_noise),
+                                 .noise(avalanche_noise),
 
-                            .raw_entropy(entropy1_raw),
-                            .stats(entropy1_stats),
+                                 .raw_entropy(entropy1_raw),
+                                 .stats(entropy1_stats),
 
-                            .enabled(entropy1_enabled),
-                            .entropy_syn(entropy1_syn),
-                            .entropy_data(entropy1_data),
-                            .entropy_ack(entropy1_ack)
-                           );
+                                 .enabled(entropy1_enabled),
+                                 .entropy_syn(entropy1_syn),
+                                 .entropy_data(entropy1_data),
+                                 .entropy_ack(entropy1_ack),
+                                 .led()
+                                );
 
   ringosc_entropy entropy2(
                            .clk(clk),
