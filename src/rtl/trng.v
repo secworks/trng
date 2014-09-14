@@ -285,8 +285,7 @@ module trng(
                                  .enabled(entropy1_enabled),
                                  .entropy_syn(entropy1_syn),
                                  .entropy_data(entropy1_data),
-                                 .entropy_ack(entropy1_ack),
-                                 .led()
+                                 .entropy_ack(entropy1_ack)
                                 );
 
   ringosc_entropy entropy2(
