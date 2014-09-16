@@ -73,6 +73,7 @@ module tb_trng();
   reg [7  : 0]  tb_address;
   reg [31 : 0]  tb_write_data;
   wire [31 : 0] tb_read_data;
+  wire [7 : 0]  tb_debug;
   wire          tb_error;
   wire          tb_security_error;
 
@@ -90,6 +91,7 @@ module tb_trng();
            .write_data(tb_write_data),
            .read_data(tb_read_data),
            .error(tb_error),
+           .debug(tb_debug),
            .security_error(tb_security_error)
           );
 

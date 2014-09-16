@@ -191,7 +191,7 @@ module trng(
   assign read_data      = tmp_read_data;
   assign error          = tmp_error;
   assign security_error = 0;
-  assigh debug          = 0;
+  assign debug          = 0;
   
   assign csprng_num_blocks = {csprng_num_blocks_high_reg,
                               csprng_num_blocks_low_reg};
