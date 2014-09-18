@@ -55,6 +55,33 @@ module tb_trng();
   parameter CLK_HALF_PERIOD = 1;
   parameter CLK_PERIOD      = 2 * CLK_HALF_PERIOD;
 
+  // The DUT address map.
+  parameter ADDR_TRNG_CTRL              = 8'h10;
+  parameter TRNG_CTRL_ENABLE_BIT        = 0;
+  parameter TRNG_CTRL_ENT0_ENABLE_BIT   = 1;
+  parameter TRNG_CTRL_ENT1_ENABLE_BIT   = 2;
+  parameter TRNG_CTRL_ENT2_ENABLE_BIT   = 3;
+  parameter TRNG_CTRL_SEED_BIT          = 8;
+
+  parameter ADDR_TRNG_STATUS            = 8'h11;
+
+  parameter ADDR_TRNG_RND_DATA          = 8'h20;
+  parameter ADDR_TRNG_RND_DATA_VALID    = 8'h21;
+  parameter TRNG_RND_VALID_BIT          = 0;
+
+  parameter ADDR_CSPRNG_NUM_ROUNDS      = 8'h30;
+  parameter ADDR_CSPRNG_NUM_BLOCKS_LOW  = 8'h31;
+  parameter ADDR_CSPRNG_NUM_BLOCKS_HIGH = 8'h32;
+
+  parameter ADDR_ENTROPY0_RAW           = 8'h40;
+  parameter ADDR_ENTROPY0_STATS         = 8'h41;
+
+  parameter ADDR_ENTROPY1_RAW           = 8'h50;
+  parameter ADDR_ENTROPY1_STATS         = 8'h51;
+
+  parameter ADDR_ENTROPY2_RAW           = 8'h60;
+  parameter ADDR_ENTROPY2_STATS         = 8'h61;
+
 
   //----------------------------------------------------------------
   // Register and Wire declarations.
@@ -94,6 +121,11 @@ module tb_trng();
            .debug(tb_debug),
            .security_error(tb_security_error)
           );
+
+
+  //----------------------------------------------------------------
+  // Concurrent assignments.
+  //----------------------------------------------------------------
 
 
   //----------------------------------------------------------------
@@ -255,12 +287,25 @@ module tb_trng();
   // a number of seeds based on entropy from source 0 and 2.
   //----------------------------------------------------------------
   task tc1_gen_rnd();
+    reg [31 : 0] i;
+
     begin
       $display("*** Starting TC1: Generating random values from entropy.");
 
+      // We try to change number of blocks to a low value to force reseeding.
+      write_word(ADDR_CSPRNG_NUM_BLOCKS_LOW, 32'h00000002);
+      write_word(ADDR_CSPRNG_NUM_BLOCKS_HIGH, 32'h00000000);
 
-      #(50000 * CLK_PERIOD);
+      #(100 * CLK_PERIOD);
 
+      i = 0;
+      while (i < 1000)
+        begin
+          $display("Reading rnd word %08d.", i);
+          i = i + 1;
+          read_word(ADDR_TRNG_RND_DATA);
+          #(2 * CLK_PERIOD);
+        end
 
       $display("*** TC1 done.");
     end
