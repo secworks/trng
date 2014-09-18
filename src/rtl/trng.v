@@ -217,11 +217,13 @@ module trng(
   assign csprng_debug_mode = 0;
 
   // Patches to get our first version to work.
+  assign entropy0_enabled = 0;
   assign entropy0_raw     = 32'h00000000;
   assign entropy0_stats   = 32'h00000000;
-  assign entropy0_enabled = 0;
   assign entropy0_syn     = 0;
   assign entropy0_data    = 32'h00000000;
+
+  entropy1_enabled        = 1;
 
   assign entropy2_enabled = 1;
   assign entropy2_stats   = 32'h00000000;
@@ -298,17 +300,20 @@ module trng(
                                  .clk(clk),
                                  .reset_n(reset_n),
 
-                                 .Enable(entropy1_enable),
-
                                  .noise(avalanche_noise),
+                                 .sampled_noise(),
+                                 .entropy(),
 
-                                 .raw_entropy(entropy1_raw),
-                                 .stats(entropy1_stats),
-
-                                 .enabled(entropy1_enabled),
                                  .entropy_syn(entropy1_syn),
                                  .entropy_data(entropy1_data),
                                  .entropy_ack(entropy1_ack)
+
+                                 .led(),
+                                 .debug_data(entropy1_raw),
+                                 .debug_clk(),
+
+                                 .delta_data(entropy1_stats),
+                                 .delta_clk()
                                 );
 
   rosc_entropy_core entropy2(
