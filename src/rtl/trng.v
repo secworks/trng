@@ -51,6 +51,7 @@ module trng(
             output wire          error,
 
             output wire  [7 : 0] debug,
+            input wire           debug_update,
 
             output wire          security_error
            );
@@ -174,6 +175,7 @@ module trng(
   wire           entropy2_syn;
   wire [31 : 0]  entropy2_data;
   wire           entropy2_ack;
+  wire           entropy2_debug;
 
   wire           mixer_enable;
   wire [511 : 0] mixer_seed_data;
@@ -201,7 +203,7 @@ module trng(
   assign read_data      = tmp_read_data;
   assign error          = tmp_error;
   assign security_error = 0;
-  assign debug          = 0;
+  assign debug          = entropy2_debug;
 
   assign csprng_num_blocks = {csprng_num_blocks_high_reg,
                               csprng_num_blocks_low_reg};
@@ -331,8 +333,8 @@ module trng(
                              .rnd_valid(entropy2_syn),
                              .rnd_ack(entropy2_ack),
 
-                             .debug(),
-                             .debug_update()
+                             .debug(entropy2_debug),
+                             .debug_update(debug_update)
                             );
 
 
