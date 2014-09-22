@@ -136,8 +136,6 @@ module trng_csprng(
   wire           cipher_data_out_valid;
   wire           cipher_ready;
 
-  reg            discard_outputs;
-
   wire           fifo_more_data;
   reg            fifo_discard;
   wire           fifo_rnd_syn;
@@ -323,7 +321,6 @@ module trng_csprng(
       ready_we               = 0;
       error_new              = 0;
       error_we               = 0;
-      discard_outputs        = 0;
       seed_ack_new           = 0;
       more_seed_new          = 0;
       fifo_discard           = 0;
@@ -498,7 +495,6 @@ module trng_csprng(
             cipher_block_new = {16{32'h00000000}};
             cipher_block_we  = 1;
             block_ctr_rst    = 1;
-            discard_outputs  = 1;
             csprng_ctrl_new  = CTRL_IDLE;
             csprng_ctrl_we   = 1;
           end

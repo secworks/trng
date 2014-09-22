@@ -175,7 +175,7 @@ module trng(
   wire           entropy2_syn;
   wire [31 : 0]  entropy2_data;
   wire           entropy2_ack;
-  wire           entropy2_debug;
+  wire [7 : 0]   entropy2_debug;
 
   wire           mixer_enable;
   wire [511 : 0] mixer_seed_data;
@@ -225,7 +225,7 @@ module trng(
   assign entropy0_syn     = 0;
   assign entropy0_data    = 32'h00000000;
 
-  entropy1_enabled        = 1;
+  assign entropy1_enabled = 1;
 
   assign entropy2_enabled = 1;
   assign entropy2_stats   = 32'h00000000;
@@ -298,7 +298,7 @@ module trng(
 //                          .entropy_ack(entropy0_ack)
 //                         );
 
-  avalance_entropy_core entropy1(
+  avalanche_entropy_core entropy1(
                                  .clk(clk),
                                  .reset_n(reset_n),
 
@@ -308,7 +308,7 @@ module trng(
 
                                  .entropy_syn(entropy1_syn),
                                  .entropy_data(entropy1_data),
-                                 .entropy_ack(entropy1_ack)
+                                 .entropy_ack(entropy1_ack),
 
                                  .led(),
                                  .debug_data(entropy1_raw),
@@ -352,8 +352,8 @@ module trng(
           entropy0_enable_reg        <= 1;
           entropy1_enable_reg        <= 1;
           entropy2_enable_reg        <= 1;
-          op_a_reg                   <= 32'h01010101;
-          op_a_reg                   <= 32'h10101010;
+          entropy2_op_a_reg          <= 32'h01010101;
+          entropy2_op_a_reg          <= 32'h10101010;
           enable_reg                 <= 1;
           csprng_rnd_ack_reg         <= 0;
           csprng_seed_reg            <= 0;
@@ -361,7 +361,6 @@ module trng(
           csprng_num_blocks_low_reg  <= CSPRNG_DEFAULT_NUM_BLOCKS[31 : 0];
           csprng_num_blocks_high_reg <= CSPRNG_DEFAULT_NUM_BLOCKS[63 : 32];
         end
-
       else
         begin
           csprng_rnd_ack_reg <= csprng_rnd_ack_new;
@@ -382,14 +381,14 @@ module trng(
               entropy2_enable_reg <= entropy2_enable_new;
             end
 
-          if (op_a_we)
+          if (entropy2_op_a_we)
             begin
-              op_a_reg <= op_a_new;
+              entropy2_op_a_reg <= entropy2_op_a_new;
             end
 
-          if (op_b_we)
+          if (entropy2_op_b_we)
             begin
-              op_b_reg <= op_b_new;
+              entropy2_op_b_reg <= entropy2_op_b_new;
             end
 
           if (enable_we)
@@ -429,10 +428,10 @@ module trng(
       entropy1_enable_we         = 0;
       entropy2_enable_new        = 0;
       entropy2_enable_we         = 0;
-      op_a_new                   = 32'h00000000;
-      op_a_we                    = 0;
-      op_b_new                   = 32'h00000000;
-      op_b_we                    = 0;
+      entropy2_op_a_new          = 32'h00000000;
+      entropy2_op_a_we           = 0;
+      entropy2_op_b_new          = 32'h00000000;
+      entropy2_op_b_we           = 0;
       enable_new                 = 0;
       enable_we                  = 0;
       csprng_seed_new            = 0;
@@ -485,16 +484,16 @@ module trng(
                     csprng_num_blocks_high_we  = 1;
                   end
 
-                ADDR_OPA:
+                ADDR_ENTROPY2_OP_A:
                   begin
-                    tmp_read_data = op_a_reg;
-                    op_a_we = 1;
+                    entropy2_op_a_new = write_data;
+                    entropy2_op_a_we  = 1;
                   end
 
-                ADDR_OPB:
+                ADDR_ENTROPY2_OP_B:
                   begin
-                    tmp_read_data = op_b_reg;
-                    op_b_we = 1;
+                    entropy2_op_b_new = write_data;
+                    entropy2_op_b_we  = 1;
                   end
 
                 default:
