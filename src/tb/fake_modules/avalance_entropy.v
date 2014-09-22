@@ -1,7 +1,7 @@
 //======================================================================
 //
-// avalance_entropy_core.v
-// -----------------------
+// avalance_entropy.v
+// ------------------
 // Fake avalanche entropy source. This module SHOULD ONLY be used
 // during simulation of the Cryptech True Random Number Generator
 // (trng). The module DOES NOT provide any real entropy.
@@ -38,22 +38,22 @@
 //
 //======================================================================
 
-module avalance_entropy_core(
-                             input wire           clk,
-                             input wire           reset_n,
+module avalance_entropy(
+                        input wire           clk,
+                        input wire           reset_n,
 
-                             input wire           enable,
+                        input wire           enable,
 
-                             input wire           noise,
+                        input wire           noise,
 
-                             output wire [31 : 0] raw_entropy,
-                             output wire [31 : 0] stats,
+                        output wire [31 : 0] raw_entropy,
+                        output wire [31 : 0] stats,
 
-                             output wire          enabled,
-                             output wire          entropy_syn,
-                             output wire [31 : 0] entropy_data,
-                             input wire           entropy_ack
-                            );
+                        output wire          enabled,
+                        output wire          entropy_syn,
+                        output wire [31 : 0] entropy_data,
+                        input wire           entropy_ack
+                       );
 
 
   //----------------------------------------------------------------
@@ -67,8 +67,8 @@ module avalance_entropy_core(
   assign entropy_syn  = enable;
   assign entropy_data = enable ? 32'h01020304 : 32'h00000000;
 
-endmodule // avalance_entropy_core
+endmodule // avalance_entropy
 
 //======================================================================
-// EOF avalance_entropy_core.v
+// EOF avalance_entropy.v
 //======================================================================
