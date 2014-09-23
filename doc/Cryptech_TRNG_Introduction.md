@@ -21,17 +21,51 @@ high capacity demands. A data rate of 100 Gbps for example shall be
 possibe to reach, albeit not in a low cost implementation.
 
 
-2. Secure and Conservative. 
+2. Secure and Conservative. Secure defaults. Following best practices
+and don't invent new things that breaks with known besr practice. Very
+high quality of the generated number. Resistance against attepmts at
+manipulation. Use of big seed state. On-line testing of entropy souces.
 
 
-3. Modular.
+3. Flexible and Modular. The architecture and the parameters controlling
+the functionality shall be under control of the application. The major
+functionaloties are in separate modules.
 
 
 4. Open, Testable and Auditable.
 
 
+Combining (4) with (2) and (3) is probably what sets the Cryptech TRNG
+apart from many other designs.
+
+
 ## High level architecture ##
 
+
+### Entropy Providers ###
+
+
+### Mixer ###
+
+
+### CSPRNG ###
+
+
+### Test and Debug ###
+
+
+
+
+## Security motivation ##
+
+
+## Implementation details ##
+State.
+
+
+    
+## Implementation results ##
+Size and performance in some FPGA devices.
 
 
 
@@ -45,8 +79,14 @@ given here only covers the one shipped from:
 
 http://trac.cryptech.is/
 
+[2] SHA-512/x
 
-  
+[3] ChaCha stream cipher
+
+[4] The Cryptech HSM Source Code: http://trac.cryptech.is/browser/core/trng
+
+
+
 ## Old stuff ##
 
 But let me just try to explain how I'm thinking and why I belive it will
