@@ -41,17 +41,73 @@ apart from many other designs.
 
 ## High level architecture ##
 
+The Cryptech TRNG is a hybrid design with entropy providers connected to
+physical entropy sources are used to seed a cryptographically safe
+pseudor random number generator (CSPRNG). In order to combine the
+entropy from the providers, the TRNG contains a mixer stage between the
+providers and the CSPRNG. Figure XYZ shows the high level architecture.
+
+Besides the three stages of the datapath, the TRNG contains a control
+part that provides the functionality needed to test and debug the TRNG
+in a secure manner, even in a running system.
+
+The followin sub chapters will give a detailed description of each of
+the parts of the TRNG.
+
 
 ### Entropy Providers ###
 
+Entropy providers can be seen as the HW equivalent to drivers in an
+operating system. The entropy provider is responsible for hiding the
+functionality needed to control and extract data from a given entropy
+source and to provide it as 32-bit data in a uniform way to the mixer.
+
+
 
 ### Mixer ###
+
+The mixer is based around a cryptographic hash function. The current
+implementation uses SHA-512 [5] but can be replaced with any other
+cryptographic hash function.
+
+Entropy is provided to the Mixer as 32-bit data words. The words are
+accepted by the mixer in strict round robin order. This means that in an
+implementation with a high capacity entropy provider and a lowe capacity
+entropy provider, the rate of accepted data words from the high capacity
+provider will be limited to the capacity of the low capacit
+provider. The high capacity provider is simply not allowed to dominate
+the input to the mixer.
+
+Unless the TRNG state is reset, the hash function is never
+reinitialized. Instead all entropy are added as new blocks to the same
+message and the seeds extracted are intermediate digests. This means
+that the state of the hash function between seed data blocks are based
+not only of the new entropy data, but also on previous hash operations.
+
+
 
 
 ### CSPRNG ###
 
 
+    
+
+The CSPRNG requires two 512 bit words from the mixer to seed the
+CSPRNG. These bits are used for:
+
+- 512 bits block
+- 256 bits key
+- 64 bits IV
+- 64 bits initial counter value.
+
+In total 896 bits are used to seed the PRNG.
+
+
 ### Test and Debug ###
+
+
+
+
 
 
 
@@ -85,6 +141,7 @@ http://trac.cryptech.is/
 
 [4] The Cryptech HSM Source Code: http://trac.cryptech.is/browser/core/trng
 
+[5] NIST. FIPS 180-4.
 
 
 ## Old stuff ##
@@ -142,3 +199,4 @@ accepts 512 bit words and generates 32-bit words. How many cycles it
 takes to generate new words and how often reseed happens depends on the
 algorithm used, how the system is configured. But the interfaces should
 be possible to keep the same. 
+
