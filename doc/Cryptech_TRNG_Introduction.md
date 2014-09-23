@@ -10,13 +10,22 @@ In this introduction to the Cryptech True Random Number Generator (TRNG)
 we will look at the design goals for the TRNG and how the design meets
 these goals [1].
 
+
 ## Design Goals ##
 The Cryptech TRNG shall meet the following design Goals 
-1. High performance and Scaleable. 
+
+1. High performance and Scaleable. Even a compact, low cost
+implementation shall be able to generate 10-100 Mbps rate of random
+number data. The design shall also be scaleable to basically arbitrarily
+high capacity demands. A data rate of 100 Gbps for example shall be
+possibe to reach, albeit not in a low cost implementation.
+
 
 2. Secure and Conservative. 
 
+
 3. Modular.
+
 
 4. Open, Testable and Auditable.
 
