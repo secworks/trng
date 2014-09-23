@@ -97,7 +97,7 @@ module tb_trng();
   reg           tb_avalanche_noise;
   reg           tb_cs;
   reg           tb_we;
-  reg [7  : 0]  tb_address;
+  reg [15  : 0] tb_address;
   reg [31 : 0]  tb_write_data;
   wire [31 : 0] tb_read_data;
   wire [7 : 0]  tb_debug;
@@ -179,7 +179,7 @@ module tb_trng();
   //
   // Write the given word to the DUT using the DUT interface.
   //----------------------------------------------------------------
-  task write_word(input [7 : 0]  address,
+  task write_word(input [15 : 0]  address,
                   input [31 : 0] word);
     begin
       if (DEBUG)
@@ -206,7 +206,7 @@ module tb_trng();
   // the word read will be available in the global variable
   // read_data.
   //----------------------------------------------------------------
-  task read_word(input [7 : 0]  address);
+  task read_word(input [15 : 0]  address);
     begin
       tb_address = address;
       tb_cs = 1;
@@ -269,13 +269,18 @@ module tb_trng();
   //----------------------------------------------------------------
   task init_sim();
     begin
-      cycle_ctr           = 0;
-      error_ctr           = 0;
-      tc_ctr              = 0;
+      cycle_ctr          = 0;
+      error_ctr          = 0;
+      tc_ctr             = 0;
 
-      tb_clk              = 0;
-      tb_reset_n          = 1;
+      tb_clk             = 0;
+      tb_reset_n         = 1;
 
+      tb_avalanche_noise = 0;
+      tb_cs              = 0;
+      tb_we              = 0;
+      tb_address         = 16'h0000;
+      tb_write_data      = 32'h00000000;
     end
   endtask // init_sim
 

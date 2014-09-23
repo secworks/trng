@@ -45,7 +45,7 @@ module trng(
 
             input wire           cs,
             input wire           we,
-            input wire  [7 : 0]  address,
+            input wire  [15 : 0] address,
             input wire  [31 : 0] write_data,
             output wire [31 : 0] read_data,
             output wire          error,
