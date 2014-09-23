@@ -62,13 +62,32 @@ operating system. The entropy provider is responsible for hiding the
 functionality needed to control and extract data from a given entropy
 source and to provide it as 32-bit data in a uniform way to the mixer.
 
+The entropy provider must observe the behaviour of its noise source and
+perform 
+
+Fast total failure tests and more comprehensive online test.
+
+
+For debugging purposes the entropy providers must provide access to the
+raw digital noise.
+
 
 
 ### Mixer ###
 
+The mixer also decouples the random number generation from the entropy
+collection. This means that the TRNG can collect entropy for the next
+seed operation while the random generatio part keeps generating random
+numbers.
+
 The mixer is based around a cryptographic hash function. The current
 implementation uses SHA-512 [5] but can be replaced with any other
 cryptographic hash function.
+
+Using a cryptographic hash function as a mixer makes it infeasible to
+determine the entropy from the seed. This makes it very hard from an
+attacker to determine how an attempt at manipulating a entropy source
+affected the seed and thus how effective the manipulatio was.
 
 Entropy is provided to the Mixer as 32-bit data words. The words are
 accepted by the mixer in strict round robin order. This means that in an
@@ -91,6 +110,11 @@ not only of the new entropy data, but also on previous hash operations.
 
 
     
+
+The CSPRNG is responsible for generating the random numbers provided to
+applications by the TRNG.
+
+
 
 The CSPRNG requires two 512 bit words from the mixer to seed the
 CSPRNG. These bits are used for:
