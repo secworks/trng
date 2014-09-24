@@ -64,7 +64,6 @@ module trng(
   parameter ENTROPY0_PREFIX             = 4'h04;
   parameter ENTROPY1_PREFIX             = 4'h05;
   parameter ENTROPY2_PREFIX             = 4'h06;
-
   parameter MIXER_PREFIX                = 4'h0a;
   parameter CSPRNG_PREFIX               = 4'h0b;
 
@@ -73,133 +72,101 @@ module trng(
   parameter ADDR_VERSION                = 8'h02;
 
   parameter ADDR_TRNG_CTRL              = 8'h10;
-  parameter TRNG_CTRL_ENABLE_BIT        = 0;
-  parameter TRNG_CTRL_ENT0_ENABLE_BIT   = 1;
-  parameter TRNG_CTRL_ENT1_ENABLE_BIT   = 2;
-  parameter TRNG_CTRL_ENT2_ENABLE_BIT   = 3;
-  parameter TRNG_CTRL_SEED_BIT          = 8;
+  parameter TRNG_CTRL_DISCARD_BIT       = 0;
+  parameter TRNG_CTRL_SEED_BIT          = 1;
 
   parameter ADDR_TRNG_STATUS            = 8'h11;
-
-  parameter ADDR_TRNG_RND_DATA          = 8'h20;
-  parameter ADDR_TRNG_RND_DATA_VALID    = 8'h21;
-  parameter TRNG_RND_VALID_BIT          = 0;
-
-  parameter ADDR_CSPRNG_NUM_ROUNDS      = 8'h30;
-  parameter ADDR_CSPRNG_NUM_BLOCKS_LOW  = 8'h31;
-  parameter ADDR_CSPRNG_NUM_BLOCKS_HIGH = 8'h32;
-
-  parameter ADDR_ENTROPY0_RAW           = 8'h40;
-  parameter ADDR_ENTROPY0_STATS         = 8'h41;
-
-  parameter ADDR_ENTROPY1_RAW           = 8'h50;
-  parameter ADDR_ENTROPY1_STATS         = 8'h51;
-
-  parameter ADDR_ENTROPY2_RAW           = 8'h60;
-  parameter ADDR_ENTROPY2_STATS         = 8'h61;
-  parameter ADDR_ENTROPY2_OP_A          = 8'h68;
-  parameter ADDR_ENTROPY2_OP_B          = 8'h69;
-
 
   parameter TRNG_NAME0   = 32'h74726e67; // "trng"
   parameter TRNG_NAME1   = 32'h20202020; // "    "
   parameter TRNG_VERSION = 32'h302e3031; // "0.01"
 
 
-  parameter CSPRNG_DEFAULT_NUM_ROUNDS = 5'h18;
-  parameter CSPRNG_DEFAULT_NUM_BLOCKS = 64'h1000000000000000;
-
-
   //----------------------------------------------------------------
   // Registers including update variables and write enable.
   //----------------------------------------------------------------
-  reg [4 : 0] csprng_num_rounds_reg;
-  reg [4 : 0] csprng_num_rounds_new;
-  reg         csprng_num_rounds_we;
+  reg discard_reg;
+  reg discard_new;
 
-  reg [31 : 0] csprng_num_blocks_low_reg;
-  reg [31 : 0] csprng_num_blocks_low_new;
-  reg          csprng_num_blocks_low_we;
-
-  reg [31 : 0] csprng_num_blocks_high_reg;
-  reg [31 : 0] csprng_num_blocks_high_new;
-  reg          csprng_num_blocks_high_we;
-
-  reg          entropy0_enable_reg;
-  reg          entropy0_enable_new;
-  reg          entropy0_enable_we;
-
-  reg          entropy1_enable_reg;
-  reg          entropy1_enable_new;
-  reg          entropy1_enable_we;
-
-  reg          entropy2_enable_reg;
-  reg          entropy2_enable_new;
-  reg          entropy2_enable_we;
-
-  reg [31 : 0] entropy2_op_a_reg;
-  reg [31 : 0] entropy2_op_a_new;
-  reg          entropy2_op_a_we;
-
-  reg [31 : 0] entropy2_op_b_reg;
-  reg [31 : 0] entropy2_op_b_new;
-  reg          entropy2_op_b_we;
-
-  reg          enable_reg;
-  reg          enable_new;
-  reg          enable_we;
-
-  reg          csprng_seed_reg;
-  reg          csprng_seed_new;
-
-  reg          csprng_rnd_ack_reg;
-  reg          csprng_rnd_ack_new;
+  reg seed_reg;
+  reg seed_new;
 
 
 
   //----------------------------------------------------------------
   // Wires.
   //----------------------------------------------------------------
-  wire           entropy0_enable;
-  wire [31 : 0]  entropy0_raw;
-  wire [31 : 0]  entropy0_stats;
-  wire           entropy0_enabled;
-  wire           entropy0_syn;
-  wire [31 : 0]  entropy0_data;
-  wire           entropy0_ack;
-
-  wire           entropy1_enable;
-  wire [31 : 0]  entropy1_raw;
-  wire [31 : 0]  entropy1_stats;
-  wire           entropy1_enabled;
-  wire           entropy1_syn;
-  wire [31 : 0]  entropy1_data;
-  wire           entropy1_ack;
-
-  wire           entropy2_enable;
-  wire [31 : 0]  entropy2_raw;
-  wire [31 : 0]  entropy2_stats;
-  wire           entropy2_enabled;
-  wire           entropy2_syn;
-  wire [31 : 0]  entropy2_data;
-  wire           entropy2_ack;
-  wire [7 : 0]   entropy2_debug;
-
-  wire           mixer_enable;
+  wire           mixer_discard;
+  wire           mixer_test_mode;
+  wire           mixer_more_seed;
   wire [511 : 0] mixer_seed_data;
   wire           mixer_seed_syn;
+  wire           mixer_seed_ack;
+  wire           mixer_api_cs;
+  wire           mixer_api_we;
+  wire  [7 : 0]  mixer_api_address;
+  wire  [31 : 0] mixer_api_write_data;
+  wire [31 : 0]  mixer_api_read_data;
+  wire           mixer_api_error;
+  wire           mixer_security_error;
 
-  wire           csprng_enable;
-  wire           csprng_debug_mode;
-  wire [4 : 0]   csprng_num_rounds;
-  wire [63 : 0]  csprng_num_blocks;
+  wire           csprng_discard;
   wire           csprng_seed;
+  wire           csprng_test_mode;
   wire           csprng_more_seed;
   wire           csprng_seed_ack;
-  wire           csprng_ready;
-  wire           csprng_error;
-  wire [31 : 0]  csprng_rnd_data;
-  wire           csprng_rnd_syn;
+  wire           csprng_api_cs;
+  wire           csprng_api_we;
+  wire  [7 : 0]  csprng_api_address;
+  wire  [31 : 0] csprng_api_write_data;
+  wire [31 : 0]  csprng_api_read_data;
+  wire           csprng_api_error;
+  wire           csprng_security_error;
+
+  wire           entropy0_entropy_enabled;
+  wire [31 : 9]  entropy0_entropy_data;
+  wire           entropy0_entropy_syn;
+  wire           entropy0_entropy_ack;
+  wire           entropy0_test_mode;
+  wire [7 : 0]   entropy0_debug;
+  wire           entropy0_debug_update;
+  wire           entropy0_api_cs;
+  wire           entropy0_api_we;
+  wire  [7 : 0]  entropy0_api_address;
+  wire  [31 : 0] entropy0_api_write_data;
+  wire [31 : 0]  entropy0_api_read_data;
+  wire           entropy0_api_error;
+  wire           entropy0_security_error;
+
+  wire           entropy1_entropy_enabled;
+  wire [31 : 9]  entropy1_entropy_data;
+  wire           entropy1_entropy_syn;
+  wire           entropy1_entropy_ack;
+  wire           entropy1_test_mode;
+  wire [7 : 0]   entropy1_debug;
+  wire           entropy1_debug_update;
+  wire           entropy1_api_cs;
+  wire           entropy1_api_we;
+  wire  [7 : 0]  entropy1_api_address;
+  wire  [31 : 0] entropy1_api_write_data;
+  wire [31 : 0]  entropy1_api_read_data;
+  wire           entropy1_api_error;
+  wire           entropy1_security_error;
+
+  wire           entropy2_entropy_enabled;
+  wire [31 : 9]  entropy2_entropy_data;
+  wire           entropy2_entropy_syn;
+  wire           entropy2_entropy_ack;
+  wire           entropy2_test_mode;
+  wire [7 : 0]   entropy2_debug;
+  wire           entropy2_debug_update;
+  wire           entropy2_api_cs;
+  wire           entropy2_api_we;
+  wire  [7 : 0]  entropy2_api_address;
+  wire  [31 : 0] entropy2_api_write_data;
+  wire [31 : 0]  entropy2_api_read_data;
+  wire           entropy2_api_error;
+  wire           entropy2_security_error;
 
   reg [31 : 0]   tmp_read_data;
   reg            tmp_error;
@@ -212,9 +179,6 @@ module trng(
   assign error          = tmp_error;
   assign security_error = 0;
   assign debug          = entropy2_debug;
-
-  assign csprng_num_blocks = {csprng_num_blocks_high_reg,
-                              csprng_num_blocks_low_reg};
 
   assign entropy0_enable = entropy0_enable_reg;
   assign entropy1_enable = entropy1_enable_reg;
@@ -233,10 +197,7 @@ module trng(
   assign entropy0_syn     = 0;
   assign entropy0_data    = 32'h00000000;
 
-  assign entropy1_enabled = 1;
-
-  assign entropy2_enabled = 1;
-  assign entropy2_stats   = 32'h00000000;
+  assign entropy1_enabled = 0;
 
 
   //----------------------------------------------------------------
@@ -326,24 +287,27 @@ module trng(
                                  .delta_clk()
                                 );
 
-  rosc_entropy_core entropy2(
-                             .clk(clk),
-                             .reset_n(reset_n),
+  rosc_entropy entropy2(
+                        .clk(clk),
+                        .reset_n(reset_n),
 
-                             .enable(entropy2_enable),
+                        .cs(entropy2_api_cs),
+                        .we(entropy2_api_we),
+                        .address(entropy2_api_address),
+                        .write_data(entropy2_api_write_data),
+                        .read_data(entropy2_api_read_data),
+                        .error(entropy2_api_error),
 
-                             .opa(entropy2_op_a_reg),
-                             .opb(entropy2_op_b_reg),
+                        .entropy_enabled(entropy2_enabled),
+                        .entropy_data(entropy2_data),
+                        .entropy_valid(entropy2_syn),
+                        .entropy_ack(entropy2_ack),
 
-                             .entropy(entropy2_raw),
+                        .debug(entropy2_debug),
+                        .debug_update(debug_update),
 
-                             .rnd_data(entropy2_data),
-                             .rnd_valid(entropy2_syn),
-                             .rnd_ack(entropy2_ack),
-
-                             .debug(entropy2_debug),
-                             .debug_update(debug_update)
-                            );
+                        .security_error(entropy2_security_error)
+                       );
 
 
   //----------------------------------------------------------------
@@ -351,108 +315,151 @@ module trng(
   //
   // Update functionality for all registers in the core.
   // All registers are positive edge triggered with asynchronous
-  // active low reset. All registers have write enable.
+  // active low reset.
   //----------------------------------------------------------------
   always @ (posedge clk or negedge reset_n)
     begin
       if (!reset_n)
         begin
-          entropy0_enable_reg        <= 1;
-          entropy1_enable_reg        <= 1;
-          entropy2_enable_reg        <= 1;
-          entropy2_op_a_reg          <= 32'h01010101;
-          entropy2_op_a_reg          <= 32'h10101010;
-          enable_reg                 <= 1;
-          csprng_rnd_ack_reg         <= 0;
-          csprng_seed_reg            <= 0;
-          csprng_num_rounds_reg      <= CSPRNG_DEFAULT_NUM_ROUNDS;
-          csprng_num_blocks_low_reg  <= CSPRNG_DEFAULT_NUM_BLOCKS[31 : 0];
-          csprng_num_blocks_high_reg <= CSPRNG_DEFAULT_NUM_BLOCKS[63 : 32];
+          discard_reg <= 0;
+          seed_reg    <= 0;
         end
       else
         begin
-          csprng_rnd_ack_reg <= csprng_rnd_ack_new;
-          csprng_seed_reg    <= csprng_seed_new;
-
-          if (entropy0_enable_we)
-            begin
-              entropy0_enable_reg <= entropy0_enable_new;
-            end
-
-          if (entropy1_enable_we)
-            begin
-              entropy1_enable_reg <= entropy1_enable_new;
-            end
-
-          if (entropy2_enable_we)
-            begin
-              entropy2_enable_reg <= entropy2_enable_new;
-            end
-
-          if (entropy2_op_a_we)
-            begin
-              entropy2_op_a_reg <= entropy2_op_a_new;
-            end
-
-          if (entropy2_op_b_we)
-            begin
-              entropy2_op_b_reg <= entropy2_op_b_new;
-            end
-
-          if (enable_we)
-            begin
-              enable_reg <= enable_new;
-            end
-
-          if (csprng_num_rounds_we)
-            begin
-              csprng_num_rounds_reg <= csprng_num_rounds_new;
-            end
-
-          if (csprng_num_blocks_low_we)
-            begin
-              csprng_num_blocks_low_reg <= csprng_num_blocks_low_new;
-            end
-
-          if (csprng_num_blocks_high_we)
-            begin
-              csprng_num_blocks_high_reg <= csprng_num_blocks_high_new;
-            end
+          discard_reg <= discard_new;
+          seed_reg    <= seed_new0;
         end
     end // reg_update
 
 
   //----------------------------------------------------------------
-  // api_logic
+  // api_mux
   //
-  // Implementation of the api logic. If cs is enabled will either
-  // try to write to or read from the internal registers.
+  // This is a simple decoder that looks at the top 4 bits of
+  // the given api address and selects which of the sub modules
+  // or the top level mux that gets to handle any API
+  // operations.
   //----------------------------------------------------------------
   always @*
-    begin : api_logic
-      entropy0_enable_new        = 0;
-      entropy0_enable_we         = 0;
-      entropy1_enable_new        = 0;
-      entropy1_enable_we         = 0;
-      entropy2_enable_new        = 0;
-      entropy2_enable_we         = 0;
-      entropy2_op_a_new          = 32'h00000000;
-      entropy2_op_a_we           = 0;
-      entropy2_op_b_new          = 32'h00000000;
-      entropy2_op_b_we           = 0;
-      enable_new                 = 0;
-      enable_we                  = 0;
-      csprng_seed_new            = 0;
-      csprng_rnd_ack_new         = 0;
-      csprng_seed_new            = 0;
-      csprng_num_rounds_new      = 5'h00;
-      csprng_num_rounds_we       = 0;
-      csprng_num_blocks_low_new  = 32'h00000000;
-      csprng_num_blocks_low_we   = 0;
-      csprng_num_blocks_high_new = 32'h00000000;
-      csprng_num_blocks_high_we  = 0;
-      tmp_read_data              = 32'h00000000;
-      tmp_error                  = 0;
+    begin : api_mux
+      trng_api_cs             = 0;
+      trng_api_we             = 0;
+      trng_api_address        = 8'h00;
+      trng_api_write_data     = 32'h00000000;
+      trng_read_data          = 32'h00000000;
+      trng_error              = 0;
+
+      entropy1_api_cs         = 0;
+      entropy1_api_we         = 0;
+      entropy1_api_address    = 8'h00;
+      entropy1_api_write_data = 32'h00000000;
+      entropy1_read_data      = 32'h00000000;
+      entropy1_error          = 0;
+
+      entropy2_api_cs         = 0;
+      entropy2_api_we         = 0;
+      entropy2_api_address    = 8'h00;
+      entropy2_api_write_data = 32'h00000000;
+      entropy2_read_data      = 32'h00000000;
+      entropy2_error          = 0;
+
+      mixer_api_cs            = 0;
+      mixer_api_we            = 0;
+      mixer_api_address       = 8'h00;
+      mixer_api_write_data    = 32'h00000000;
+      mixer_read_data         = 32'h00000000;
+      mixer_error             = 0;
+
+      csprng_api_cs           = 0;
+      csprng_api_we           = 0;
+      csprng_api_address      = 8'h00;
+      csprng_api_write_data   = 32'h00000000;
+      csprng_read_data        = 32'h00000000;
+      csprng_error            = 0;
+
+      tmp_read_data           = 32'h00000000;
+      tmp_error               = 0;
+
+      case (address[11 : 8])
+        TRNG_PREFIX:
+          begin
+            trng_api_cs         = cs;
+            trng_api_we         = we;
+            trng_api_address    = address[7 : 0];
+            trng_api_write_data = write_data;
+            tmp_read_data       = trng_read_data;
+            tmp_error           = trng_error;
+          end
+
+        ENTROPY0_PREFIX:
+          begin
+            entropy0_api_cs         = cs;
+            entropy0_api_we         = we;
+            entropy0_api_address    = address[7 : 0];
+            entropy0_api_write_data = write_data;
+            tmp_read_data           = entropy0_read_data;
+            tmp_error               = entropy0_error;
+          end
+
+        ENTROPY1_PREFIX:
+          begin
+            entropy1_api_cs         = cs;
+            entropy1_api_we         = we;
+            entropy1_api_address    = address[7 : 0];
+            entropy1_api_write_data = write_data;
+            tmp_read_data           = entropy1_read_data;
+            tmp_error               = entropy1_error;
+          end
+
+        ENTROPY2_PREFIX:
+          begin
+            entropy2_api_cs         = cs;
+            entropy2_api_we         = we;
+            entropy2_api_address    = address[7 : 0];
+            entropy2_api_write_data = write_data;
+            tmp_read_data           = entropy2_read_data;
+            tmp_error               = entropy2_error;
+          end
+
+        MIXER_PREFIX:
+          begin
+            entropy0_api_cs         = cs;
+            entropy0_api_we         = we;
+            entropy0_api_address    = address[7 : 0];
+            entropy0_api_write_data = write_data;
+            tmp_read_data           = entropy0_read_data;
+            tmp_error               = entropy0_error;
+          end
+
+        CSPRNG_PREFIX:
+          begin
+            entropy0_api_cs         = cs;
+            entropy0_api_we         = we;
+            entropy0_api_address    = address[7 : 0];
+            entropy0_api_write_data = write_data;
+            tmp_read_data           = entropy0_read_data;
+            tmp_error               = entropy0_error;
+          end
+
+        default:
+          begin
+
+          end
+      endcase // case (address[11 : 8])
+    end // api_mux
+
+
+  //----------------------------------------------------------------
+  // trng_api_logic
+  //
+  // Implementation of the top level api logic.
+  //----------------------------------------------------------------
+  always @*
+    begin : trng_api_logic
+      discard_new    = 0;
+      seed_new       = 0;
+      trng_read_data = 32'h00000000;
+      trng_error     = 0;
 
       if (cs)
         begin
@@ -463,50 +470,13 @@ module trng(
                 // Write operations.
                 ADDR_TRNG_CTRL:
                   begin
-                    enable_new          = write_data[TRNG_CTRL_ENABLE_BIT];
-                    enable_we           = 1;
-                    entropy0_enable_new = write_data[TRNG_CTRL_ENT0_ENABLE_BIT];
-                    entropy0_enable_we  = 1;
-                    entropy1_enable_new = write_data[TRNG_CTRL_ENT1_ENABLE_BIT];
-                    entropy1_enable_we  = 1;
-                    entropy2_enable_new = write_data[TRNG_CTRL_ENT2_ENABLE_BIT];
-                    entropy2_enable_we  = 1;
-                    csprng_seed_new     = write_data[TRNG_CTRL_SEED_BIT];
-                  end
-
-                ADDR_CSPRNG_NUM_ROUNDS:
-                  begin
-                    csprng_num_rounds_new = write_data[4 : 0];
-                    csprng_num_rounds_we  = 1;
-                  end
-
-                ADDR_CSPRNG_NUM_BLOCKS_LOW:
-                  begin
-                    csprng_num_blocks_low_new = write_data;
-                    csprng_num_blocks_low_we  = 1;
-                  end
-
-                ADDR_CSPRNG_NUM_BLOCKS_HIGH:
-                  begin
-                    csprng_num_blocks_high_new = write_data;
-                    csprng_num_blocks_high_we  = 1;
-                  end
-
-                ADDR_ENTROPY2_OP_A:
-                  begin
-                    entropy2_op_a_new = write_data;
-                    entropy2_op_a_we  = 1;
-                  end
-
-                ADDR_ENTROPY2_OP_B:
-                  begin
-                    entropy2_op_b_new = write_data;
-                    entropy2_op_b_we  = 1;
+                    discard_new = write_data[TRNG_CTRL_DISCARD_BIT];
+                    seed_new    = write_data[TRNG_CTRL_SEED_BIT];
                   end
 
                 default:
                   begin
-                    tmp_error = 1;
+                    trng_error = 1;
                   end
               endcase // case (address)
             end // if (we)
@@ -518,26 +488,21 @@ module trng(
                 // Read operations.
                 ADDR_NAME0:
                   begin
-                    tmp_read_data = TRNG_NAME0;
+                    trng_read_data = TRNG_NAME0;
                   end
 
                 ADDR_NAME1:
                   begin
-                    tmp_read_data = TRNG_NAME1;
+                    trng_read_data = TRNG_NAME1;
                   end
 
                 ADDR_VERSION:
                   begin
-                    tmp_read_data = TRNG_VERSION;
+                    trng_read_data = TRNG_VERSION;
                   end
 
                 ADDR_TRNG_CTRL:
                   begin
-                    tmp_read_data[TRNG_CTRL_ENABLE_BIT]      = enable_reg;
-                    tmp_read_data[TRNG_CTRL_ENT0_ENABLE_BIT] = entropy0_enable_reg;
-                    tmp_read_data[TRNG_CTRL_ENT1_ENABLE_BIT] = entropy1_enable_reg;
-                    tmp_read_data[TRNG_CTRL_ENT2_ENABLE_BIT] = entropy2_enable_reg;
-                    tmp_read_data[TRNG_CTRL_SEED_BIT]        = csprng_seed_reg;
                   end
 
                 ADDR_TRNG_STATUS:
@@ -545,70 +510,14 @@ module trng(
 
                   end
 
-                ADDR_TRNG_RND_DATA:
-                  begin
-                    csprng_rnd_ack_new = 1;
-                    tmp_read_data      = csprng_rnd_data;
-                  end
-
-                ADDR_TRNG_RND_DATA_VALID:
-                  begin
-                    tmp_read_data[TRNG_RND_VALID_BIT] = csprng_rnd_syn;
-                  end
-
-                ADDR_CSPRNG_NUM_ROUNDS:
-                  begin
-                    tmp_read_data[4 : 0] = csprng_num_rounds_reg;
-                  end
-
-                ADDR_CSPRNG_NUM_BLOCKS_LOW:
-                  begin
-                    tmp_read_data = csprng_num_blocks_low_reg;
-                  end
-
-                ADDR_CSPRNG_NUM_BLOCKS_HIGH:
-                  begin
-                    tmp_read_data = csprng_num_blocks_high_reg;
-                  end
-
-                ADDR_ENTROPY0_RAW:
-                  begin
-                    tmp_read_data = entropy0_raw;
-                  end
-
-                ADDR_ENTROPY0_STATS:
-                  begin
-                    tmp_read_data = entropy0_stats;
-                  end
-
-                ADDR_ENTROPY1_RAW:
-                  begin
-                    tmp_read_data = entropy1_raw;
-                  end
-
-                ADDR_ENTROPY1_STATS:
-                  begin
-                    tmp_read_data = entropy1_stats;
-                  end
-
-                ADDR_ENTROPY2_RAW:
-                  begin
-                    tmp_read_data = entropy2_raw;
-                  end
-
-                ADDR_ENTROPY2_STATS:
-                  begin
-                    tmp_read_data = entropy2_stats;
-                  end
-
                 default:
                   begin
-                    tmp_error = 1;
+                    trng_error = 1;
                   end
               endcase // case (address)
             end
         end
-    end // addr_decoder
+    end // trng_api_logic
 endmodule // trng
 
 //======================================================================
