@@ -74,6 +74,7 @@ module trng(
   parameter ADDR_TRNG_CTRL              = 8'h10;
   parameter TRNG_CTRL_DISCARD_BIT       = 0;
   parameter TRNG_CTRL_SEED_BIT          = 1;
+  parameter TRNG_CTRL_TEST_MODE_BIT     = 2;
 
   parameter ADDR_TRNG_STATUS            = 8'h11;
 
@@ -88,9 +89,12 @@ module trng(
   reg discard_reg;
   reg discard_new;
 
+  reg test_mode_reg;
+  reg test_mode_new;
+  reg test_mode_we;
+
   reg seed_reg;
   reg seed_new;
-
 
 
   //----------------------------------------------------------------
@@ -337,11 +341,17 @@ module trng(
         begin
           discard_reg <= 0;
           seed_reg    <= 0;
+          test_mode_reg <= 0;
         end
       else
         begin
           discard_reg <= discard_new;
           seed_reg    <= seed_new0;
+
+          if (test_mode_we)
+            begin
+              test_mode_reg <= test_mode_new;
+            end
         end
     end // reg_update
 
@@ -472,6 +482,8 @@ module trng(
     begin : trng_api_logic
       discard_new    = 0;
       seed_new       = 0;
+      test_mode_new  = 0;
+      test_mode_we   = 0;
       trng_read_data = 32'h00000000;
       trng_error     = 0;
 
@@ -484,8 +496,10 @@ module trng(
                 // Write operations.
                 ADDR_TRNG_CTRL:
                   begin
-                    discard_new = write_data[TRNG_CTRL_DISCARD_BIT];
-                    seed_new    = write_data[TRNG_CTRL_SEED_BIT];
+                    discard_new   = write_data[TRNG_CTRL_DISCARD_BIT];
+                    seed_new      = write_data[TRNG_CTRL_SEED_BIT];
+                    test_mode_new = write_data[TRNG_CTRL_TEST_MODE_BIT];
+                    test_mode_we  = 1;
                   end
 
                 default:
