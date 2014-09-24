@@ -45,7 +45,7 @@ module trng(
 
             input wire           cs,
             input wire           we,
-            input wire  [15 : 0] address,
+            input wire  [11 : 0] address,
             input wire  [31 : 0] write_data,
             output wire [31 : 0] read_data,
             output wire          error,
@@ -60,6 +60,14 @@ module trng(
   //----------------------------------------------------------------
   // Internal constant and parameter definitions.
   //----------------------------------------------------------------
+  parameter TRNG_PREFIX                 = 4'h00;
+  parameter ENTROPY0_PREFIX             = 4'h04;
+  parameter ENTROPY1_PREFIX             = 4'h05;
+  parameter ENTROPY2_PREFIX             = 4'h06;
+
+  parameter MIXER_PREFIX                = 4'h0a;
+  parameter CSPRNG_PREFIX               = 4'h0b;
+
   parameter ADDR_NAME0                  = 8'h00;
   parameter ADDR_NAME1                  = 8'h01;
   parameter ADDR_VERSION                = 8'h02;
