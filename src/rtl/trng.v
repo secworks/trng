@@ -112,11 +112,10 @@ module trng(
   wire  [31 : 0] mixer_api_write_data;
   wire [31 : 0]  mixer_api_read_data;
   wire           mixer_api_error;
-  wire           mixer_security_error;
 
   wire           csprng_discard;
-  wire           csprng_seed;
   wire           csprng_test_mode;
+  wire           csprng_seed;
   wire           csprng_more_seed;
   wire           csprng_seed_ack;
   wire           csprng_api_cs;
@@ -127,6 +126,12 @@ module trng(
   wire           csprng_api_error;
   wire           csprng_security_error;
 
+  wire           entropy0_api_cs;
+  wire           entropy0_api_we;
+  wire  [7 : 0]  entropy0_api_address;
+  wire  [31 : 0] entropy0_api_write_data;
+  wire [31 : 0]  entropy0_api_read_data;
+  wire           entropy0_api_error;
   wire           entropy0_entropy_enabled;
   wire [31 : 9]  entropy0_entropy_data;
   wire           entropy0_entropy_syn;
@@ -134,14 +139,14 @@ module trng(
   wire           entropy0_test_mode;
   wire [7 : 0]   entropy0_debug;
   wire           entropy0_debug_update;
-  wire           entropy0_api_cs;
-  wire           entropy0_api_we;
-  wire  [7 : 0]  entropy0_api_address;
-  wire  [31 : 0] entropy0_api_write_data;
-  wire [31 : 0]  entropy0_api_read_data;
-  wire           entropy0_api_error;
   wire           entropy0_security_error;
 
+  wire           entropy1_api_cs;
+  wire           entropy1_api_we;
+  wire  [7 : 0]  entropy1_api_address;
+  wire  [31 : 0] entropy1_api_write_data;
+  wire [31 : 0]  entropy1_api_read_data;
+  wire           entropy1_api_error;
   wire           entropy1_entropy_enabled;
   wire [31 : 9]  entropy1_entropy_data;
   wire           entropy1_entropy_syn;
@@ -149,14 +154,14 @@ module trng(
   wire           entropy1_test_mode;
   wire [7 : 0]   entropy1_debug;
   wire           entropy1_debug_update;
-  wire           entropy1_api_cs;
-  wire           entropy1_api_we;
-  wire  [7 : 0]  entropy1_api_address;
-  wire  [31 : 0] entropy1_api_write_data;
-  wire [31 : 0]  entropy1_api_read_data;
-  wire           entropy1_api_error;
   wire           entropy1_security_error;
 
+  wire           entropy2_api_cs;
+  wire           entropy2_api_we;
+  wire  [7 : 0]  entropy2_api_address;
+  wire  [31 : 0] entropy2_api_write_data;
+  wire [31 : 0]  entropy2_api_read_data;
+  wire           entropy2_api_error;
   wire           entropy2_entropy_enabled;
   wire [31 : 9]  entropy2_entropy_data;
   wire           entropy2_entropy_syn;
@@ -164,12 +169,6 @@ module trng(
   wire           entropy2_test_mode;
   wire [7 : 0]   entropy2_debug;
   wire           entropy2_debug_update;
-  wire           entropy2_api_cs;
-  wire           entropy2_api_we;
-  wire  [7 : 0]  entropy2_api_address;
-  wire  [31 : 0] entropy2_api_write_data;
-  wire [31 : 0]  entropy2_api_read_data;
-  wire           entropy2_api_error;
   wire           entropy2_security_error;
 
   reg [31 : 0]   tmp_read_data;
@@ -181,10 +180,10 @@ module trng(
   //----------------------------------------------------------------
   assign read_data      = tmp_read_data;
   assign error          = tmp_error;
-  assign security_error = 0;
+  assign security_error = entropy0_security_error | entropy1_security_error |
+                          entropy2_security_error;
   assign debug          = entropy2_debug;
 
-  assign csprng_enable     = enable_reg;
   assign csprng_seed       = seed_reg;
 
   assign mixer_discard  = discard_reg;
