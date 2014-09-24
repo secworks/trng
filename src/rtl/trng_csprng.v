@@ -41,25 +41,25 @@ module trng_csprng(
                    input wire           clk,
                    input wire           reset_n,
 
-                   // Control, config and status.
-                   input wire           enable,
-                   input                debug_mode,
-                   input wire [4 : 0]   num_rounds,
-                   input wire [63 : 0]  num_blocks,
-                   input wire           seed,
-                   output wire          more_seed,
-                   output wire          ready,
+                   input wire           cs,
+                   input wire           we,
+                   input wire  [7 : 0]  address,
+                   input wire  [31 : 0] write_data,
+                   output wire [31 : 0] read_data,
                    output wire          error,
 
-                   // Seed input
+                   input wire           discard,
+                   input wire           seed,
+                   input                test_mode,
+                   output wire          more_seed,
+                   output wire          security_error,
+
                    input [511 : 0]      seed_data,
                    input wire           seed_syn,
-                   output wire          seed_ack,
+                   output wire          seed_ack
 
-                   // Random data output
-                   output wire          rnd_syn,
-                   output wire [31 : 0] rnd_data,
-                   input wire           rnd_ack
+                   output wire [7 : 0]  debug,
+                   input wire           debug_update
                   );
 
 
@@ -79,6 +79,9 @@ module trng_csprng(
   parameter CTRL_NEXT1     = 4'h7;
   parameter CTRL_MORE      = 4'h8;
   parameter CTRL_CANCEL    = 4'hf;
+
+  parameter CSPRNG_DEFAULT_NUM_ROUNDS = 5'h18;
+  parameter CSPRNG_DEFAULT_NUM_BLOCKS = 64'h1000000000000000;
 
 
   //----------------------------------------------------------------
@@ -125,6 +128,18 @@ module trng_csprng(
   reg           seed_ack_reg;
   reg           seed_ack_new;
 
+  reg [4 : 0] csprng_num_rounds_reg;
+  reg [4 : 0] csprng_num_rounds_new;
+  reg         csprng_num_rounds_we;
+
+  reg [31 : 0] csprng_num_blocks_low_reg;
+  reg [31 : 0] csprng_num_blocks_low_new;
+  reg          csprng_num_blocks_low_we;
+
+  reg [31 : 0] csprng_num_blocks_high_reg;
+  reg [31 : 0] csprng_num_blocks_high_new;
+  reg          csprng_num_blocks_high_we;
+
 
   //----------------------------------------------------------------
   // Wires.
@@ -154,6 +169,9 @@ module trng_csprng(
 
   assign rnd_syn   = fifo_rnd_syn;
   assign rnd_data  = fifo_rnd_data;
+
+  assign csprng_num_blocks = {csprng_num_blocks_high_reg,
+                              csprng_num_blocks_low_reg};
 
 
   //----------------------------------------------------------------
@@ -216,6 +234,9 @@ module trng_csprng(
           ready_reg        <= 0;
           error_reg        <= 0;
           csprng_ctrl_reg  <= CTRL_IDLE;
+          csprng_num_rounds_reg      <= CSPRNG_DEFAULT_NUM_ROUNDS;
+          csprng_num_blocks_low_reg  <= CSPRNG_DEFAULT_NUM_BLOCKS[31 : 0];
+          csprng_num_blocks_high_reg <= CSPRNG_DEFAULT_NUM_BLOCKS[63 : 32];
         end
       else
         begin
@@ -260,6 +281,21 @@ module trng_csprng(
           if (csprng_ctrl_we)
             begin
               csprng_ctrl_reg <= csprng_ctrl_new;
+            end
+
+          if (csprng_num_rounds_we)
+            begin
+              csprng_num_rounds_reg <= csprng_num_rounds_new;
+            end
+
+          if (csprng_num_blocks_low_we)
+            begin
+              csprng_num_blocks_low_reg <= csprng_num_blocks_low_new;
+            end
+
+          if (csprng_num_blocks_high_we)
+            begin
+              csprng_num_blocks_high_reg <= csprng_num_blocks_high_new;
             end
         end
     end // reg_update
