@@ -207,7 +207,16 @@ module trng(
                    .clk(clk),
                    .reset_n(reset_n),
 
-                   .enable(mixer_enable),
+                   .cs(mixer_api_cs),
+                   .we(mixer_api_we),
+                   .address(mixer_api_address),
+                   .write_data(mixer_api_write_data),
+                   .read_data(mixer_api_read_data),
+                   .error(mixer_api_error),
+
+                   .discard(mixer_discard),
+                   .test_mode(mixer_test_mode),
+
                    .more_seed(csprng_more_seed),
 
                    .entropy0_enabled(entropy0_enabled),
@@ -234,14 +243,17 @@ module trng(
                      .clk(clk),
                      .reset_n(reset_n),
 
-                     .enable(csprng_enable),
-                     .debug_mode(csprng_debug_mode),
-                     .num_rounds(csprng_num_rounds_reg),
-                     .num_blocks(csprng_num_blocks),
-                     .seed(csprng_seed),
+                     .cs(csprng_api_cs),
+                     .we(csprng_api_we),
+                     .address(csprng_api_address),
+                     .write_data(csprng_api_write_data),
+                     .read_data(csprng_api_read_data),
+                     .error(csprng_api_error),
+
+                     .discard(csprng_discard),
+                     .test_mode(csprng_test_mode),
+
                      .more_seed(csprng_more_seed),
-                     .ready(csprng_ready),
-                     .error(csprng_error),
 
                      .seed_data(mixer_seed_data),
                      .seed_syn(mixer_seed_syn),
@@ -267,25 +279,27 @@ module trng(
 //                          .entropy_ack(entropy0_ack)
 //                         );
 
-  avalanche_entropy_core entropy1(
-                                 .clk(clk),
-                                 .reset_n(reset_n),
+  avalanche_entropy entropy1(
+                             .clk(clk),
+                             .reset_n(reset_n),
 
-                                 .noise(avalanche_noise),
-                                 .sampled_noise(),
-                                 .entropy(),
+                             .cs(entropy1_api_cs),
+                             .we(entropy1_api_we),
+                             .address(entropy1_api_address),
+                             .write_data(entropy1_api_write_data),
+                             .read_data(entropy1_api_read_data),
+                             .error(entropy1_api_error),
 
-                                 .entropy_syn(entropy1_syn),
-                                 .entropy_data(entropy1_data),
-                                 .entropy_ack(entropy1_ack),
+                             .entropy_enabled(entropy1_syn),
+                             .entropy_syn(entropy1_syn),
+                             .entropy_data(entropy1_data),
+                             .entropy_ack(entropy1_ack),
 
-                                 .led(),
-                                 .debug_data(entropy1_raw),
-                                 .debug_clk(),
+                             .debug(entropy1_debug),
+                             .debug_update(entropy1_debug_update),
 
-                                 .delta_data(entropy1_stats),
-                                 .delta_clk()
-                                );
+                             .security_error(entropy1_security_error)
+                            );
 
   rosc_entropy entropy2(
                         .clk(clk),
@@ -304,7 +318,7 @@ module trng(
                         .entropy_ack(entropy2_ack),
 
                         .debug(entropy2_debug),
-                        .debug_update(debug_update),
+                        .debug_update(entropy2_debug_update),
 
                         .security_error(entropy2_security_error)
                        );
