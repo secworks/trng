@@ -103,13 +103,6 @@ module trng_mixer(
   //----------------------------------------------------------------
   // Registers including update variables and write enable.
   //----------------------------------------------------------------
-  reg          enable_reg;
-  reg          enable_new;
-  reg          enable_we;
-
-  reg          restart_reg;
-  reg          restart_new;
-
   reg [31 : 0] block00_reg;
   reg [31 : 0] block00_we;
   reg [31 : 0] block01_reg;
@@ -197,6 +190,13 @@ module trng_mixer(
   reg         init_done_new;
   reg         init_done_we;
 
+  reg         enable_reg;
+  reg         enable_new;
+  reg         enable_we;
+
+  reg         restart_reg;
+  reg         restart_new;
+
 
   //----------------------------------------------------------------
   // Wires.
@@ -270,8 +270,8 @@ module trng_mixer(
   // reg_update
   //
   // Update functionality for all registers in the core.
-  // All registers are positive edge triggered with synchronous
-  // active low reset. All registers have write enable.
+  // All registers are positive edge triggered with asynchronous
+  // active low reset.
   //----------------------------------------------------------------
   always @ (posedge clk or negedge reset_n)
     begin
@@ -312,11 +312,15 @@ module trng_mixer(
           init_done_reg            <= 0;
           word_ctr_reg             <= 5'h00;
           seed_syn_reg             <= 0;
+          enable_reg               <= 0;
+          restart_reg              <= 0;
           entropy_collect_ctrl_reg <= CTRL_IDLE;
           mixer_ctrl_reg           <= CTRL_IDLE;
         end
       else
         begin
+          restart_reg <= restart_new;
+
           if (block00_we)
             begin
               block00_reg <= muxed_entropy;
@@ -495,6 +499,11 @@ module trng_mixer(
           if (entropy_collect_ctrl_we)
             begin
               entropy_collect_ctrl_reg <= entropy_collect_ctrl_new;
+            end
+
+          if (enable_we)
+            begin
+              enable_reg <= enable_new;
             end
 
           if (mixer_ctrl_we)
