@@ -113,10 +113,10 @@ module trng(
   wire [511 : 0] mixer_seed_data;
   wire           mixer_seed_syn;
   wire           mixer_seed_ack;
-  wire           mixer_api_cs;
-  wire           mixer_api_we;
-  wire  [7 : 0]  mixer_api_address;
-  wire  [31 : 0] mixer_api_write_data;
+  reg            mixer_api_cs;
+  reg            mixer_api_we;
+  reg  [7 : 0 ]  mixer_api_address;
+  reg  [31 : 0]  mixer_api_write_data;
   wire [31 : 0]  mixer_api_read_data;
   wire           mixer_api_error;
 
@@ -125,18 +125,18 @@ module trng(
   wire           csprng_seed;
   wire           csprng_more_seed;
   wire           csprng_seed_ack;
-  wire           csprng_api_cs;
-  wire           csprng_api_we;
-  wire  [7 : 0]  csprng_api_address;
-  wire  [31 : 0] csprng_api_write_data;
+  reg            csprng_api_cs;
+  reg            csprng_api_we;
+  reg  [7 : 0]   csprng_api_address;
+  reg  [31 : 0]  csprng_api_write_data;
   wire [31 : 0]  csprng_api_read_data;
   wire           csprng_api_error;
   wire           csprng_security_error;
 
-  wire           entropy0_api_cs;
-  wire           entropy0_api_we;
-  wire  [7 : 0]  entropy0_api_address;
-  wire  [31 : 0] entropy0_api_write_data;
+  reg            entropy0_api_cs;
+  reg            entropy0_api_we;
+  reg  [7 : 0]   entropy0_api_address;
+  reg  [31 : 0]  entropy0_api_write_data;
   wire [31 : 0]  entropy0_api_read_data;
   wire           entropy0_api_error;
   wire           entropy0_entropy_enabled;
@@ -149,10 +149,10 @@ module trng(
   wire           entropy0_security_error;
 
   wire           entropy1_noise;
-  wire           entropy1_api_cs;
-  wire           entropy1_api_we;
-  wire  [7 : 0]  entropy1_api_address;
-  wire  [31 : 0] entropy1_api_write_data;
+  reg            entropy1_api_cs;
+  reg            entropy1_api_we;
+  reg  [7 : 0]   entropy1_api_address;
+  reg  [31 : 0]  entropy1_api_write_data;
   wire [31 : 0]  entropy1_api_read_data;
   wire           entropy1_api_error;
   wire           entropy1_entropy_enabled;
@@ -164,10 +164,10 @@ module trng(
   wire           entropy1_debug_update;
   wire           entropy1_security_error;
 
-  wire           entropy2_api_cs;
-  wire           entropy2_api_we;
-  wire  [7 : 0]  entropy2_api_address;
-  wire  [31 : 0] entropy2_api_write_data;
+  reg            entropy2_api_cs;
+  reg            entropy2_api_we;
+  reg  [7 : 0]   entropy2_api_address;
+  reg  [31 : 0]  entropy2_api_write_data;
   wire [31 : 0]  entropy2_api_read_data;
   wire           entropy2_api_error;
   wire           entropy2_entropy_enabled;
