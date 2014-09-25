@@ -165,8 +165,9 @@ module trng_csprng(
 
   wire           fifo_more_data;
   reg            fifo_discard;
-  wire           fifo_rnd_syn;
-  wire [31 : 0]  fifo_rnd_data;
+  wire           rnd_syn;
+  wire [31 : 0]  rnd_data;
+  reg            rnd_ack;
   reg            fifo_cipher_data_valid;
 
 
@@ -218,8 +219,8 @@ module trng_csprng(
                         .discard(fifo_discard),
                         .more_data(fifo_more_data),
 
-                        .rnd_syn(fifo_rnd_syn),
-                        .rnd_data(fifo_rnd_data),
+                        .rnd_syn(rnd_syn),
+                        .rnd_data(rnd_data),
                         .rnd_ack(rnd_ack)
                        );
 
@@ -244,6 +245,8 @@ module trng_csprng(
           seed_ack_reg        <= 0;
           ready_reg           <= 0;
           error_reg           <= 0;
+          enable_reg          <= 0;
+          seed_reg            <= 0;
           num_rounds_reg      <= DEFAULT_NUM_ROUNDS;
           num_blocks_low_reg  <= DEFAULT_NUM_BLOCKS[31 : 0];
           num_blocks_high_reg <= DEFAULT_NUM_BLOCKS[63 : 32];
@@ -253,6 +256,12 @@ module trng_csprng(
         begin
           more_seed_reg <= more_seed_new;
           seed_ack_reg  <= seed_ack_new;
+          seed_reg      <= seed_new;
+
+          if (enable_we)
+            begin
+              enable_reg <= enable_new;
+            end
 
           if (cipher_key_we)
             begin
@@ -317,20 +326,22 @@ module trng_csprng(
   //----------------------------------------------------------------
   always @*
     begin : csprng_api_logic
-      enable_new    = 0;
-      enable_we     = 0;
-      seed_new      = 0;
+      enable_new          = 0;
+      enable_we           = 0;
+      seed_new            = 0;
 
-      num_rounds_new = 32'h00000000;
-      num_rounds_we  = 0;
+      num_rounds_new      = 5'h00;
+      num_rounds_we       = 0;
 
       num_blocks_low_new  = 32'h00000000;
       num_blocks_low_we   = 0;
       num_blocks_high_new = 32'h00000000;
       num_blocks_high_we  = 0;
 
-      tmp_read_data = 32'h00000000;
-      tmp_error     = 0;
+      rnd_ack             = 0;
+
+      tmp_read_data       = 32'h00000000;
+      tmp_error           = 0;
 
       if (cs)
         begin
@@ -341,22 +352,27 @@ module trng_csprng(
                 // Write operations.
                 ADDR_CTRL:
                   begin
-
+                    enable_new = write_data[CTRL_ENABLE_BIT];
+                    enable_we  = 1;
+                    seed_new   = write_data[CTRL_SEED_BIT];
                   end
 
                 ADDR_NUM_ROUNDS:
                   begin
-
+                    num_rounds_new = write_data[4 : 0];
+                    num_rounds_we  = 1;
                   end
 
                 ADDR_NUM_BLOCK_LOW:
                   begin
-
+                    num_blocks_low_new = write_data;
+                    num_blocks_low_we  = 1;
                   end
 
                 ADDR_NUM_BLOCK_HIGH:
                   begin
-
+                    num_blocks_high_new = write_data;
+                    num_blocks_high_we  = 1;
                   end
 
                 default:
@@ -378,23 +394,28 @@ module trng_csprng(
 
                 ADDR_STATUS:
                   begin
-
+                    tmp_read_data = rnd_syn;
                   end
 
                 ADDR_RND_DATA:
                   begin
+                    tmp_read_data = rnd_data;
+                    rnd_ack  = 1;
                   end
 
                 ADDR_NUM_ROUNDS:
                   begin
+                    tmp_read_data = {27'h00000000, num_rounds_reg};
                   end
 
                 ADDR_NUM_BLOCK_LOW:
                   begin
+                    tmp_read_data = num_blocks_low_reg;
                   end
 
                 ADDR_NUM_BLOCK_HIGH:
                   begin
+                    tmp_read_data = num_blocks_high_reg;
                   end
 
                 default:
