@@ -1,7 +1,7 @@
 //======================================================================
 //
-// ringosc_entropy.v
-// ----------------
+// rosc_entropy.v
+// --------------
 // Fake ring oscillator based entropy source. This module SHOULD ONLY
 // be used during simulation of the Cryptech True Random Number
 // Generator (trng). The module DOES NOT provide any real entropy.
@@ -38,32 +38,42 @@
 //
 //======================================================================
 
-module ringosc_entropy(
-                       input wire           clk,
-                       input wire           reset_n,
+module rosc_entropy(
+                    input wire           clk,
+                    input wire           reset_n,
 
-                       input wire           enable,
+                    input wire           cs,
+                    input wire           we,
+                    input wire  [7 : 0]  address,
+                    input wire  [31 : 0] write_data,
+                    output wire [31 : 0] read_data,
+                    output wire          error,
 
-                       output wire [31 : 0] raw_entropy,
-                       output wire [31 : 0] stats,
+                    input wire           test_mode,
+                    output wire          security_error,
 
-                       output wire          enabled,
-                       output wire          entropy_syn,
-                       output wire [31 : 0] entropy_data,
-                       input wire           entropy_ack
-                      );
+                    output wire          entropy_enabled,
+                    output wire [31 : 0] entropy_data,
+                    output wire          entropy_valid,
+                    input wire           entropy_ack,
+
+                        output wire [7 : 0]  debug,
+                    input wire           debug_update
+                   );
 
 
   //----------------------------------------------------------------
   // Concurrent connectivity for ports etc.
   //----------------------------------------------------------------
-  assign enabled      = enable;
+  assign read_data      = 32'h00000000;
+  assign error          = 0;
+  assign security_error = 0;
 
-  assign raw_entropy  = enable ? 32'h01234567 : 32'h00000000;
-  assign stats        = enable ? 32'hfedcba98 : 32'h00000000;
+  assign entropy_enabled = 1;
+  assign entropy_data    = 32'haa55aa55;
+  assign entropy_valid   = 1;
 
-  assign entropy_syn  = enable;
-  assign entropy_data = enable ? 32'ha5a5a5a5 : 32'h00000000;
+  assign debug           = 8'h42;
 
 endmodule // ringosc_entropy
 

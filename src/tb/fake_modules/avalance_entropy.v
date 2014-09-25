@@ -42,30 +42,40 @@ module avalance_entropy(
                         input wire           clk,
                         input wire           reset_n,
 
-                        input wire           enable,
-
                         input wire           noise,
 
-                        output wire [31 : 0] raw_entropy,
-                        output wire [31 : 0] stats,
+                        input wire           cs,
+                        input wire           we,
+                        input wire  [7 : 0]  address,
+                        input wire  [31 : 0] write_data,
+                        output wire [31 : 0] read_data,
+                        output wire          error,
 
-                        output wire          enabled,
-                        output wire          entropy_syn,
+                        input wire           test_mode,
+                        output wire          security_error,
+
+                        output wire          entropy_enabled,
                         output wire [31 : 0] entropy_data,
-                        input wire           entropy_ack
+                        output wire          entropy_valid,
+                        input wire           entropy_ack,
+
+                        output wire [7 : 0]  debug,
+                        input wire           debug_update
                        );
 
 
   //----------------------------------------------------------------
   // Concurrent connectivity for ports etc.
   //----------------------------------------------------------------
-  assign enabled      = enable;
+  assign read_data      = 32'h00000000;
+  assign error          = 0;
+  assign security_error = 0;
 
-  assign raw_entropy  = enable ? 32'hdeaddead : 32'h00000000;
-  assign stats        = enable ? 32'hbeefbeef : 32'h00000000;
+  assign entropy_enabled = 1;
+  assign entropy_data    = 32'h11223344;
+  assign entropy_valid   = 1;
 
-  assign entropy_syn  = enable;
-  assign entropy_data = enable ? 32'h01020304 : 32'h00000000;
+  assign debug           = 8'aa;
 
 endmodule // avalance_entropy
 
