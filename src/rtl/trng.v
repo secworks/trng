@@ -100,6 +100,13 @@ module trng(
   //----------------------------------------------------------------
   // Wires.
   //----------------------------------------------------------------
+  reg            trng_api_cs;
+  reg            trng_api_we;
+  reg  [7 : 0]   trng_api_address;
+  reg  [31 : 0 ] trng_api_write_data;
+  wire [31 : 0]  trng_api_read_data;
+  wire           trng_api_error;
+
   wire           mixer_discard;
   wire           mixer_test_mode;
   wire           mixer_more_seed;
