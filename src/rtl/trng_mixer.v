@@ -97,7 +97,7 @@ module trng_mixer(
   parameter MIXER_CTRL_ENABLE_BIT  = 0;
   parameter MIXER_CTRL_RESTART_BIT = 1;
 
-  parameter ADDR_TRNG_STATUS       = 8'h11;
+  parameter ADDR_MIXER_STATUS      = 8'h11;
 
 
   //----------------------------------------------------------------
@@ -605,7 +605,7 @@ module trng_mixer(
 
         ENTROPY_SRC0:
           begin
-            if (!enable)
+            if (!enable_reg)
               begin
                 word_ctr_rst             = 1;
                 entropy_collect_ctrl_new = ENTROPY_IDLE;
@@ -634,7 +634,7 @@ module trng_mixer(
         ENTROPY_SRC0_ACK:
           begin
             tmp_entropy0_ack = 1;
-            if (!enable)
+            if (!enable_reg)
               begin
                 word_ctr_rst             = 1;
                 entropy_collect_ctrl_new = ENTROPY_IDLE;
@@ -660,7 +660,7 @@ module trng_mixer(
 
         ENTROPY_SRC1:
           begin
-            if (!enable)
+            if (!enable_reg)
               begin
                 word_ctr_rst             = 1;
                 entropy_collect_ctrl_new = ENTROPY_IDLE;
@@ -689,7 +689,7 @@ module trng_mixer(
         ENTROPY_SRC1_ACK:
           begin
             tmp_entropy1_ack = 1;
-            if (!enable)
+            if (!enable_reg)
               begin
                 word_ctr_rst             = 1;
                 entropy_collect_ctrl_new = ENTROPY_IDLE;
@@ -714,7 +714,7 @@ module trng_mixer(
 
         ENTROPY_SRC2:
           begin
-            if (!enable)
+            if (!enable_reg)
               begin
                 word_ctr_rst             = 1;
                 entropy_collect_ctrl_new = ENTROPY_IDLE;
@@ -743,7 +743,7 @@ module trng_mixer(
         ENTROPY_SRC2_ACK:
           begin
             tmp_entropy2_ack = 1;
-            if (!enable)
+            if (!enable_reg)
               begin
                 word_ctr_rst             = 1;
                 entropy_collect_ctrl_new = ENTROPY_IDLE;
