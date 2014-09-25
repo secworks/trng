@@ -40,7 +40,13 @@ module trng_mixer(
                   input wire           clk,
                   input wire           reset_n,
 
-                  input wire            enable,
+                  input wire            cs,
+                  input wire            we,
+                  input wire  [7 : 0]   address,
+                  input wire  [31 : 0]  write_data,
+                  output wire [31 : 0]  read_data,
+                  output wire           error,
+
                   input wire            more_seed,
 
                   input wire            entropy0_enabled,
@@ -84,10 +90,23 @@ module trng_mixer(
   parameter ENTROPY_SRC2     = 4'h5;
   parameter ENTROPY_SRC2_ACK = 4'h6;
 
+  parameter ADDR_MIXER_CTRL        = 8'h10;
+  parameter MIXER_CTRL_ENABLE_BIT  = 0;
+  parameter MIXER_CTRL_RESTART_BIT = 1;
+
+  parameter ADDR_TRNG_STATUS       = 8'h11;
+
 
   //----------------------------------------------------------------
   // Registers including update variables and write enable.
   //----------------------------------------------------------------
+  reg          enable_reg;
+  reg          enable_new;
+  reg          enable_we;
+
+  reg          restart_reg;
+  reg          restart_new;
+
   reg [31 : 0] block00_reg;
   reg [31 : 0] block00_we;
   reg [31 : 0] block01_reg;
@@ -196,10 +215,16 @@ module trng_mixer(
   reg             tmp_entropy1_ack;
   reg             tmp_entropy2_ack;
 
+  reg [31 : 0]    tmp_read_data;
+  reg             tmp_error;
+
 
   //----------------------------------------------------------------
   // Concurrent connectivity for ports etc.
   //----------------------------------------------------------------
+  assign read_data = tmp_read_data;
+  assign error     = tmp_error;
+
   assign seed_syn  = seed_syn_reg;
   assign seed_data = hash_digest;
 
@@ -475,6 +500,65 @@ module trng_mixer(
             end
         end
     end // reg_update
+
+
+  //----------------------------------------------------------------
+  // mixer_api_logic
+  //----------------------------------------------------------------
+  always @*
+    begin : mixer_api_logic
+      enable_new    = 0;
+      enable_we     = 0;
+      restart_reg   = 0;
+      restart_new   = 0;
+      tmp_read_data = 32'h00000000;
+      tmp_error     = 0;
+
+      if (cs)
+        begin
+          if (we)
+            begin
+              // Write operations.
+              case (address)
+                // Write operations.
+                ADDR_MIXER_CTRL:
+                  begin
+                    enable_new  = write_data[MIXER_CTRL_ENABLE_BIT];
+                    enable_we   = 1;
+                    restart_new = write_data[MIXER_CTRL_RESTART_BIT];
+                  end
+
+                default:
+                  begin
+                    tmp_error = 1;
+                  end
+              endcase // case (address)
+            end // if (we)
+
+          else
+            begin
+              // Read operations.
+              case (address)
+                // Read operations.
+                ADDR_MIXER_CTRL:
+                  begin
+                    tmp_read_data = {30'h00000000, restart_reg, enable_reg};
+                  end
+
+                ADDR_MIXER_STATUS:
+                  begin
+
+                  end
+
+                default:
+                  begin
+                    tmp_error = 1;
+                  end
+              endcase // case (address)
+            end
+        end
+    end // trng_api_logic
+
 
   //----------------------------------------------------------------
   // entropy_collect_ctrl
