@@ -46,7 +46,7 @@ TB_MIXER_SRC=../src/tb/tb_mixer.v
 
 TRNG_SRC=../src/rtl/trng.v $(MIXER_SRC) $(SHA512_SRC) $(CSPRNG_SRC) $(CHACHA_SRC)
 TB_TRNG_SRC=../src/tb/tb_trng.v
-FAKE_ENTROPY_SRC=../src/tb/fake_modules/avalance_entropy.v ../src/tb/fake_modules/pseudo_entropy.v ../src/tb/fake_modules/ringosc_entropy.v
+FAKE_ENTROPY_SRC=../src/tb/fake_modules/avalance_entropy.v ../src/tb/fake_modules/pseudo_entropy.v ../src/tb/fake_modules/rosc_entropy.v
 
 CC=iverilog
 
