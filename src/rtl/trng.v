@@ -299,9 +299,9 @@ module trng(
                              .read_data(entropy1_api_read_data),
                              .error(entropy1_api_error),
 
-                             .entropy_enabled(entropy1_entropy_syn),
-                             .entropy_syn(entropy1_entropy_syn),
+                             .entropy_enabled(entropy1_entropy_enabled),
                              .entropy_data(entropy1_entropy_data),
+                             .entropy_valid(entropy1_entropy_syn),
                              .entropy_ack(entropy1_entropy_ack),
 
                              .debug(entropy1_debug),
