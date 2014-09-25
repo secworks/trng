@@ -66,6 +66,16 @@ module tb_mixer();
   reg            tb_clk;
   reg            tb_reset_n;
   reg            tb_enable;
+
+  reg            tb_cs;
+  reg            tb_we;
+  reg [7 : 0]    tb_address;
+  reg [31 : 0]   tb_write_data;
+  wire [31 : 0]  tb_read_data;
+  wire           tb_error;
+  
+  reg            tb_discard;
+  reg            tb_test_mode;
   reg            tb_more_seed;
 
   reg            tb_entropy0_enabled;
@@ -95,7 +105,16 @@ module tb_mixer();
                  .clk(tb_clk),
                  .reset_n(tb_reset_n),
 
-                 .enable(tb_enable),
+                 .cs(tb_cs),
+                 .we(tb_we),
+                 .address(tb_address),
+                 .write_data(tb_write_data),
+                 .read_data(tb_read_data),
+                 .error(tb_error),
+                 
+                 .discard(tb_discard),
+                 .test_mode(tb_test_mode),
+
                  .more_seed(tb_more_seed),
 
                  .entropy0_enabled(tb_entropy0_enabled),
@@ -216,8 +235,13 @@ module tb_mixer();
 
       tb_clk              = 0;
       tb_reset_n          = 1;
-
-      tb_enable           = 0;
+      tb_cs               = 0;
+      tb_we               = 0;
+      tb_address          = 8'h00;
+      tb_write_data       = 32'h00000000;
+  
+      tb_discard          = 0;
+      tb_test_mode        = 0;
       tb_more_seed        = 0;
 
       tb_entropy0_enabled = 0;
