@@ -141,6 +141,7 @@ module trng(
   wire           entropy0_debug_update;
   wire           entropy0_security_error;
 
+  wire           entropy1_noise;
   wire           entropy1_api_cs;
   wire           entropy1_api_we;
   wire  [7 : 0]  entropy1_api_address;
@@ -194,6 +195,8 @@ module trng(
   assign entropy0_test_mode = test_mode_reg;
   assign entropy1_test_mode = test_mode_reg;
   assign entropy2_test_mode = test_mode_reg;
+
+  assign entropy1_noise = avalanche_noise;
 
   // Patches to get our first version to work.
   assign entropy0_enabled = 0;
@@ -285,6 +288,8 @@ module trng(
   avalanche_entropy entropy1(
                              .clk(clk),
                              .reset_n(reset_n),
+
+                             .noise(entropy1_noise),
 
                              .cs(entropy1_api_cs),
                              .we(entropy1_api_we),
