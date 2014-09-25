@@ -133,7 +133,7 @@ module trng(
   wire [31 : 0]  entropy0_api_read_data;
   wire           entropy0_api_error;
   wire           entropy0_entropy_enabled;
-  wire [31 : 9]  entropy0_entropy_data;
+  wire [31 : 0]  entropy0_entropy_data;
   wire           entropy0_entropy_syn;
   wire           entropy0_entropy_ack;
   wire           entropy0_test_mode;
@@ -149,7 +149,7 @@ module trng(
   wire [31 : 0]  entropy1_api_read_data;
   wire           entropy1_api_error;
   wire           entropy1_entropy_enabled;
-  wire [31 : 9]  entropy1_entropy_data;
+  wire [31 : 0]  entropy1_entropy_data;
   wire           entropy1_entropy_syn;
   wire           entropy1_entropy_ack;
   wire           entropy1_test_mode;
@@ -164,7 +164,7 @@ module trng(
   wire [31 : 0]  entropy2_api_read_data;
   wire           entropy2_api_error;
   wire           entropy2_entropy_enabled;
-  wire [31 : 9]  entropy2_entropy_data;
+  wire [31 : 0]  entropy2_entropy_data;
   wire           entropy2_entropy_syn;
   wire           entropy2_entropy_ack;
   wire           entropy2_test_mode;
@@ -199,11 +199,9 @@ module trng(
   assign entropy1_noise = avalanche_noise;
 
   // Patches to get our first version to work.
-  assign entropy0_enabled = 0;
-  assign entropy0_raw     = 32'h00000000;
-  assign entropy0_stats   = 32'h00000000;
-  assign entropy0_syn     = 0;
-  assign entropy0_data    = 32'h00000000;
+  assign entropy0_entropy_enabled = 0;
+  assign entropy0_entropy_syn     = 0;
+  assign entropy0_entropy_data    = 32'h00000000;
 
 
   //----------------------------------------------------------------
@@ -225,20 +223,20 @@ module trng(
 
                    .more_seed(csprng_more_seed),
 
-                   .entropy0_enabled(entropy0_enabled),
-                   .entropy0_syn(entropy0_syn),
-                   .entropy0_data(entropy0_data),
-                   .entropy0_ack(entropy0_ack),
+                   .entropy0_enabled(entropy0_entropy_enabled),
+                   .entropy0_syn(entropy0_entropy_syn),
+                   .entropy0_data(entropy0_entropy_data),
+                   .entropy0_ack(entropy0_entropy_ack),
 
-                   .entropy1_enabled(entropy1_enabled),
-                   .entropy1_syn(entropy1_syn),
-                   .entropy1_data(entropy1_data),
-                   .entropy1_ack(entropy1_ack),
+                   .entropy1_enabled(entropy1_entropy_enabled),
+                   .entropy1_syn(entropy1_entropy_syn),
+                   .entropy1_data(entropy1_entropy_data),
+                   .entropy1_ack(entropy1_entropy_ack),
 
-                   .entropy2_enabled(entropy2_enabled),
-                   .entropy2_syn(entropy2_syn),
-                   .entropy2_data(entropy2_data),
-                   .entropy2_ack(entropy2_ack),
+                   .entropy2_enabled(entropy2_entropy_enabled),
+                   .entropy2_syn(entropy2_entropy_syn),
+                   .entropy2_data(entropy2_entropy_data),
+                   .entropy2_ack(entropy2_entropy_ack),
 
                    .seed_data(mixer_seed_data),
                    .seed_syn(mixer_seed_syn),
@@ -263,11 +261,7 @@ module trng(
 
                      .seed_data(mixer_seed_data),
                      .seed_syn(mixer_seed_syn),
-                     .seed_ack(csprng_seed_ack),
-
-                     .rnd_data(csprng_rnd_data),
-                     .rnd_syn(csprng_rnd_syn),
-                     .rnd_ack(csprng_rnd_ack_reg)
+                     .seed_ack(csprng_seed_ack)
                     );
 
 //  pseudo_entropy entropy0(
