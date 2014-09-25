@@ -136,6 +136,13 @@ module trng_csprng(
   reg           seed_ack_reg;
   reg           seed_ack_new;
 
+  reg           enable_reg;
+  reg           enable_new;
+  reg           enable_we;
+
+  reg           seed_reg;
+  reg           seed_new;
+
   reg [4 : 0]   num_rounds_reg;
   reg [4 : 0]   num_rounds_new;
   reg           num_rounds_we;
@@ -156,6 +163,9 @@ module trng_csprng(
   //----------------------------------------------------------------
   // Wires.
   //----------------------------------------------------------------
+  reg [31 : 0]   tmp_read_data;
+  reg            tmp_error;
+
   reg            cipher_init;
   reg            cipher_next;
 
@@ -180,9 +190,6 @@ module trng_csprng(
   assign ready     = ready_reg;
   assign error     = error_reg;
 
-  assign rnd_syn   = fifo_rnd_syn;
-  assign rnd_data  = fifo_rnd_data;
-
   assign num_blocks = {num_blocks_high_reg, num_blocks_low_reg};
 
 
@@ -200,7 +207,7 @@ module trng_csprng(
                      .keylen(CIPHER_KEYLEN256),
                      .iv(cipher_iv_reg),
                      .ctr(cipher_ctr_reg),
-                     .rounds(num_rounds),
+                     .rounds(num_rounds_reg),
 
                      .data_in(cipher_block_reg),
                      .ready(cipher_ready),
@@ -389,7 +396,7 @@ module trng_csprng(
                 // Read operations.
                 ADDR_CTRL:
                   begin
-                    tmp_read_data = {30'h00000000, restart_reg, enable_reg};
+                    tmp_read_data = {30'h00000000, seed_reg, enable_reg};
                   end
 
                 ADDR_STATUS:
@@ -494,7 +501,7 @@ module trng_csprng(
       case (csprng_ctrl_reg)
         CTRL_IDLE:
           begin
-            if (!enable)
+            if (!enable_reg)
               begin
                 csprng_ctrl_new = CTRL_CANCEL;
                 csprng_ctrl_we  = 1;
@@ -509,7 +516,7 @@ module trng_csprng(
 
         CTRL_SEED0:
           begin
-            if ((!enable) || (seed))
+            if ((!enable_reg) || (seed_reg))
               begin
                 csprng_ctrl_new = CTRL_CANCEL;
                 csprng_ctrl_we  = 1;
@@ -526,7 +533,7 @@ module trng_csprng(
 
         CTRL_NSYN:
           begin
-            if ((!enable) || (seed))
+            if ((!enable_reg) || (seed_reg))
               begin
                 csprng_ctrl_new = CTRL_CANCEL;
                 csprng_ctrl_we  = 1;
@@ -541,7 +548,7 @@ module trng_csprng(
 
         CTRL_SEED1:
           begin
-            if ((!enable) || (seed))
+            if ((!enable_reg) || (seed_reg))
               begin
                 csprng_ctrl_new = CTRL_CANCEL;
                 csprng_ctrl_we  = 1;
@@ -566,7 +573,7 @@ module trng_csprng(
 
         CTRL_INIT0:
           begin
-            if ((!enable) || (seed))
+            if ((!enable_reg) || (seed_reg))
               begin
                 csprng_ctrl_new = CTRL_CANCEL;
                 csprng_ctrl_we  = 1;
@@ -582,7 +589,7 @@ module trng_csprng(
 
         CTRL_INIT1:
           begin
-            if ((!enable) || (seed))
+            if ((!enable_reg) || (seed_reg))
               begin
                 csprng_ctrl_new = CTRL_CANCEL;
                 csprng_ctrl_we  = 1;
@@ -596,7 +603,7 @@ module trng_csprng(
 
         CTRL_NEXT0:
           begin
-            if ((!enable) || (seed))
+            if ((!enable_reg) || (seed_reg))
               begin
                 csprng_ctrl_new = CTRL_CANCEL;
                 csprng_ctrl_we  = 1;
@@ -610,7 +617,7 @@ module trng_csprng(
           end
 
         CTRL_NEXT1:
-            if ((!enable) || (seed))
+            if ((!enable_reg) || (seed_reg))
               begin
                 csprng_ctrl_new = CTRL_CANCEL;
                 csprng_ctrl_we  = 1;
@@ -625,7 +632,7 @@ module trng_csprng(
 
         CTRL_MORE:
           begin
-            if ((!enable) || (seed))
+            if ((!enable_reg) || (seed_reg))
               begin
                 csprng_ctrl_new = CTRL_CANCEL;
                 csprng_ctrl_we  = 1;
