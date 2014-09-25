@@ -1,7 +1,7 @@
 //======================================================================
 //
-// avalance_entropy.v
-// ------------------
+// avalanche_entropy.v
+// -------------------
 // Fake avalanche entropy source. This module SHOULD ONLY be used
 // during simulation of the Cryptech True Random Number Generator
 // (trng). The module DOES NOT provide any real entropy.
@@ -38,30 +38,30 @@
 //
 //======================================================================
 
-module avalance_entropy(
-                        input wire           clk,
-                        input wire           reset_n,
+module avalanche_entropy(
+                         input wire           clk,
+                         input wire           reset_n,
 
-                        input wire           noise,
+                         input wire           noise,
 
-                        input wire           cs,
-                        input wire           we,
-                        input wire  [7 : 0]  address,
-                        input wire  [31 : 0] write_data,
-                        output wire [31 : 0] read_data,
-                        output wire          error,
+                         input wire           cs,
+                         input wire           we,
+                         input wire  [7 : 0]  address,
+                         input wire  [31 : 0] write_data,
+                         output wire [31 : 0] read_data,
+                         output wire          error,
 
-                        input wire           test_mode,
-                        output wire          security_error,
+                         input wire           test_mode,
+                         output wire          security_error,
 
-                        output wire          entropy_enabled,
-                        output wire [31 : 0] entropy_data,
-                        output wire          entropy_valid,
-                        input wire           entropy_ack,
+                         output wire          entropy_enabled,
+                         output wire [31 : 0] entropy_data,
+                         output wire          entropy_valid,
+                         input wire           entropy_ack,
 
-                        output wire [7 : 0]  debug,
-                        input wire           debug_update
-                       );
+                         output wire [7 : 0]  debug,
+                         input wire           debug_update
+                        );
 
 
   //----------------------------------------------------------------
@@ -77,8 +77,8 @@ module avalance_entropy(
 
   assign debug           = 8'haa;
 
-endmodule // avalance_entropy
+endmodule // avalanche_entropy
 
 //======================================================================
-// EOF avalance_entropy.v
+// EOF avalanche_entropy.v
 //======================================================================
