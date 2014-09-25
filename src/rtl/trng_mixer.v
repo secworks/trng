@@ -47,6 +47,9 @@ module trng_mixer(
                   output wire [31 : 0]  read_data,
                   output wire           error,
 
+                  input wire            discard,
+                  input wire            test_mode,
+
                   input wire            more_seed,
 
                   input wire            entropy0_enabled,
@@ -890,7 +893,7 @@ module trng_mixer(
 
         CTRL_COLLECT:
           begin
-            if ((!enable))
+            if ((!discard))
               begin
                 mixer_ctrl_new = CTRL_IDLE;
                 mixer_ctrl_we  = 1;
@@ -907,7 +910,7 @@ module trng_mixer(
 
         CTRL_MIX:
           begin
-            if ((!enable))
+            if ((!discard))
               begin
                 mixer_ctrl_new = CTRL_IDLE;
                 mixer_ctrl_we  = 1;
@@ -929,7 +932,7 @@ module trng_mixer(
 
         CTRL_SYN:
           begin
-            if ((!enable))
+            if ((!discard))
               begin
                 mixer_ctrl_new = CTRL_IDLE;
                 mixer_ctrl_we  = 1;
@@ -946,7 +949,7 @@ module trng_mixer(
 
         CTRL_ACK:
           begin
-            if ((!enable))
+            if ((!discard))
               begin
                 mixer_ctrl_new = CTRL_IDLE;
                 mixer_ctrl_we  = 1;
@@ -962,7 +965,7 @@ module trng_mixer(
 
         CTRL_NEXT:
           begin
-            if ((!enable))
+            if ((!discard))
               begin
                 mixer_ctrl_new = CTRL_IDLE;
                 mixer_ctrl_we  = 1;
