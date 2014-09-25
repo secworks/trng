@@ -49,7 +49,6 @@ module trng_csprng(
                    output wire          error,
 
                    input wire           discard,
-                   input wire           seed,
                    input                test_mode,
                    output wire          more_seed,
                    output wire          security_error,
@@ -80,8 +79,21 @@ module trng_csprng(
   parameter CTRL_MORE      = 4'h8;
   parameter CTRL_CANCEL    = 4'hf;
 
-  parameter CSPRNG_DEFAULT_NUM_ROUNDS = 5'h18;
-  parameter CSPRNG_DEFAULT_NUM_BLOCKS = 64'h1000000000000000;
+  parameter DEFAULT_NUM_ROUNDS = 5'h18;
+  parameter DEFAULT_NUM_BLOCKS = 64'h1000000000000000;
+
+  parameter ADDR_CTRL            = 8'h10;
+  parameter CTRL_ENABLE_BIT      = 0;
+  parameter CTRL_SEED_BIT        = 1;
+
+  parameter ADDR_STATUS          = 8'h11;
+  parameter STATUS_RND_VALID_BIT = 0;
+
+  parameter ADDR_RND_DATA        = 8'h20;
+
+  parameter ADDR_NUM_ROUNDS      = 8'h40;
+  parameter ADDR_NUM_BLOCK_LOW   = 8'h41;
+  parameter ADDR_NUM_BLOCK_HIGH  = 8'h42;
 
 
   //----------------------------------------------------------------
@@ -114,10 +126,6 @@ module trng_csprng(
   reg           error_new;
   reg           error_we;
 
-  reg [3 : 0]   csprng_ctrl_reg;
-  reg [3 : 0]   csprng_ctrl_new;
-  reg           csprng_ctrl_we;
-
   reg           ready_reg;
   reg           ready_new;
   reg           ready_we;
@@ -128,17 +136,21 @@ module trng_csprng(
   reg           seed_ack_reg;
   reg           seed_ack_new;
 
-  reg [4 : 0] csprng_num_rounds_reg;
-  reg [4 : 0] csprng_num_rounds_new;
-  reg         csprng_num_rounds_we;
+  reg [4 : 0]   num_rounds_reg;
+  reg [4 : 0]   num_rounds_new;
+  reg           num_rounds_we;
 
-  reg [31 : 0] csprng_num_blocks_low_reg;
-  reg [31 : 0] csprng_num_blocks_low_new;
-  reg          csprng_num_blocks_low_we;
+  reg [31 : 0]  num_blocks_low_reg;
+  reg [31 : 0]  num_blocks_low_new;
+  reg           num_blocks_low_we;
 
-  reg [31 : 0] csprng_num_blocks_high_reg;
-  reg [31 : 0] csprng_num_blocks_high_new;
-  reg          csprng_num_blocks_high_we;
+  reg [31 : 0]  num_blocks_high_reg;
+  reg [31 : 0]  num_blocks_high_new;
+  reg           num_blocks_high_we;
+
+  reg [3 : 0]   csprng_ctrl_reg;
+  reg [3 : 0]   csprng_ctrl_new;
+  reg           csprng_ctrl_we;
 
 
   //----------------------------------------------------------------
@@ -170,8 +182,7 @@ module trng_csprng(
   assign rnd_syn   = fifo_rnd_syn;
   assign rnd_data  = fifo_rnd_data;
 
-  assign csprng_num_blocks = {csprng_num_blocks_high_reg,
-                              csprng_num_blocks_low_reg};
+  assign num_blocks = {num_blocks_high_reg, num_blocks_low_reg};
 
 
   //----------------------------------------------------------------
@@ -224,19 +235,19 @@ module trng_csprng(
     begin
       if (!reset_n)
         begin
-          cipher_key_reg   <= {8{32'h00000000}};
-          cipher_iv_reg    <= {2{32'h00000000}};
-          cipher_ctr_reg   <= {2{32'h00000000}};
-          cipher_block_reg <= {16{32'h00000000}};
-          block_ctr_reg    <= {2{32'h00000000}};
-          more_seed_reg    <= 0;
-          seed_ack_reg     <= 0;
-          ready_reg        <= 0;
-          error_reg        <= 0;
-          csprng_ctrl_reg  <= CTRL_IDLE;
-          csprng_num_rounds_reg      <= CSPRNG_DEFAULT_NUM_ROUNDS;
-          csprng_num_blocks_low_reg  <= CSPRNG_DEFAULT_NUM_BLOCKS[31 : 0];
-          csprng_num_blocks_high_reg <= CSPRNG_DEFAULT_NUM_BLOCKS[63 : 32];
+          cipher_key_reg      <= {8{32'h00000000}};
+          cipher_iv_reg       <= {2{32'h00000000}};
+          cipher_ctr_reg      <= {2{32'h00000000}};
+          cipher_block_reg    <= {16{32'h00000000}};
+          block_ctr_reg       <= {2{32'h00000000}};
+          more_seed_reg       <= 0;
+          seed_ack_reg        <= 0;
+          ready_reg           <= 0;
+          error_reg           <= 0;
+          num_rounds_reg      <= DEFAULT_NUM_ROUNDS;
+          num_blocks_low_reg  <= DEFAULT_NUM_BLOCKS[31 : 0];
+          num_blocks_high_reg <= DEFAULT_NUM_BLOCKS[63 : 32];
+          csprng_ctrl_reg     <= CTRL_IDLE;
         end
       else
         begin
@@ -283,22 +294,117 @@ module trng_csprng(
               csprng_ctrl_reg <= csprng_ctrl_new;
             end
 
-          if (csprng_num_rounds_we)
+          if (num_rounds_we)
             begin
-              csprng_num_rounds_reg <= csprng_num_rounds_new;
+              num_rounds_reg <= num_rounds_new;
             end
 
-          if (csprng_num_blocks_low_we)
+          if (num_blocks_low_we)
             begin
-              csprng_num_blocks_low_reg <= csprng_num_blocks_low_new;
+              num_blocks_low_reg <= num_blocks_low_new;
             end
 
-          if (csprng_num_blocks_high_we)
+          if (num_blocks_high_we)
             begin
-              csprng_num_blocks_high_reg <= csprng_num_blocks_high_new;
+              num_blocks_high_reg <= num_blocks_high_new;
             end
         end
     end // reg_update
+
+
+  //----------------------------------------------------------------
+  // csprng_api_logic
+  //----------------------------------------------------------------
+  always @*
+    begin : csprng_api_logic
+      enable_new    = 0;
+      enable_we     = 0;
+      seed_new      = 0;
+
+      num_rounds_new = 32'h00000000;
+      num_rounds_we  = 0;
+
+      num_blocks_low_new  = 32'h00000000;
+      num_blocks_low_we   = 0;
+      num_blocks_high_new = 32'h00000000;
+      num_blocks_high_we  = 0;
+
+      tmp_read_data = 32'h00000000;
+      tmp_error     = 0;
+
+      if (cs)
+        begin
+          if (we)
+            begin
+              // Write operations.
+              case (address)
+                // Write operations.
+                ADDR_CTRL:
+                  begin
+
+                  end
+
+                ADDR_NUM_ROUNDS:
+                  begin
+
+                  end
+
+                ADDR_NUM_BLOCK_LOW:
+                  begin
+
+                  end
+
+                ADDR_NUM_BLOCK_HIGH:
+                  begin
+
+                  end
+
+                default:
+                  begin
+                    tmp_error = 1;
+                  end
+              endcase // case (address)
+            end // if (we)
+
+          else
+            begin
+              // Read operations.
+              case (address)
+                // Read operations.
+                ADDR_CTRL:
+                  begin
+                    tmp_read_data = {30'h00000000, restart_reg, enable_reg};
+                  end
+
+                ADDR_STATUS:
+                  begin
+
+                  end
+
+                ADDR_RND_DATA:
+                  begin
+                  end
+
+                ADDR_NUM_ROUNDS:
+                  begin
+                  end
+
+                ADDR_NUM_BLOCK_LOW:
+                  begin
+                  end
+
+                ADDR_NUM_BLOCK_HIGH:
+                  begin
+                  end
+
+                default:
+                  begin
+                    tmp_error = 1;
+                  end
+              endcase // case (address)
+            end
+        end
+    end // cspng_api_logic
 
 
   //----------------------------------------------------------------
