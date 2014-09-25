@@ -569,7 +569,7 @@ module trng_mixer(
               endcase // case (address)
             end
         end
-    end // trng_api_logic
+    end // mixer_api_logic
 
 
   //----------------------------------------------------------------
