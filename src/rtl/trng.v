@@ -292,10 +292,10 @@ module trng(
                              .read_data(entropy1_api_read_data),
                              .error(entropy1_api_error),
 
-                             .entropy_enabled(entropy1_syn),
-                             .entropy_syn(entropy1_syn),
-                             .entropy_data(entropy1_data),
-                             .entropy_ack(entropy1_ack),
+                             .entropy_enabled(entropy1_entropy_syn),
+                             .entropy_syn(entropy1_entropy_syn),
+                             .entropy_data(entropy1_entropy_data),
+                             .entropy_ack(entropy1_entropy_ack),
 
                              .debug(entropy1_debug),
                              .debug_update(entropy1_debug_update),
@@ -314,10 +314,10 @@ module trng(
                         .read_data(entropy2_api_read_data),
                         .error(entropy2_api_error),
 
-                        .entropy_enabled(entropy2_enabled),
-                        .entropy_data(entropy2_data),
-                        .entropy_valid(entropy2_syn),
-                        .entropy_ack(entropy2_ack),
+                        .entropy_enabled(entropy2_entropy_enabled),
+                        .entropy_data(entropy2_entropy_data),
+                        .entropy_valid(entropy2_entropy_syn),
+                        .entropy_ack(entropy2_entropy_ack),
 
                         .debug(entropy2_debug),
                         .debug_update(entropy2_debug_update),
