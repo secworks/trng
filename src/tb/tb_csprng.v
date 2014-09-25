@@ -65,14 +65,20 @@ module tb_csprng();
 
   reg           tb_clk;
   reg           tb_reset_n;
-  reg           tb_debug_mode;
-  reg [4 : 0]   tb_num_rounds;
-  reg [63 : 0]  tb_num_blocks;
-  reg           tb_seed;
-  reg           tb_enable;
+
+  reg           tb_cs;
+  reg           tb_we;
+  reg [7 : 0]   tb_address;
+  reg [31 : 0]  tb_write_data;
+  wire [31 : 0] tb_read_data;
+  wire          tb_error;
+
+  reg           tb_discard;
+  reg           tb_test_mode;
+
   wire          tb_ready;
   wire          tb_more_seed;
-  wire          tb_error;
+
   reg           tb_seed_syn;
   reg [511 : 0] tb_seed_data;
   wire          tb_seed_ack;
@@ -88,22 +94,21 @@ module tb_csprng();
                   .clk(tb_clk),
                   .reset_n(tb_reset_n),
 
-                  .debug_mode(tb_debug_mode),
-                  .num_rounds(tb_num_rounds),
-                  .num_blocks(tb_num_blocks),
-                  .seed(tb_seed),
-                  .enable(tb_enable),
-                  .more_seed(tb_more_seed),
-                  .ready(tb_ready),
+                  .cs(tb_cs),
+                  .we(tb_we),
+                  .address(tb_address),
+                  .write_data(tb_write_data),
+                  .read_data(tb_read_data),
                   .error(tb_error),
+
+                  .discard(tb_discard),
+                  .test_mode(tb_test_mode),
+
+                  .more_seed(tb_more_seed),
 
                   .seed_syn(tb_seed_syn),
                   .seed_data(tb_seed_data),
-                  .seed_ack(tb_seed_ack),
-
-                  .rnd_syn(tb_rnd_syn),
-                  .rnd_data(tb_rnd_data),
-                  .rnd_ack(tb_rnd_ack)
+                  .seed_ack(tb_seed_ack)
                  );
 
 
@@ -149,12 +154,12 @@ module tb_csprng();
       $display("State of DUT");
       $display("------------");
       $display("Inputs:");
-      $display("debug_mode = 0x%01x, seed = 0x%01x, enable = 0x%01x",
-               dut.debug_mode, dut.seed, dut.enable);
+      $display("test_mode = 0x%01x, seed = 0x%01x, enable = 0x%01x",
+               dut.test_mode, dut.seed_reg, dut.enable_reg);
       $display("ready = 0x%01x, error = 0x%01x",
                dut.ready, dut.error);
       $display("num_rounds = 0x%02x, num_blocks = 0x%016x",
-               dut.num_rounds, dut.num_blocks);
+               dut.num_rounds_reg, dut.num_blocks);
       $display("seed_syn = 0x%01x, seed_ack = 0x%01x, seed_data = 0x%064x",
                dut.seed_syn, dut.seed_ack, dut.seed_data);
       $display("");
@@ -240,11 +245,17 @@ module tb_csprng();
 
       tb_clk        = 0;
       tb_reset_n    = 1;
-      tb_debug_mode = 0;
-      tb_num_rounds = 5'h00;
-      tb_num_blocks = 64'h0000000000000000;
-      tb_seed       = 0;
-      tb_enable     = 0;
+
+      tb_clk        = 0;
+      tb_reset_n    = 1;
+      tb_cs         = 0;
+      tb_we         = 0;
+      tb_address    = 8'h00;
+      tb_write_data = 32'h00000000;
+
+      tb_discard    = 0;
+      tb_test_mode  = 0;
+
       tb_seed_syn   = 0;
       tb_seed_data  = {16{32'h00000000}};
       tb_rnd_ack    = 0;
@@ -261,11 +272,9 @@ module tb_csprng();
   task tc1_test_init_cipher();
     begin
       $display("*** TC1: Test automatic init of cipher started.");
-      tb_num_blocks = 64'h0000000000000004;
-      tb_seed_syn   = 1;
+      // tb_num_blocks = 64'h0000000000000004;
       tb_seed_data  = {8{64'haaaaaaaa55555555}};
-      tb_enable     = 1;
-      tb_num_rounds = 5'h08;
+      // tb_num_rounds = 5'h08;
       tb_rnd_ack    = 1;
 
       #(2000 * CLK_PERIOD);
