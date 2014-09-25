@@ -75,7 +75,7 @@ module avalance_entropy(
   assign entropy_data    = 32'h11223344;
   assign entropy_valid   = 1;
 
-  assign debug           = 8'aa;
+  assign debug           = 8'haa;
 
 endmodule // avalance_entropy
 
