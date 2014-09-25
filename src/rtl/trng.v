@@ -60,12 +60,12 @@ module trng(
   //----------------------------------------------------------------
   // Internal constant and parameter definitions.
   //----------------------------------------------------------------
-  parameter TRNG_PREFIX                 = 4'h00;
-  parameter ENTROPY0_PREFIX             = 4'h04;
-  parameter ENTROPY1_PREFIX             = 4'h05;
-  parameter ENTROPY2_PREFIX             = 4'h06;
-  parameter MIXER_PREFIX                = 4'h0a;
-  parameter CSPRNG_PREFIX               = 4'h0b;
+  parameter TRNG_PREFIX                 = 4'h0;
+  parameter ENTROPY0_PREFIX             = 4'h4;
+  parameter ENTROPY1_PREFIX             = 4'h5;
+  parameter ENTROPY2_PREFIX             = 4'h6;
+  parameter MIXER_PREFIX                = 4'ha;
+  parameter CSPRNG_PREFIX               = 4'hb;
 
   parameter ADDR_NAME0                  = 8'h00;
   parameter ADDR_NAME1                  = 8'h01;
