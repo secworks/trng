@@ -55,7 +55,7 @@ module trng_csprng(
 
                    input [511 : 0]      seed_data,
                    input wire           seed_syn,
-                   output wire          seed_ack
+                   output wire          seed_ack,
 
                    output wire [7 : 0]  debug,
                    input wire           debug_update
@@ -405,7 +405,7 @@ module trng_csprng(
 
                 ADDR_NUM_ROUNDS:
                   begin
-                    tmp_read_data = {27'h00000000, num_rounds_reg};
+                    tmp_read_data = {27'h0000000, num_rounds_reg};
                   end
 
                 ADDR_NUM_BLOCK_LOW:
