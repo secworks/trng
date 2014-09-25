@@ -104,8 +104,8 @@ module trng(
   reg            trng_api_we;
   reg  [7 : 0]   trng_api_address;
   reg  [31 : 0 ] trng_api_write_data;
-  wire [31 : 0]  trng_api_read_data;
-  wire           trng_api_error;
+  reg [31 : 0]   trng_api_read_data;
+  reg            trng_api_error;
 
   wire           mixer_discard;
   wire           mixer_test_mode;
@@ -351,7 +351,7 @@ module trng(
       else
         begin
           discard_reg <= discard_new;
-          seed_reg    <= seed_new0;
+          seed_reg    <= seed_new;
 
           if (test_mode_we)
             begin
@@ -375,36 +375,26 @@ module trng(
       trng_api_we             = 0;
       trng_api_address        = 8'h00;
       trng_api_write_data     = 32'h00000000;
-      trng_read_data          = 32'h00000000;
-      trng_error              = 0;
 
       entropy1_api_cs         = 0;
       entropy1_api_we         = 0;
       entropy1_api_address    = 8'h00;
       entropy1_api_write_data = 32'h00000000;
-      entropy1_read_data      = 32'h00000000;
-      entropy1_error          = 0;
 
       entropy2_api_cs         = 0;
       entropy2_api_we         = 0;
       entropy2_api_address    = 8'h00;
       entropy2_api_write_data = 32'h00000000;
-      entropy2_read_data      = 32'h00000000;
-      entropy2_error          = 0;
 
       mixer_api_cs            = 0;
       mixer_api_we            = 0;
       mixer_api_address       = 8'h00;
       mixer_api_write_data    = 32'h00000000;
-      mixer_read_data         = 32'h00000000;
-      mixer_error             = 0;
 
       csprng_api_cs           = 0;
       csprng_api_we           = 0;
       csprng_api_address      = 8'h00;
       csprng_api_write_data   = 32'h00000000;
-      csprng_read_data        = 32'h00000000;
-      csprng_error            = 0;
 
       tmp_read_data           = 32'h00000000;
       tmp_error               = 0;
@@ -416,8 +406,8 @@ module trng(
             trng_api_we         = we;
             trng_api_address    = address[7 : 0];
             trng_api_write_data = write_data;
-            tmp_read_data       = trng_read_data;
-            tmp_error           = trng_error;
+            tmp_read_data       = trng_api_read_data;
+            tmp_error           = trng_api_error;
           end
 
         ENTROPY0_PREFIX:
@@ -426,8 +416,8 @@ module trng(
             entropy0_api_we         = we;
             entropy0_api_address    = address[7 : 0];
             entropy0_api_write_data = write_data;
-            tmp_read_data           = entropy0_read_data;
-            tmp_error               = entropy0_error;
+            tmp_read_data           = entropy0_api_read_data;
+            tmp_error               = entropy0_api_error;
           end
 
         ENTROPY1_PREFIX:
@@ -436,8 +426,8 @@ module trng(
             entropy1_api_we         = we;
             entropy1_api_address    = address[7 : 0];
             entropy1_api_write_data = write_data;
-            tmp_read_data           = entropy1_read_data;
-            tmp_error               = entropy1_error;
+            tmp_read_data           = entropy1_api_read_data;
+            tmp_error               = entropy1_api_error;
           end
 
         ENTROPY2_PREFIX:
@@ -446,8 +436,8 @@ module trng(
             entropy2_api_we         = we;
             entropy2_api_address    = address[7 : 0];
             entropy2_api_write_data = write_data;
-            tmp_read_data           = entropy2_read_data;
-            tmp_error               = entropy2_error;
+            tmp_read_data           = entropy2_api_read_data;
+            tmp_error               = entropy2_api_error;
           end
 
         MIXER_PREFIX:
@@ -456,8 +446,8 @@ module trng(
             entropy0_api_we         = we;
             entropy0_api_address    = address[7 : 0];
             entropy0_api_write_data = write_data;
-            tmp_read_data           = entropy0_read_data;
-            tmp_error               = entropy0_error;
+            tmp_read_data           = mixer_api_read_data;
+            tmp_error               = mixer_api_error;
           end
 
         CSPRNG_PREFIX:
@@ -466,8 +456,8 @@ module trng(
             entropy0_api_we         = we;
             entropy0_api_address    = address[7 : 0];
             entropy0_api_write_data = write_data;
-            tmp_read_data           = entropy0_read_data;
-            tmp_error               = entropy0_error;
+            tmp_read_data           = csprng_api_read_data;
+            tmp_error               = csprng_api_error;
           end
 
         default:
@@ -485,12 +475,12 @@ module trng(
   //----------------------------------------------------------------
   always @*
     begin : trng_api_logic
-      discard_new    = 0;
-      seed_new       = 0;
-      test_mode_new  = 0;
-      test_mode_we   = 0;
-      trng_read_data = 32'h00000000;
-      trng_error     = 0;
+      discard_new        = 0;
+      seed_new           = 0;
+      test_mode_new      = 0;
+      test_mode_we       = 0;
+      trng_api_read_data = 32'h00000000;
+      trng_api_error     = 0;
 
       if (cs)
         begin
@@ -509,7 +499,7 @@ module trng(
 
                 default:
                   begin
-                    trng_error = 1;
+                    trng_api_error = 1;
                   end
               endcase // case (address)
             end // if (we)
@@ -521,17 +511,17 @@ module trng(
                 // Read operations.
                 ADDR_NAME0:
                   begin
-                    trng_read_data = TRNG_NAME0;
+                    trng_api_read_data = TRNG_NAME0;
                   end
 
                 ADDR_NAME1:
                   begin
-                    trng_read_data = TRNG_NAME1;
+                    trng_api_read_data = TRNG_NAME1;
                   end
 
                 ADDR_VERSION:
                   begin
-                    trng_read_data = TRNG_VERSION;
+                    trng_api_read_data = TRNG_VERSION;
                   end
 
                 ADDR_TRNG_CTRL:
@@ -545,7 +535,7 @@ module trng(
 
                 default:
                   begin
-                    trng_error = 1;
+                    trng_api_error = 1;
                   end
               endcase // case (address)
             end
