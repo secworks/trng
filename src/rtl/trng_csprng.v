@@ -180,6 +180,8 @@ module trng_csprng(
   reg            rnd_ack;
   reg            fifo_cipher_data_valid;
 
+  wire [63 : 0]  num_blocks;
+
 
   //----------------------------------------------------------------
   // Concurrent connectivity for ports etc.
@@ -187,7 +189,6 @@ module trng_csprng(
   assign seed_ack  = seed_ack_reg;
   assign more_seed = more_seed_reg;
 
-  assign ready     = ready_reg;
   assign error     = error_reg;
 
   assign num_blocks = {num_blocks_high_reg, num_blocks_low_reg};
@@ -401,7 +402,7 @@ module trng_csprng(
 
                 ADDR_STATUS:
                   begin
-                    tmp_read_data = rnd_syn;
+                    tmp_read_data = {ready_reg, rnd_syn};
                   end
 
                 ADDR_RND_DATA:
