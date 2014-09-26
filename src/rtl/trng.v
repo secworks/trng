@@ -66,6 +66,12 @@ module trng(
   parameter MIXER_PREFIX            = 4'ha;
   parameter CSPRNG_PREFIX           = 4'hb;
 
+  parameter DEBUG_ENTROPY0          = 3'h0;
+  parameter DEBUG_ENTROPY1          = 3'h1;
+  parameter DEBUG_ENTROPY2          = 3'h2;
+  parameter DEBUG_MIXER             = 3'h3;
+  parameter DEBUG_CSPRNG            = 3'h4;
+
   parameter ADDR_NAME0              = 8'h00;
   parameter ADDR_NAME1              = 8'h01;
   parameter ADDR_VERSION            = 8'h02;
@@ -75,6 +81,7 @@ module trng(
   parameter TRNG_CTRL_TEST_MODE_BIT = 1;
 
   parameter ADDR_TRNG_STATUS        = 8'h11;
+  parameter ADDR_DEBUG_CTRL         = 8'h12;
 
   parameter TRNG_NAME0              = 32'h74726e67; // "trng"
   parameter TRNG_NAME1              = 32'h20202020; // "    "
@@ -90,6 +97,10 @@ module trng(
   reg test_mode_reg;
   reg test_mode_new;
   reg test_mode_we;
+
+  reg [2 : 0] debug_mux_reg;
+  reg [2 : 0] debug_mux_new;
+  reg [2 : 0] debug_mux_we;
 
 
   //----------------------------------------------------------------
@@ -131,7 +142,7 @@ module trng(
   wire           entropy1_entropy_ack;
   wire           entropy1_test_mode;
   wire [7 : 0]   entropy1_debug;
-  wire           entropy1_debug_update;
+  reg            entropy1_debug_update;
   wire           entropy1_security_error;
 
   reg            entropy2_api_cs;
@@ -144,12 +155,13 @@ module trng(
   wire           entropy2_entropy_ack;
   wire           entropy2_test_mode;
   wire [7 : 0]   entropy2_debug;
-  wire           entropy2_debug_update;
+  reg            entropy2_debug_update;
   wire           entropy2_security_error;
 
   reg [7 : 0]    api_address;
   reg [31 : 0]   tmp_read_data;
   reg            tmp_error;
+  reg [7 : 0]    tmp_debug;
 
 
   //----------------------------------------------------------------
@@ -157,10 +169,8 @@ module trng(
   //----------------------------------------------------------------
   assign read_data      = tmp_read_data;
   assign error          = tmp_error;
-
   assign security_error = entropy1_security_error | entropy2_security_error;
-
-  assign debug          = entropy2_debug;
+  assign debug          = tmp_debug;
 
   // Patches to get our first version to work.
   assign entropy0_entropy_enabled = 0;
@@ -275,7 +285,7 @@ module trng(
                         .entropy_ack(entropy2_entropy_ack),
 
                         .debug(entropy2_debug),
-                        .debug_update(debug_update)
+                        .debug_update(entropy2_debug_update)
                        );
 
 
@@ -292,6 +302,7 @@ module trng(
         begin
           discard_reg   <= 0;
           test_mode_reg <= 0;
+          debug_mux_reg <= DEBUG_ENTROPY2;
         end
       else
         begin
@@ -301,8 +312,45 @@ module trng(
             begin
               test_mode_reg <= test_mode_new;
             end
+
+          if (debug_mux_we)
+            begin
+              debug_mux_reg <= debug_mux_new;
+            end
         end
     end // reg_update
+
+
+  //----------------------------------------------------------------
+  // debug_mux
+  //----------------------------------------------------------------
+  always @*
+    begin : debug_mux
+      entropy1_debug_update = 0;
+      entropy2_debug_update = 0;
+
+      tmp_debug = 8'h00;
+
+      case(debug_mux_reg)
+        DEBUG_ENTROPY1:
+          begin
+            entropy1_debug_update = debug_update;
+            tmp_debug             = entropy1_debug;
+          end
+
+        DEBUG_ENTROPY2:
+          begin
+            entropy1_debug_update = debug_update;
+            tmp_debug             = entropy1_debug;
+          end
+
+        default:
+          begin
+
+          end
+      endcase // case (debug_mux_reg)
+
+    end // debug_mux
 
 
   //----------------------------------------------------------------
@@ -393,6 +441,8 @@ module trng(
       discard_new        = 0;
       test_mode_new      = 0;
       test_mode_we       = 0;
+      debug_mux_new      = 3'h0;
+      debug_mux_we       = 0;
       trng_api_read_data = 32'h00000000;
       trng_api_error     = 0;
 
@@ -408,6 +458,12 @@ module trng(
                     discard_new   = write_data[TRNG_CTRL_DISCARD_BIT];
                     test_mode_new = write_data[TRNG_CTRL_TEST_MODE_BIT];
                     test_mode_we  = 1;
+                  end
+
+                ADDR_DEBUG_CTRL:
+                  begin
+                    debug_mux_new = write_data[2 : 0];
+                    debug_mux_we  = 1;
                   end
 
                 default:
@@ -444,6 +500,11 @@ module trng(
                 ADDR_TRNG_STATUS:
                   begin
 
+                  end
+
+                ADDR_DEBUG_CTRL:
+                  begin
+                    trng_api_read_data = debug_mux_new;
                   end
 
                 default:
