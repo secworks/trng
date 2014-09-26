@@ -113,9 +113,8 @@ module trng(
   wire           csprng_seed_ack;
   reg            csprng_api_cs;
   reg            csprng_api_we;
-  reg  [7 : 0]   csprng_api_address;
+  wire [31 : 0]  csprng_api_read_data;
   wire           csprng_api_error;
-  wire           csprng_security_error;
 
   wire           entropy0_entropy_enabled;
   wire [31 : 0]  entropy0_entropy_data;
@@ -148,7 +147,7 @@ module trng(
   wire           entropy2_debug_update;
   wire           entropy2_security_error;
 
-  reg            api_address;
+  reg [7 : 0]    api_address;
   reg [31 : 0]   tmp_read_data;
   reg            tmp_error;
 
