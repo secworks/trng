@@ -60,27 +60,26 @@ module trng(
   //----------------------------------------------------------------
   // Internal constant and parameter definitions.
   //----------------------------------------------------------------
-  parameter TRNG_PREFIX                 = 4'h0;
-  parameter ENTROPY0_PREFIX             = 4'h4;
-  parameter ENTROPY1_PREFIX             = 4'h5;
-  parameter ENTROPY2_PREFIX             = 4'h6;
-  parameter MIXER_PREFIX                = 4'ha;
-  parameter CSPRNG_PREFIX               = 4'hb;
+  parameter TRNG_PREFIX             = 4'h0;
+  parameter ENTROPY0_PREFIX         = 4'h4;
+  parameter ENTROPY1_PREFIX         = 4'h5;
+  parameter ENTROPY2_PREFIX         = 4'h6;
+  parameter MIXER_PREFIX            = 4'ha;
+  parameter CSPRNG_PREFIX           = 4'hb;
 
-  parameter ADDR_NAME0                  = 8'h00;
-  parameter ADDR_NAME1                  = 8'h01;
-  parameter ADDR_VERSION                = 8'h02;
+  parameter ADDR_NAME0              = 8'h00;
+  parameter ADDR_NAME1              = 8'h01;
+  parameter ADDR_VERSION            = 8'h02;
 
-  parameter ADDR_TRNG_CTRL              = 8'h10;
-  parameter TRNG_CTRL_DISCARD_BIT       = 0;
-  parameter TRNG_CTRL_SEED_BIT          = 1;
-  parameter TRNG_CTRL_TEST_MODE_BIT     = 2;
+  parameter ADDR_TRNG_CTRL          = 8'h10;
+  parameter TRNG_CTRL_DISCARD_BIT   = 0;
+  parameter TRNG_CTRL_TEST_MODE_BIT = 1;
 
-  parameter ADDR_TRNG_STATUS            = 8'h11;
+  parameter ADDR_TRNG_STATUS        = 8'h11;
 
-  parameter TRNG_NAME0   = 32'h74726e67; // "trng"
-  parameter TRNG_NAME1   = 32'h20202020; // "    "
-  parameter TRNG_VERSION = 32'h302e3031; // "0.01"
+  parameter TRNG_NAME0              = 32'h74726e67; // "trng"
+  parameter TRNG_NAME1              = 32'h20202020; // "    "
+  parameter TRNG_VERSION            = 32'h302e3031; // "0.01"
 
 
   //----------------------------------------------------------------
@@ -181,8 +180,6 @@ module trng(
   assign security_error = entropy0_security_error | entropy1_security_error |
                           entropy2_security_error;
   assign debug          = entropy2_debug;
-
-  assign csprng_seed       = seed_reg;
 
   assign mixer_discard  = discard_reg;
   assign csprng_discard = discard_reg;
@@ -334,14 +331,12 @@ module trng(
     begin
       if (!reset_n)
         begin
-          discard_reg <= 0;
-          seed_reg    <= 0;
+          discard_reg   <= 0;
           test_mode_reg <= 0;
         end
       else
         begin
           discard_reg <= discard_new;
-          seed_reg    <= seed_new;
 
           if (test_mode_we)
             begin
@@ -455,7 +450,6 @@ module trng(
   always @*
     begin : trng_api_logic
       discard_new        = 0;
-      seed_new           = 0;
       test_mode_new      = 0;
       test_mode_we       = 0;
       trng_api_read_data = 32'h00000000;
@@ -471,7 +465,6 @@ module trng(
                 ADDR_TRNG_CTRL:
                   begin
                     discard_new   = write_data[TRNG_CTRL_DISCARD_BIT];
-                    seed_new      = write_data[TRNG_CTRL_SEED_BIT];
                     test_mode_new = write_data[TRNG_CTRL_TEST_MODE_BIT];
                     test_mode_we  = 1;
                   end
