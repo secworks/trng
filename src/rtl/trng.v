@@ -102,8 +102,6 @@ module trng(
   reg [31 : 0]   trng_api_read_data;
   reg            trng_api_error;
 
-  wire           mixer_discard;
-  wire           mixer_test_mode;
   wire           mixer_more_seed;
   wire [511 : 0] mixer_seed_data;
   wire           mixer_seed_syn;
@@ -114,8 +112,6 @@ module trng(
   wire [31 : 0]  mixer_api_read_data;
   wire           mixer_api_error;
 
-  wire           csprng_discard;
-  wire           csprng_test_mode;
   wire           csprng_more_seed;
   wire           csprng_seed_ack;
   reg            csprng_api_cs;
@@ -181,9 +177,6 @@ module trng(
                           entropy2_security_error;
   assign debug          = entropy2_debug;
 
-  assign mixer_discard  = discard_reg;
-  assign csprng_discard = discard_reg;
-
   assign mixer_test_mode    = test_mode_reg;
   assign csprng_test_mode   = test_mode_reg;
   assign entropy0_test_mode = test_mode_reg;
@@ -212,8 +205,8 @@ module trng(
                    .read_data(mixer_api_read_data),
                    .error(mixer_api_error),
 
-                   .discard(mixer_discard),
-                   .test_mode(mixer_test_mode),
+                   .discard(discard_reg),
+                   .test_mode(test_mode_reg),
 
                    .more_seed(csprng_more_seed),
 
@@ -248,8 +241,8 @@ module trng(
                      .read_data(csprng_api_read_data),
                      .error(csprng_api_error),
 
-                     .discard(csprng_discard),
-                     .test_mode(csprng_test_mode),
+                     .discard(discard_reg),
+                     .test_mode(test_mode_reg),
 
                      .more_seed(csprng_more_seed),
 
@@ -286,15 +279,17 @@ module trng(
                              .read_data(entropy1_api_read_data),
                              .error(entropy1_api_error),
 
+                             .discard(discard_reg),
+                             .test_mode(test_mode_reg),
+                             .security_error(entropy1_security_error),
+
                              .entropy_enabled(entropy1_entropy_enabled),
                              .entropy_data(entropy1_entropy_data),
                              .entropy_valid(entropy1_entropy_syn),
                              .entropy_ack(entropy1_entropy_ack),
 
                              .debug(entropy1_debug),
-                             .debug_update(entropy1_debug_update),
-
-                             .security_error(entropy1_security_error)
+                             .debug_update(entropy1_debug_update)
                             );
 
   rosc_entropy entropy2(
@@ -308,15 +303,17 @@ module trng(
                         .read_data(entropy2_api_read_data),
                         .error(entropy2_api_error),
 
+                        .discard(discard_reg),
+                        .test_mode(test_mode_reg),
+                        .security_error(entropy2_security_error),
+
                         .entropy_enabled(entropy2_entropy_enabled),
                         .entropy_data(entropy2_entropy_data),
                         .entropy_valid(entropy2_entropy_syn),
                         .entropy_ack(entropy2_entropy_ack),
 
                         .debug(entropy2_debug),
-                        .debug_update(entropy2_debug_update),
-
-                        .security_error(entropy2_security_error)
+                        .debug_update(entropy2_debug_update)
                        );
 
 
