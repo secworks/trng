@@ -122,10 +122,6 @@ module trng_csprng(
   reg           block_ctr_we;
   reg           block_ctr_max;
 
-  reg           error_reg;
-  reg           error_new;
-  reg           error_we;
-
   reg           ready_reg;
   reg           ready_new;
   reg           ready_we;
@@ -186,12 +182,14 @@ module trng_csprng(
   //----------------------------------------------------------------
   // Concurrent connectivity for ports etc.
   //----------------------------------------------------------------
-  assign seed_ack  = seed_ack_reg;
-  assign more_seed = more_seed_reg;
+  assign read_data      = tmp_read_data;
+  assign error          = tmp_error;
+  assign seed_ack       = seed_ack_reg;
+  assign more_seed      = more_seed_reg;
+  assign debug          = 8'haa;
+  assign security_error = 0;
 
-  assign error     = error_reg;
-
-  assign num_blocks = {num_blocks_high_reg, num_blocks_low_reg};
+  assign num_blocks     = {num_blocks_high_reg, num_blocks_low_reg};
 
 
   //----------------------------------------------------------------
@@ -252,7 +250,6 @@ module trng_csprng(
           more_seed_reg       <= 0;
           seed_ack_reg        <= 0;
           ready_reg           <= 0;
-          error_reg           <= 0;
           enable_reg          <= 0;
           seed_reg            <= 0;
           num_rounds_reg      <= DEFAULT_NUM_ROUNDS;
@@ -299,11 +296,6 @@ module trng_csprng(
           if (ready_we)
             begin
               ready_reg <= ready_new;
-            end
-
-          if (error_we)
-            begin
-              error_reg <= error_new;
             end
 
           if (csprng_ctrl_we)
@@ -490,8 +482,6 @@ module trng_csprng(
       block_ctr_inc          = 0;
       ready_new              = 0;
       ready_we               = 0;
-      error_new              = 0;
-      error_we               = 0;
       seed_ack_new           = 0;
       more_seed_new          = 0;
       fifo_discard           = 0;

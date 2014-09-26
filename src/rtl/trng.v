@@ -177,12 +177,6 @@ module trng(
                           entropy2_security_error;
   assign debug          = entropy2_debug;
 
-  assign mixer_test_mode    = test_mode_reg;
-  assign csprng_test_mode   = test_mode_reg;
-  assign entropy0_test_mode = test_mode_reg;
-  assign entropy1_test_mode = test_mode_reg;
-  assign entropy2_test_mode = test_mode_reg;
-
   assign entropy1_noise = avalanche_noise;
 
   // Patches to get our first version to work.
