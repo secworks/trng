@@ -340,8 +340,8 @@ module trng(
 
         DEBUG_ENTROPY2:
           begin
-            entropy1_debug_update = debug_update;
-            tmp_debug             = entropy1_debug;
+            entropy2_debug_update = debug_update;
+            tmp_debug             = entropy2_debug;
           end
 
         default:
