@@ -61,7 +61,6 @@ module trng(
   // Internal constant and parameter definitions.
   //----------------------------------------------------------------
   parameter TRNG_PREFIX             = 4'h0;
-  parameter ENTROPY0_PREFIX         = 4'h4;
   parameter ENTROPY1_PREFIX         = 4'h5;
   parameter ENTROPY2_PREFIX         = 4'h6;
   parameter MIXER_PREFIX            = 4'ha;
@@ -98,7 +97,6 @@ module trng(
   //----------------------------------------------------------------
   reg            trng_api_cs;
   reg            trng_api_we;
-  reg  [7 : 0]   trng_api_address;
   reg [31 : 0]   trng_api_read_data;
   reg            trng_api_error;
 
@@ -108,7 +106,6 @@ module trng(
   wire           mixer_seed_ack;
   reg            mixer_api_cs;
   reg            mixer_api_we;
-  reg  [7 : 0 ]  mixer_api_address;
   wire [31 : 0]  mixer_api_read_data;
   wire           mixer_api_error;
 
@@ -117,28 +114,16 @@ module trng(
   reg            csprng_api_cs;
   reg            csprng_api_we;
   reg  [7 : 0]   csprng_api_address;
-  wire [31 : 0]  csprng_api_read_data;
   wire           csprng_api_error;
   wire           csprng_security_error;
 
-  reg            entropy0_api_cs;
-  reg            entropy0_api_we;
-  reg  [7 : 0]   entropy0_api_address;
-  wire [31 : 0]  entropy0_api_read_data;
-  wire           entropy0_api_error;
   wire           entropy0_entropy_enabled;
   wire [31 : 0]  entropy0_entropy_data;
   wire           entropy0_entropy_syn;
   wire           entropy0_entropy_ack;
-  wire           entropy0_test_mode;
-  wire [7 : 0]   entropy0_debug;
-  wire           entropy0_debug_update;
-  wire           entropy0_security_error;
 
-  wire           entropy1_noise;
   reg            entropy1_api_cs;
   reg            entropy1_api_we;
-  reg  [7 : 0]   entropy1_api_address;
   wire [31 : 0]  entropy1_api_read_data;
   wire           entropy1_api_error;
   wire           entropy1_entropy_enabled;
@@ -152,7 +137,6 @@ module trng(
 
   reg            entropy2_api_cs;
   reg            entropy2_api_we;
-  reg  [7 : 0]   entropy2_api_address;
   wire [31 : 0]  entropy2_api_read_data;
   wire           entropy2_api_error;
   wire           entropy2_entropy_enabled;
@@ -164,6 +148,7 @@ module trng(
   wire           entropy2_debug_update;
   wire           entropy2_security_error;
 
+  reg            api_address;
   reg [31 : 0]   tmp_read_data;
   reg            tmp_error;
 
@@ -173,11 +158,10 @@ module trng(
   //----------------------------------------------------------------
   assign read_data      = tmp_read_data;
   assign error          = tmp_error;
-  assign security_error = entropy0_security_error | entropy1_security_error |
-                          entropy2_security_error;
-  assign debug          = entropy2_debug;
 
-  assign entropy1_noise = avalanche_noise;
+  assign security_error = entropy1_security_error | entropy2_security_error;
+
+  assign debug          = entropy2_debug;
 
   // Patches to get our first version to work.
   assign entropy0_entropy_enabled = 0;
@@ -194,7 +178,7 @@ module trng(
 
                    .cs(mixer_api_cs),
                    .we(mixer_api_we),
-                   .address(mixer_api_address),
+                   .address(api_address),
                    .write_data(write_data),
                    .read_data(mixer_api_read_data),
                    .error(mixer_api_error),
@@ -230,7 +214,7 @@ module trng(
 
                      .cs(csprng_api_cs),
                      .we(csprng_api_we),
-                     .address(csprng_api_address),
+                     .address(api_address),
                      .write_data(write_data),
                      .read_data(csprng_api_read_data),
                      .error(csprng_api_error),
@@ -245,30 +229,15 @@ module trng(
                      .seed_ack(csprng_seed_ack)
                     );
 
-//  pseudo_entropy entropy0(
-//                          .clk(clk),
-//                          .reset_n(reset_n),
-//
-//                          .enable(entropy0_enable),
-//
-//                          .raw_entropy(entropy0_raw),
-//                          .stats(entropy0_stats),
-//
-//                          .enabled(entropy0_enabled),
-//                          .entropy_syn(entropy0_syn),
-//                          .entropy_data(entropy0_data),
-//                          .entropy_ack(entropy0_ack)
-//                         );
-
   avalanche_entropy entropy1(
                              .clk(clk),
                              .reset_n(reset_n),
 
-                             .noise(entropy1_noise),
+                             .noise(avalanche_noise),
 
                              .cs(entropy1_api_cs),
                              .we(entropy1_api_we),
-                             .address(entropy1_api_address),
+                             .address(api_address),
                              .write_data(write_data),
                              .read_data(entropy1_api_read_data),
                              .error(entropy1_api_error),
@@ -292,7 +261,7 @@ module trng(
 
                         .cs(entropy2_api_cs),
                         .we(entropy2_api_we),
-                        .address(entropy2_api_address),
+                        .address(api_address),
                         .write_data(write_data),
                         .read_data(entropy2_api_read_data),
                         .error(entropy2_api_error),
@@ -307,7 +276,7 @@ module trng(
                         .entropy_ack(entropy2_entropy_ack),
 
                         .debug(entropy2_debug),
-                        .debug_update(entropy2_debug_update)
+                        .debug_update(debug_update)
                        );
 
 
@@ -347,82 +316,64 @@ module trng(
   //----------------------------------------------------------------
   always @*
     begin : api_mux
-      trng_api_cs             = 0;
-      trng_api_we             = 0;
-      trng_api_address        = 8'h00;
+      trng_api_cs     = 0;
+      trng_api_we     = 0;
 
-      entropy1_api_cs         = 0;
-      entropy1_api_we         = 0;
-      entropy1_api_address    = 8'h00;
+      entropy1_api_cs = 0;
+      entropy1_api_we = 0;
 
-      entropy2_api_cs         = 0;
-      entropy2_api_we         = 0;
-      entropy2_api_address    = 8'h00;
+      entropy2_api_cs = 0;
+      entropy2_api_we = 0;
 
-      mixer_api_cs            = 0;
-      mixer_api_we            = 0;
-      mixer_api_address       = 8'h00;
+      mixer_api_cs    = 0;
+      mixer_api_we    = 0;
 
-      csprng_api_cs           = 0;
-      csprng_api_we           = 0;
-      csprng_api_address      = 8'h00;
+      csprng_api_cs   = 0;
+      csprng_api_we   = 0;
 
-      tmp_read_data           = 32'h00000000;
-      tmp_error               = 0;
+      api_address     = address[7 : 0];
+      tmp_read_data   = 32'h00000000;
+      tmp_error       = 0;
 
       case (address[11 : 8])
         TRNG_PREFIX:
           begin
-            trng_api_cs         = cs;
-            trng_api_we         = we;
-            trng_api_address    = address[7 : 0];
-            tmp_read_data       = trng_api_read_data;
-            tmp_error           = trng_api_error;
-          end
-
-        ENTROPY0_PREFIX:
-          begin
-            entropy0_api_cs         = cs;
-            entropy0_api_we         = we;
-            entropy0_api_address    = address[7 : 0];
-            tmp_read_data           = entropy0_api_read_data;
-            tmp_error               = entropy0_api_error;
+            trng_api_cs   = cs;
+            trng_api_we   = we;
+            tmp_read_data = trng_api_read_data;
+            tmp_error     = trng_api_error;
           end
 
         ENTROPY1_PREFIX:
           begin
-            entropy1_api_cs         = cs;
-            entropy1_api_we         = we;
-            entropy1_api_address    = address[7 : 0];
-            tmp_read_data           = entropy1_api_read_data;
-            tmp_error               = entropy1_api_error;
+            entropy1_api_cs = cs;
+            entropy1_api_we = we;
+            tmp_read_data   = entropy1_api_read_data;
+            tmp_error       = entropy1_api_error;
           end
 
         ENTROPY2_PREFIX:
           begin
-            entropy2_api_cs         = cs;
-            entropy2_api_we         = we;
-            entropy2_api_address    = address[7 : 0];
-            tmp_read_data           = entropy2_api_read_data;
-            tmp_error               = entropy2_api_error;
+            entropy2_api_cs = cs;
+            entropy2_api_we = we;
+            tmp_read_data   = entropy2_api_read_data;
+            tmp_error       = entropy2_api_error;
           end
 
         MIXER_PREFIX:
           begin
-            entropy0_api_cs         = cs;
-            entropy0_api_we         = we;
-            entropy0_api_address    = address[7 : 0];
-            tmp_read_data           = mixer_api_read_data;
-            tmp_error               = mixer_api_error;
+            mixer_api_cs  = cs;
+            mixer_api_we  = we;
+            tmp_read_data = mixer_api_read_data;
+            tmp_error     = mixer_api_error;
           end
 
         CSPRNG_PREFIX:
           begin
-            entropy0_api_cs         = cs;
-            entropy0_api_we         = we;
-            entropy0_api_address    = address[7 : 0];
-            tmp_read_data           = csprng_api_read_data;
-            tmp_error               = csprng_api_error;
+            csprng_api_cs = cs;
+            csprng_api_we = we;
+            tmp_read_data = csprng_api_read_data;
+            tmp_error     = csprng_api_error;
           end
 
         default:
@@ -451,7 +402,7 @@ module trng(
           if (trng_api_we)
             begin
               // Write operations.
-              case (trng_api_address)
+              case (api_address)
                 // Write operations.
                 ADDR_TRNG_CTRL:
                   begin
@@ -470,7 +421,7 @@ module trng(
           else
             begin
               // Read operations.
-              case (trng_api_address)
+              case (api_address)
                 // Read operations.
                 ADDR_NAME0:
                   begin
