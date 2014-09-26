@@ -93,9 +93,6 @@ module trng(
   reg test_mode_new;
   reg test_mode_we;
 
-  reg seed_reg;
-  reg seed_new;
-
 
   //----------------------------------------------------------------
   // Wires.
@@ -103,7 +100,6 @@ module trng(
   reg            trng_api_cs;
   reg            trng_api_we;
   reg  [7 : 0]   trng_api_address;
-  reg  [31 : 0 ] trng_api_write_data;
   reg [31 : 0]   trng_api_read_data;
   reg            trng_api_error;
 
@@ -116,19 +112,16 @@ module trng(
   reg            mixer_api_cs;
   reg            mixer_api_we;
   reg  [7 : 0 ]  mixer_api_address;
-  reg  [31 : 0]  mixer_api_write_data;
   wire [31 : 0]  mixer_api_read_data;
   wire           mixer_api_error;
 
   wire           csprng_discard;
   wire           csprng_test_mode;
-  wire           csprng_seed;
   wire           csprng_more_seed;
   wire           csprng_seed_ack;
   reg            csprng_api_cs;
   reg            csprng_api_we;
   reg  [7 : 0]   csprng_api_address;
-  reg  [31 : 0]  csprng_api_write_data;
   wire [31 : 0]  csprng_api_read_data;
   wire           csprng_api_error;
   wire           csprng_security_error;
@@ -136,7 +129,6 @@ module trng(
   reg            entropy0_api_cs;
   reg            entropy0_api_we;
   reg  [7 : 0]   entropy0_api_address;
-  reg  [31 : 0]  entropy0_api_write_data;
   wire [31 : 0]  entropy0_api_read_data;
   wire           entropy0_api_error;
   wire           entropy0_entropy_enabled;
@@ -152,7 +144,6 @@ module trng(
   reg            entropy1_api_cs;
   reg            entropy1_api_we;
   reg  [7 : 0]   entropy1_api_address;
-  reg  [31 : 0]  entropy1_api_write_data;
   wire [31 : 0]  entropy1_api_read_data;
   wire           entropy1_api_error;
   wire           entropy1_entropy_enabled;
@@ -167,7 +158,6 @@ module trng(
   reg            entropy2_api_cs;
   reg            entropy2_api_we;
   reg  [7 : 0]   entropy2_api_address;
-  reg  [31 : 0]  entropy2_api_write_data;
   wire [31 : 0]  entropy2_api_read_data;
   wire           entropy2_api_error;
   wire           entropy2_entropy_enabled;
@@ -221,7 +211,7 @@ module trng(
                    .cs(mixer_api_cs),
                    .we(mixer_api_we),
                    .address(mixer_api_address),
-                   .write_data(mixer_api_write_data),
+                   .write_data(write_data),
                    .read_data(mixer_api_read_data),
                    .error(mixer_api_error),
 
@@ -257,7 +247,7 @@ module trng(
                      .cs(csprng_api_cs),
                      .we(csprng_api_we),
                      .address(csprng_api_address),
-                     .write_data(csprng_api_write_data),
+                     .write_data(write_data),
                      .read_data(csprng_api_read_data),
                      .error(csprng_api_error),
 
@@ -295,7 +285,7 @@ module trng(
                              .cs(entropy1_api_cs),
                              .we(entropy1_api_we),
                              .address(entropy1_api_address),
-                             .write_data(entropy1_api_write_data),
+                             .write_data(write_data),
                              .read_data(entropy1_api_read_data),
                              .error(entropy1_api_error),
 
@@ -317,7 +307,7 @@ module trng(
                         .cs(entropy2_api_cs),
                         .we(entropy2_api_we),
                         .address(entropy2_api_address),
-                        .write_data(entropy2_api_write_data),
+                        .write_data(write_data),
                         .read_data(entropy2_api_read_data),
                         .error(entropy2_api_error),
 
@@ -374,27 +364,22 @@ module trng(
       trng_api_cs             = 0;
       trng_api_we             = 0;
       trng_api_address        = 8'h00;
-      trng_api_write_data     = 32'h00000000;
 
       entropy1_api_cs         = 0;
       entropy1_api_we         = 0;
       entropy1_api_address    = 8'h00;
-      entropy1_api_write_data = 32'h00000000;
 
       entropy2_api_cs         = 0;
       entropy2_api_we         = 0;
       entropy2_api_address    = 8'h00;
-      entropy2_api_write_data = 32'h00000000;
 
       mixer_api_cs            = 0;
       mixer_api_we            = 0;
       mixer_api_address       = 8'h00;
-      mixer_api_write_data    = 32'h00000000;
 
       csprng_api_cs           = 0;
       csprng_api_we           = 0;
       csprng_api_address      = 8'h00;
-      csprng_api_write_data   = 32'h00000000;
 
       tmp_read_data           = 32'h00000000;
       tmp_error               = 0;
@@ -405,7 +390,6 @@ module trng(
             trng_api_cs         = cs;
             trng_api_we         = we;
             trng_api_address    = address[7 : 0];
-            trng_api_write_data = write_data;
             tmp_read_data       = trng_api_read_data;
             tmp_error           = trng_api_error;
           end
@@ -415,7 +399,6 @@ module trng(
             entropy0_api_cs         = cs;
             entropy0_api_we         = we;
             entropy0_api_address    = address[7 : 0];
-            entropy0_api_write_data = write_data;
             tmp_read_data           = entropy0_api_read_data;
             tmp_error               = entropy0_api_error;
           end
@@ -425,7 +408,6 @@ module trng(
             entropy1_api_cs         = cs;
             entropy1_api_we         = we;
             entropy1_api_address    = address[7 : 0];
-            entropy1_api_write_data = write_data;
             tmp_read_data           = entropy1_api_read_data;
             tmp_error               = entropy1_api_error;
           end
@@ -435,7 +417,6 @@ module trng(
             entropy2_api_cs         = cs;
             entropy2_api_we         = we;
             entropy2_api_address    = address[7 : 0];
-            entropy2_api_write_data = write_data;
             tmp_read_data           = entropy2_api_read_data;
             tmp_error               = entropy2_api_error;
           end
@@ -445,7 +426,6 @@ module trng(
             entropy0_api_cs         = cs;
             entropy0_api_we         = we;
             entropy0_api_address    = address[7 : 0];
-            entropy0_api_write_data = write_data;
             tmp_read_data           = mixer_api_read_data;
             tmp_error               = mixer_api_error;
           end
@@ -455,7 +435,6 @@ module trng(
             entropy0_api_cs         = cs;
             entropy0_api_we         = we;
             entropy0_api_address    = address[7 : 0];
-            entropy0_api_write_data = write_data;
             tmp_read_data           = csprng_api_read_data;
             tmp_error               = csprng_api_error;
           end
@@ -482,12 +461,12 @@ module trng(
       trng_api_read_data = 32'h00000000;
       trng_api_error     = 0;
 
-      if (cs)
+      if (trng_api_cs)
         begin
-          if (we)
+          if (trng_api_we)
             begin
               // Write operations.
-              case (address)
+              case (trng_api_address)
                 // Write operations.
                 ADDR_TRNG_CTRL:
                   begin
@@ -507,7 +486,7 @@ module trng(
           else
             begin
               // Read operations.
-              case (address)
+              case (trng_api_address)
                 // Read operations.
                 ADDR_NAME0:
                   begin
