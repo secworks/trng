@@ -69,7 +69,10 @@ module trng_mixer(
 
                   output wire [511 : 0] seed_data,
                   output wire           seed_syn,
-                  input wire            seed_ack
+                  input wire            seed_ack,
+
+                  output wire [7 : 0]   debug,
+                  input wire            debug_update
                  );
 
 
@@ -245,6 +248,8 @@ module trng_mixer(
   assign entropy0_ack = tmp_entropy0_ack;
   assign entropy1_ack = tmp_entropy1_ack;
   assign entropy2_ack = tmp_entropy2_ack;
+
+  assign debug = 8'h55;
 
 
   //----------------------------------------------------------------

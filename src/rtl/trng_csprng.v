@@ -178,6 +178,8 @@ module trng_csprng(
 
   wire [63 : 0]  num_blocks;
 
+  wire           muxed_rnd_ack;
+
 
   //----------------------------------------------------------------
   // Concurrent connectivity for ports etc.
@@ -186,10 +188,11 @@ module trng_csprng(
   assign error          = tmp_error;
   assign seed_ack       = seed_ack_reg;
   assign more_seed      = more_seed_reg;
-  assign debug          = 8'haa;
+  assign debug          = rnd_data[7 : 0];
   assign security_error = 0;
 
   assign num_blocks     = {num_blocks_high_reg, num_blocks_low_reg};
+  assign muxed_rnd_ack  = rnd_ack | debug_update;
 
 
   //----------------------------------------------------------------
@@ -227,7 +230,7 @@ module trng_csprng(
 
                         .rnd_syn(rnd_syn),
                         .rnd_data(rnd_data),
-                        .rnd_ack(rnd_ack)
+                        .rnd_ack(muxed_rnd_ack)
                        );
 
 

@@ -119,6 +119,8 @@ module trng(
   reg            mixer_api_we;
   wire [31 : 0]  mixer_api_read_data;
   wire           mixer_api_error;
+  wire [7 : 0]   mixer_debug;
+  reg            mixer_debug_update;
 
   wire           csprng_more_seed;
   wire           csprng_seed_ack;
@@ -126,6 +128,8 @@ module trng(
   reg            csprng_api_we;
   wire [31 : 0]  csprng_api_read_data;
   wire           csprng_api_error;
+  wire [7 : 0]   csprng_debug;
+  reg            csprng_debug_update;
 
   wire           entropy0_entropy_enabled;
   wire [31 : 0]  entropy0_entropy_data;
@@ -214,7 +218,10 @@ module trng(
 
                    .seed_data(mixer_seed_data),
                    .seed_syn(mixer_seed_syn),
-                   .seed_ack(csprng_seed_ack)
+                   .seed_ack(csprng_seed_ack),
+
+                   .debug(mixer_debug),
+                   .debug_update(mixer_debug_update)
                   );
 
   trng_csprng csprng(
@@ -235,7 +242,10 @@ module trng(
 
                      .seed_data(mixer_seed_data),
                      .seed_syn(mixer_seed_syn),
-                     .seed_ack(csprng_seed_ack)
+                     .seed_ack(csprng_seed_ack),
+
+                     .debug(csprng_debug),
+                     .debug_update(csprng_debug_update)
                     );
 
   avalanche_entropy entropy1(
@@ -302,7 +312,7 @@ module trng(
         begin
           discard_reg   <= 0;
           test_mode_reg <= 0;
-          debug_mux_reg <= DEBUG_ENTROPY2;
+          debug_mux_reg <= DEBUG_ENTROPY1;
         end
       else
         begin
@@ -328,6 +338,8 @@ module trng(
     begin : debug_mux
       entropy1_debug_update = 0;
       entropy2_debug_update = 0;
+      mixer_debug_update    = 0;
+      csprng_debug_update   = 0;
 
       tmp_debug = 8'h00;
 
@@ -342,6 +354,18 @@ module trng(
           begin
             entropy2_debug_update = debug_update;
             tmp_debug             = entropy2_debug;
+          end
+
+        DEBUG_MIXER:
+          begin
+            mixer_debug_update = debug_update;
+            tmp_debug          = mixer_debug;
+          end
+
+        DEBUG_CSPRNG:
+          begin
+            csprng_debug_update = debug_update;
+            tmp_debug           = csprng_debug;
           end
 
         default:
