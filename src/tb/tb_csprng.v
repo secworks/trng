@@ -78,13 +78,16 @@ module tb_csprng();
 
   wire          tb_ready;
   wire          tb_more_seed;
-
+  wire          tb_security_error;
   reg           tb_seed_syn;
   reg [511 : 0] tb_seed_data;
   wire          tb_seed_ack;
-  wire          tb_rnd_syn;
   wire [31: 0]  tb_rnd_data;
+  wire          tb_rnd_syn;
   reg           tb_rnd_ack;
+
+  wire [7 : 0]  tb_debug;
+  reg           tb_debug_update;
 
 
   //----------------------------------------------------------------
@@ -105,10 +108,14 @@ module tb_csprng();
                   .test_mode(tb_test_mode),
 
                   .more_seed(tb_more_seed),
+                  .security_error(tb_security_error),
 
-                  .seed_syn(tb_seed_syn),
                   .seed_data(tb_seed_data),
-                  .seed_ack(tb_seed_ack)
+                  .seed_syn(tb_seed_syn),
+                  .seed_ack(tb_seed_ack),
+
+                  .debug(tb_debug),
+                  .debug_update(tb_debug_update)
                  );
 
 
@@ -156,8 +163,6 @@ module tb_csprng();
       $display("Inputs:");
       $display("test_mode = 0x%01x, seed = 0x%01x, enable = 0x%01x",
                dut.test_mode, dut.seed_reg, dut.enable_reg);
-      $display("ready = 0x%01x, error = 0x%01x",
-               dut.ready, dut.error);
       $display("num_rounds = 0x%02x, num_blocks = 0x%016x",
                dut.num_rounds_reg, dut.num_blocks);
       $display("seed_syn = 0x%01x, seed_ack = 0x%01x, seed_data = 0x%064x",
@@ -239,26 +244,25 @@ module tb_csprng();
   //----------------------------------------------------------------
   task init_sim();
     begin
-      cycle_ctr     = 0;
-      error_ctr     = 0;
-      tc_ctr        = 0;
+      cycle_ctr       = 0;
+      error_ctr       = 0;
+      tc_ctr          = 0;
 
-      tb_clk        = 0;
-      tb_reset_n    = 1;
+      tb_clk          = 0;
+      tb_reset_n      = 1;
 
-      tb_clk        = 0;
-      tb_reset_n    = 1;
-      tb_cs         = 0;
-      tb_we         = 0;
-      tb_address    = 8'h00;
-      tb_write_data = 32'h00000000;
+      tb_cs           = 0;
+      tb_we           = 0;
+      tb_address      = 8'h00;
+      tb_write_data   = 32'h00000000;
 
-      tb_discard    = 0;
-      tb_test_mode  = 0;
+      tb_discard      = 0;
+      tb_test_mode    = 0;
 
-      tb_seed_syn   = 0;
-      tb_seed_data  = {16{32'h00000000}};
-      tb_rnd_ack    = 0;
+      tb_seed_syn     = 0;
+      tb_seed_data    = {16{32'h00000000}};
+      tb_rnd_ack      = 0;
+      tb_debug_update = 0;
     end
   endtask // init_sim
 
