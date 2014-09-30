@@ -101,6 +101,7 @@ module tb_trng();
   reg [31 : 0]  tb_write_data;
   wire [31 : 0] tb_read_data;
   wire [7 : 0]  tb_debug;
+  reg           tb_debug_update;
   wire          tb_error;
   wire          tb_security_error;
 
@@ -119,6 +120,7 @@ module tb_trng();
            .read_data(tb_read_data),
            .error(tb_error),
            .debug(tb_debug),
+           .debug_update(tb_debug_update),
            .security_error(tb_security_error)
           );
 
@@ -275,12 +277,13 @@ module tb_trng();
 
       tb_clk             = 0;
       tb_reset_n         = 1;
-
+      
       tb_avalanche_noise = 0;
       tb_cs              = 0;
       tb_we              = 0;
       tb_address         = 12'h000;
       tb_write_data      = 32'h00000000;
+      tb_debug_update    = 0;
     end
   endtask // init_sim
 
