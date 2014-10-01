@@ -277,7 +277,7 @@ module tb_trng();
 
       tb_clk             = 0;
       tb_reset_n         = 1;
-      
+
       tb_avalanche_noise = 0;
       tb_cs              = 0;
       tb_we              = 0;
@@ -292,13 +292,15 @@ module tb_trng();
   // tc1_gen_rnd()
   //
   // A simple first testcase that tries to make the DUT generate
-  // a number of seeds based on entropy from source 0 and 2.
+  // a number of random values.
   //----------------------------------------------------------------
   task tc1_gen_rnd();
     reg [31 : 0] i;
 
     begin
       $display("*** Starting TC1: Generating random values from entropy.");
+
+      tb_debug_update = 1;
 
       // We try to change number of blocks to a low value to force reseeding.
       write_word(ADDR_CSPRNG_NUM_BLOCKS_LOW, 32'h00000002);
