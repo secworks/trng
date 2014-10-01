@@ -312,7 +312,7 @@ module trng(
         begin
           discard_reg   <= 0;
           test_mode_reg <= 0;
-          debug_mux_reg <= DEBUG_ENTROPY1;
+          debug_mux_reg <= DEBUG_CSPRNG;
         end
       else
         begin
