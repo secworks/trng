@@ -100,8 +100,10 @@ module trng_mixer(
   parameter ADDR_MIXER_CTRL        = 8'h10;
   parameter MIXER_CTRL_ENABLE_BIT  = 0;
   parameter MIXER_CTRL_RESTART_BIT = 1;
-
   parameter ADDR_MIXER_STATUS      = 8'h11;
+  parameter ADDR_MIXER_TIMEOUT     = 8'h20;
+
+  parameter DEFAULT_ENTROPY_TIMEOUT = 24'h100000;
 
 
   //----------------------------------------------------------------
@@ -181,6 +183,17 @@ module trng_mixer(
   reg [3 : 0] entropy_collect_ctrl_reg;
   reg [3 : 0] entropy_collect_ctrl_new;
   reg         entropy_collect_ctrl_we;
+
+  reg [23 : 0] entropy_timeout_ctr_reg;
+  reg [23 : 0] entropy_timeout_ctr_new;
+  reg          entropy_timeout_ctr_inc;
+  reg          entropy_timeout_ctr_rst;
+  reg          entropy_timeout_ctr_we;
+  reg          entropy_timeout;
+
+  reg [23 : 0] entropy_timeout_reg;
+  reg [23 : 0] entropy_timeout_new;
+  reg          entropy_timeout_we;
 
   reg [3 : 0] mixer_ctrl_reg;
   reg [3 : 0] mixer_ctrl_new;
@@ -321,6 +334,8 @@ module trng_mixer(
           seed_syn_reg             <= 0;
           enable_reg               <= 1;
           restart_reg              <= 0;
+          entropy_timeout_reg      <= DEFAULT_ENTROPY_TIMEOUT;
+          entropy_timeout_ctr_reg  <= 24'h000000;
           entropy_collect_ctrl_reg <= CTRL_IDLE;
           mixer_ctrl_reg           <= CTRL_IDLE;
         end
@@ -517,6 +532,16 @@ module trng_mixer(
             begin
               mixer_ctrl_reg <= mixer_ctrl_new;
             end
+
+          if (entropy_timeout_we)
+            begin
+              entropy_timeout_reg <= entropy_timeout_new;
+            end
+
+          if (entropy_timeout_ctr_we)
+            begin
+              entropy_timeout_ctr_reg <= entropy_timeout_ctr_new;
+            end
         end
     end // reg_update
 
@@ -526,12 +551,14 @@ module trng_mixer(
   //----------------------------------------------------------------
   always @*
     begin : mixer_api_logic
-      enable_new    = 0;
-      enable_we     = 0;
-      restart_reg   = 0;
-      restart_new   = 0;
-      tmp_read_data = 32'h00000000;
-      tmp_error     = 0;
+      enable_new          = 0;
+      enable_we           = 0;
+      restart_reg         = 0;
+      restart_new         = 0;
+      entropy_timeout_new = 24'h000000;
+      entropy_timeout_we  = 0;
+      tmp_read_data       = 32'h00000000;
+      tmp_error           = 0;
 
       if (cs)
         begin
@@ -545,6 +572,12 @@ module trng_mixer(
                     enable_new  = write_data[MIXER_CTRL_ENABLE_BIT];
                     enable_we   = 1;
                     restart_new = write_data[MIXER_CTRL_RESTART_BIT];
+                  end
+
+                ADDR_MIXER_TIMEOUT:
+                  begin
+                    entropy_timeout_new = write_data[23 : 0];
+                    entropy_timeout_we  = 1;
                   end
 
                 default:
@@ -561,12 +594,17 @@ module trng_mixer(
                 // Read operations.
                 ADDR_MIXER_CTRL:
                   begin
-                    tmp_read_data = {30'h00000000, restart_reg, enable_reg};
+                    tmp_read_data = {restart_reg, enable_reg};
                   end
 
                 ADDR_MIXER_STATUS:
                   begin
+                    tmp_read_data = 32'h00000000;
+                  end
 
+                ADDR_MIXER_TIMEOUT:
+                  begin
+                    tmp_read_data = entropy_timeout_reg;
                   end
 
                 default:
@@ -596,6 +634,8 @@ module trng_mixer(
       update_block             = 0;
       block_done               = 0;
       muxed_entropy            = 32'h00000000;
+      entropy_timeout_ctr_inc  = 0;
+      entropy_timeout_ctr_rst  = 0;
       entropy_collect_ctrl_new = ENTROPY_IDLE;
       entropy_collect_ctrl_we  = 0;
 
@@ -605,6 +645,7 @@ module trng_mixer(
             if (collect_block)
               begin
                 word_ctr_rst             = 1;
+                entropy_timeout_ctr_rst  = 1;
                 entropy_collect_ctrl_new = ENTROPY_SRC0;
                 entropy_collect_ctrl_we  = 1;
               end
@@ -629,9 +670,21 @@ module trng_mixer(
                         entropy_collect_ctrl_new = ENTROPY_SRC0_ACK;
                         entropy_collect_ctrl_we  = 1;
                       end
+                    else
+                      if (entropy_timeout)
+                        begin
+                          entropy_timeout_ctr_rst  = 1;
+                          entropy_collect_ctrl_new = ENTROPY_SRC1;
+                          entropy_collect_ctrl_we  = 1;
+                        end
+                      else
+                        begin
+                          entropy_timeout_ctr_inc = 1;
+                        end
                   end
                 else
                   begin
+                    entropy_timeout_ctr_rst  = 1;
                     entropy_collect_ctrl_new = ENTROPY_SRC1;
                     entropy_collect_ctrl_we  = 1;
                   end
@@ -684,6 +737,17 @@ module trng_mixer(
                         entropy_collect_ctrl_new = ENTROPY_SRC1_ACK;
                         entropy_collect_ctrl_we  = 1;
                       end
+                    else
+                      if (entropy_timeout)
+                        begin
+                          entropy_timeout_ctr_rst  = 1;
+                          entropy_collect_ctrl_new = ENTROPY_SRC2;
+                          entropy_collect_ctrl_we  = 1;
+                        end
+                      else
+                        begin
+                          entropy_timeout_ctr_inc = 1;
+                        end
                   end
                 else
                   begin
@@ -738,6 +802,17 @@ module trng_mixer(
                         entropy_collect_ctrl_new = ENTROPY_SRC2_ACK;
                         entropy_collect_ctrl_we  = 1;
                       end
+                    else
+                      if (entropy_timeout)
+                        begin
+                          entropy_timeout_ctr_rst  = 1;
+                          entropy_collect_ctrl_new = ENTROPY_SRC0;
+                          entropy_collect_ctrl_we  = 1;
+                        end
+                      else
+                        begin
+                          entropy_timeout_ctr_inc = 1;
+                        end
                   end
                 else
                   begin
@@ -853,6 +928,40 @@ module trng_mixer(
           endcase // case (word_ctr_reg)
         end
     end // word_mux
+
+
+  //----------------------------------------------------------------
+  // entropy_timeout_logic
+  //
+  // Logic that updates the entropy timeout counter and signals
+  // when the wait for antropy from a provider has exceeded
+  // acceptable time.
+  //----------------------------------------------------------------
+  always @*
+    begin : entropy_timeout_logic
+      entropy_timeout_ctr_new = 24'h000000;
+      entropy_timeout_ctr_we  = 0;
+      entropy_timeout         = 0;
+
+      if (entropy_timeout_ctr_reg == entropy_timeout_reg)
+        begin
+          entropy_timeout         = 1;
+          entropy_timeout_ctr_new = 24'h000000;
+          entropy_timeout_ctr_we  = 1;
+        end
+
+      if (entropy_timeout_ctr_rst)
+        begin
+          entropy_timeout_ctr_new = 24'h000000;
+          entropy_timeout_ctr_we  = 1;
+        end
+
+      if (entropy_timeout_ctr_inc)
+        begin
+          entropy_timeout_ctr_new = entropy_timeout_ctr_reg + 1'b1;
+          entropy_timeout_ctr_we  = 1;
+        end
+    end
 
 
   //----------------------------------------------------------------
