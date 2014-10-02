@@ -103,7 +103,7 @@ module trng_mixer(
   parameter ADDR_MIXER_STATUS      = 8'h11;
   parameter ADDR_MIXER_TIMEOUT     = 8'h20;
 
-  parameter DEFAULT_ENTROPY_TIMEOUT = 24'h100000;
+  parameter DEFAULT_ENTROPY_TIMEOUT = 24'h800000;
 
 
   //----------------------------------------------------------------
