@@ -82,9 +82,9 @@ module tb_trng();
   parameter ADDR_CSPRNG_STATUS          = 8'h11;
   parameter CSPRNG_STATUS_RND_VALID_BIT = 0;
 
-  parameter ADDR_CSPRNG_NUM_ROUNDS      = 8'h30;
-  parameter ADDR_CSPRNG_NUM_BLOCKS_LOW  = 8'h31;
-  parameter ADDR_CSPRNG_NUM_BLOCKS_HIGH = 8'h32;
+  parameter ADDR_CSPRNG_NUM_ROUNDS      = 8'h40;
+  parameter ADDR_CSPRNG_NUM_BLOCKS_LOW  = 8'h41;
+  parameter ADDR_CSPRNG_NUM_BLOCKS_HIGH = 8'h42;
 
   parameter ADDR_ENTROPY0_RAW           = 8'h40;
   parameter ADDR_ENTROPY0_STATS         = 8'h41;
@@ -334,7 +334,7 @@ module tb_trng();
       i = 0;
       while (i < 100000)
         begin
-          $display("Reading rnd word %08d.", i);
+          $display("Reading rnd word %08x.", i);
           i = i + 1;
           read_word({CSPRNG_PREFIX, ADDR_TRNG_RND_DATA});
           #(2 * CLK_PERIOD);
