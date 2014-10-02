@@ -77,6 +77,7 @@ module tb_mixer();
   reg            tb_discard;
   reg            tb_test_mode;
   reg            tb_more_seed;
+  wire           tb_security_error;
 
   reg            tb_entropy0_enabled;
   reg            tb_entropy0_syn;
@@ -116,6 +117,7 @@ module tb_mixer();
                  
                  .discard(tb_discard),
                  .test_mode(tb_test_mode),
+                 .security_error(tb_security_error),
 
                  .more_seed(tb_more_seed),
 

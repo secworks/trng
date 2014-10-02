@@ -65,6 +65,19 @@ module trng_csprng(
   //----------------------------------------------------------------
   // Internal constant and parameter definitions.
   //----------------------------------------------------------------
+  parameter ADDR_CTRL            = 8'h10;
+  parameter CTRL_ENABLE_BIT      = 0;
+  parameter CTRL_SEED_BIT        = 1;
+
+  parameter ADDR_STATUS          = 8'h11;
+  parameter STATUS_RND_VALID_BIT = 0;
+
+  parameter ADDR_RND_DATA        = 8'h20;
+
+  parameter ADDR_NUM_ROUNDS      = 8'h40;
+  parameter ADDR_NUM_BLOCK_LOW   = 8'h41;
+  parameter ADDR_NUM_BLOCK_HIGH  = 8'h42;
+
   parameter CIPHER_KEYLEN256  = 1'b1; // 256 bit key.
   parameter CIPHER_MAX_BLOCKS = 64'h1000000000000000;
 
@@ -81,19 +94,6 @@ module trng_csprng(
 
   parameter DEFAULT_NUM_ROUNDS = 5'h18;
   parameter DEFAULT_NUM_BLOCKS = 64'h1000000000000000;
-
-  parameter ADDR_CTRL            = 8'h10;
-  parameter CTRL_ENABLE_BIT      = 0;
-  parameter CTRL_SEED_BIT        = 1;
-
-  parameter ADDR_STATUS          = 8'h11;
-  parameter STATUS_RND_VALID_BIT = 0;
-
-  parameter ADDR_RND_DATA        = 8'h20;
-
-  parameter ADDR_NUM_ROUNDS      = 8'h40;
-  parameter ADDR_NUM_BLOCK_LOW   = 8'h41;
-  parameter ADDR_NUM_BLOCK_HIGH  = 8'h42;
 
 
   //----------------------------------------------------------------

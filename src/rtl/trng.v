@@ -119,6 +119,7 @@ module trng(
   reg            mixer_api_we;
   wire [31 : 0]  mixer_api_read_data;
   wire           mixer_api_error;
+  wire           mixer_security_error;
   wire [7 : 0]   mixer_debug;
   reg            mixer_debug_update;
 
@@ -130,6 +131,7 @@ module trng(
   wire           csprng_api_error;
   wire [7 : 0]   csprng_debug;
   reg            csprng_debug_update;
+  wire           csprng_security_error;
 
   wire           entropy0_entropy_enabled;
   wire [31 : 0]  entropy0_entropy_data;
@@ -198,6 +200,7 @@ module trng(
 
                    .discard(discard_reg),
                    .test_mode(test_mode_reg),
+                   .security_error(mixer_security_error),
 
                    .more_seed(csprng_more_seed),
 
@@ -237,8 +240,10 @@ module trng(
 
                      .discard(discard_reg),
                      .test_mode(test_mode_reg),
+                     .security_error(csprng_security_error),
 
                      .more_seed(csprng_more_seed),
+                     .security_error(csprng_security_error),
 
                      .seed_data(mixer_seed_data),
                      .seed_syn(mixer_seed_syn),

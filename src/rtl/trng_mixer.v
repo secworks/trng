@@ -49,6 +49,7 @@ module trng_mixer(
 
                   input wire            discard,
                   input wire            test_mode,
+                  output wire           security_error,
 
                   input wire            more_seed,
 
@@ -228,8 +229,9 @@ module trng_mixer(
   //----------------------------------------------------------------
   // Concurrent connectivity for ports etc.
   //----------------------------------------------------------------
-  assign read_data = tmp_read_data;
-  assign error     = tmp_error;
+  assign read_data      = tmp_read_data;
+  assign error          = tmp_error;
+  assign security_error = 0;
 
   assign seed_syn  = seed_syn_reg;
   assign seed_data = hash_digest;
