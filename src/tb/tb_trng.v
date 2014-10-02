@@ -75,6 +75,13 @@ module tb_trng();
   parameter ADDR_TRNG_RND_DATA_VALID    = 8'h21;
   parameter TRNG_RND_VALID_BIT          = 0;
 
+  parameter ADDR_CSPRNG_CTRL            = 8'h10;
+  parameter CSPRNG_CTRL_ENABLE_BIT      = 0;
+  parameter CSPRNG_CTRL_SEED_BIT        = 1;
+
+  parameter ADDR_CSPRNG_STATUS          = 8'h11;
+  parameter CSPRNG_STATUS_RND_VALID_BIT = 0;
+
   parameter ADDR_CSPRNG_NUM_ROUNDS      = 8'h30;
   parameter ADDR_CSPRNG_NUM_BLOCKS_LOW  = 8'h31;
   parameter ADDR_CSPRNG_NUM_BLOCKS_HIGH = 8'h32;
@@ -88,6 +95,9 @@ module tb_trng();
   parameter ADDR_ENTROPY2_RAW           = 8'h60;
   parameter ADDR_ENTROPY2_STATS         = 8'h61;
 
+  parameter ADDR_MIXER_CTRL             = 8'h10;
+  parameter MIXER_CTRL_ENABLE_BIT       = 0;
+  parameter MIXER_CTRL_RESTART_BIT      = 1;
 
   //----------------------------------------------------------------
   // Register and Wire declarations.
@@ -308,18 +318,25 @@ module tb_trng();
 
       tb_debug_update = 1;
 
+      #(10 * CLK_PERIOD);
+
+      // Enable the csprng and the mixer
+      write_word({CSPRNG_PREFIX, ADDR_CSPRNG_CTRL}, 32'h00000001);
+      write_word({MIXER_PREFIX, ADDR_MIXER_CTRL}, 32'h00000001);
+
+
       // We try to change number of blocks to a low value to force reseeding.
-      write_word(ADDR_CSPRNG_NUM_BLOCKS_LOW, 32'h00000002);
-      write_word(ADDR_CSPRNG_NUM_BLOCKS_HIGH, 32'h00000000);
+      write_word({CSPRNG_PREFIX, ADDR_CSPRNG_NUM_BLOCKS_LOW}, 32'h00000002);
+      write_word({CSPRNG_PREFIX, ADDR_CSPRNG_NUM_BLOCKS_HIGH}, 32'h00000000);
 
       #(100 * CLK_PERIOD);
 
       i = 0;
-      while (i < 1000000)
+      while (i < 100000)
         begin
           $display("Reading rnd word %08d.", i);
           i = i + 1;
-          read_word(ADDR_TRNG_RND_DATA);
+          read_word({CSPRNG_PREFIX, ADDR_TRNG_RND_DATA});
           #(2 * CLK_PERIOD);
         end
 
