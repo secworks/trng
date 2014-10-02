@@ -56,6 +56,12 @@ module tb_trng();
   parameter CLK_PERIOD      = 2 * CLK_HALF_PERIOD;
 
   // The DUT address map.
+  parameter TRNG_PREFIX                 = 4'h0;
+  parameter ENTROPY1_PREFIX             = 4'h5;
+  parameter ENTROPY2_PREFIX             = 4'h6;
+  parameter MIXER_PREFIX                = 4'ha;
+  parameter CSPRNG_PREFIX               = 4'hb;
+
   parameter ADDR_TRNG_CTRL              = 8'h10;
   parameter TRNG_CTRL_ENABLE_BIT        = 0;
   parameter TRNG_CTRL_ENT0_ENABLE_BIT   = 1;
@@ -309,7 +315,7 @@ module tb_trng();
       #(100 * CLK_PERIOD);
 
       i = 0;
-      while (i < 1000)
+      while (i < 1000000)
         begin
           $display("Reading rnd word %08d.", i);
           i = i + 1;
