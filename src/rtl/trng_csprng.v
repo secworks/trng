@@ -75,8 +75,8 @@ module trng_csprng(
   parameter ADDR_RND_DATA        = 8'h20;
 
   parameter ADDR_NUM_ROUNDS      = 8'h40;
-  parameter ADDR_NUM_BLOCK_LOW   = 8'h41;
-  parameter ADDR_NUM_BLOCK_HIGH  = 8'h42;
+  parameter ADDR_NUM_BLOCKS_LOW   = 8'h41;
+  parameter ADDR_NUM_BLOCKS_HIGH  = 8'h42;
 
   parameter CIPHER_KEYLEN256  = 1'b1; // 256 bit key.
   parameter CIPHER_MAX_BLOCKS = 64'h1000000000000000;
@@ -366,13 +366,13 @@ module trng_csprng(
                     num_rounds_we  = 1;
                   end
 
-                ADDR_NUM_BLOCK_LOW:
+                ADDR_NUM_BLOCKS_LOW:
                   begin
                     num_blocks_low_new = write_data;
                     num_blocks_low_we  = 1;
                   end
 
-                ADDR_NUM_BLOCK_HIGH:
+                ADDR_NUM_BLOCKS_HIGH:
                   begin
                     num_blocks_high_new = write_data;
                     num_blocks_high_we  = 1;
@@ -411,12 +411,12 @@ module trng_csprng(
                     tmp_read_data = {27'h0000000, num_rounds_reg};
                   end
 
-                ADDR_NUM_BLOCK_LOW:
+                ADDR_NUM_BLOCKS_LOW:
                   begin
                     tmp_read_data = num_blocks_low_reg;
                   end
 
-                ADDR_NUM_BLOCK_HIGH:
+                ADDR_NUM_BLOCKS_HIGH:
                   begin
                     tmp_read_data = num_blocks_high_reg;
                   end
