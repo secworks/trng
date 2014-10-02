@@ -82,13 +82,6 @@ module trng_mixer(
   //----------------------------------------------------------------
   parameter MODE_SHA_512 = 2'h3;
 
-  parameter CTRL_IDLE    = 4'h0;
-  parameter CTRL_COLLECT = 4'h1;
-  parameter CTRL_MIX     = 4'h2;
-  parameter CTRL_SYN     = 4'h3;
-  parameter CTRL_ACK     = 4'h4;
-  parameter CTRL_NEXT    = 4'h5;
-
   parameter ENTROPY_IDLE     = 4'h0;
   parameter ENTROPY_SRC0     = 4'h1;
   parameter ENTROPY_SRC0_ACK = 4'h2;
@@ -96,6 +89,13 @@ module trng_mixer(
   parameter ENTROPY_SRC1_ACK = 4'h4;
   parameter ENTROPY_SRC2     = 4'h5;
   parameter ENTROPY_SRC2_ACK = 4'h6;
+
+  parameter CTRL_IDLE    = 4'h0;
+  parameter CTRL_COLLECT = 4'h1;
+  parameter CTRL_MIX     = 4'h2;
+  parameter CTRL_SYN     = 4'h3;
+  parameter CTRL_ACK     = 4'h4;
+  parameter CTRL_NEXT    = 4'h5;
 
   parameter ADDR_MIXER_CTRL        = 8'h10;
   parameter MIXER_CTRL_ENABLE_BIT  = 0;
@@ -319,7 +319,7 @@ module trng_mixer(
           init_done_reg            <= 0;
           word_ctr_reg             <= 5'h00;
           seed_syn_reg             <= 0;
-          enable_reg               <= 0;
+          enable_reg               <= 1;
           restart_reg              <= 0;
           entropy_collect_ctrl_reg <= CTRL_IDLE;
           mixer_ctrl_reg           <= CTRL_IDLE;
@@ -909,7 +909,7 @@ module trng_mixer(
 
         CTRL_COLLECT:
           begin
-            if ((!discard))
+            if ((discard))
               begin
                 mixer_ctrl_new = CTRL_IDLE;
                 mixer_ctrl_we  = 1;
@@ -926,7 +926,7 @@ module trng_mixer(
 
         CTRL_MIX:
           begin
-            if ((!discard))
+            if ((discard))
               begin
                 mixer_ctrl_new = CTRL_IDLE;
                 mixer_ctrl_we  = 1;
@@ -948,7 +948,7 @@ module trng_mixer(
 
         CTRL_SYN:
           begin
-            if ((!discard))
+            if ((discard))
               begin
                 mixer_ctrl_new = CTRL_IDLE;
                 mixer_ctrl_we  = 1;
@@ -965,7 +965,7 @@ module trng_mixer(
 
         CTRL_ACK:
           begin
-            if ((!discard))
+            if ((discard))
               begin
                 mixer_ctrl_new = CTRL_IDLE;
                 mixer_ctrl_we  = 1;
@@ -981,7 +981,7 @@ module trng_mixer(
 
         CTRL_NEXT:
           begin
-            if ((!discard))
+            if ((discard))
               begin
                 mixer_ctrl_new = CTRL_IDLE;
                 mixer_ctrl_we  = 1;

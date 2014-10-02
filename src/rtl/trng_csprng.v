@@ -253,7 +253,7 @@ module trng_csprng(
           more_seed_reg       <= 0;
           seed_ack_reg        <= 0;
           ready_reg           <= 0;
-          enable_reg          <= 0;
+          enable_reg          <= 1;
           seed_reg            <= 0;
           num_rounds_reg      <= DEFAULT_NUM_ROUNDS;
           num_blocks_low_reg  <= DEFAULT_NUM_BLOCKS[31 : 0];
