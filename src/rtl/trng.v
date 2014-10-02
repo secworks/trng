@@ -243,7 +243,6 @@ module trng(
                      .security_error(csprng_security_error),
 
                      .more_seed(csprng_more_seed),
-                     .security_error(csprng_security_error),
 
                      .seed_data(mixer_seed_data),
                      .seed_syn(mixer_seed_syn),
