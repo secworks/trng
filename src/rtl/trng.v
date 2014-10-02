@@ -82,10 +82,14 @@ module trng(
 
   parameter ADDR_TRNG_STATUS        = 8'h11;
   parameter ADDR_DEBUG_CTRL         = 8'h12;
+  parameter ADDR_DEBUG_DELAY        = 8'h13;
 
   parameter TRNG_NAME0              = 32'h74726e67; // "trng"
   parameter TRNG_NAME1              = 32'h20202020; // "    "
   parameter TRNG_VERSION            = 32'h302e3031; // "0.01"
+
+  // 20x/s @ 50 MHz.
+  parameter DEFAULT_DEBUG_DELAY     = 32'h002625a0;
 
 
   //----------------------------------------------------------------
@@ -98,9 +102,20 @@ module trng(
   reg test_mode_new;
   reg test_mode_we;
 
+  reg [7 : 0] debug_out_reg;
+  reg         debug_out_we;
+
   reg [2 : 0] debug_mux_reg;
   reg [2 : 0] debug_mux_new;
   reg [2 : 0] debug_mux_we;
+
+  reg [31 : 0] debug_delay_ctr_reg;
+  reg [31 : 0] debug_delay_ctr_new;
+  reg          debug_delay_ctr_we;
+
+  reg [31 : 0] debug_delay_reg;
+  reg [31 : 0] debug_delay_new;
+  reg          debug_delay_we;
 
 
   //----------------------------------------------------------------
@@ -176,7 +191,7 @@ module trng(
   assign read_data      = tmp_read_data;
   assign error          = tmp_error;
   assign security_error = entropy1_security_error | entropy2_security_error;
-  assign debug          = tmp_debug;
+  assign debug          = debug_out_reg;
 
   // Patches to get our first version to work.
   assign entropy0_entropy_enabled = 0;
@@ -314,13 +329,22 @@ module trng(
     begin
       if (!reset_n)
         begin
-          discard_reg   <= 0;
-          test_mode_reg <= 0;
-          debug_mux_reg <= DEBUG_CSPRNG;
+          discard_reg         <= 0;
+          test_mode_reg       <= 0;
+          debug_mux_reg       <= DEBUG_CSPRNG;
+          debug_delay_reg     <= DEFAULT_DEBUG_DELAY;
+          debug_delay_ctr_reg <= 32'h00000000;
+          debug_out_reg       <= 8'h00;
         end
       else
         begin
-          discard_reg <= discard_new;
+          discard_reg         <= discard_new;
+          debug_delay_ctr_reg <= debug_delay_ctr_new;
+
+          if (debug_out_we)
+            begin
+              debug_out_reg <= tmp_debug;
+            end
 
           if (test_mode_we)
             begin
@@ -331,12 +355,40 @@ module trng(
             begin
               debug_mux_reg <= debug_mux_new;
             end
+
+          if (debug_delay_we)
+            begin
+              debug_delay_reg <= debug_delay_new;
+            end
         end
     end // reg_update
 
 
   //----------------------------------------------------------------
+  // debug_update_logic
+  //
+  // Debug update counter and update logic.
+  //----------------------------------------------------------------
+  always @*
+    begin : debug_update_logic
+      if (debug_delay_ctr_reg == debug_delay_reg)
+        begin
+          debug_out_we        = 1;
+          debug_delay_ctr_new = 32'h00000000;
+        end
+      else
+        begin
+          debug_out_we        = 0;
+          debug_delay_ctr_new = debug_delay_ctr_reg + 1'b1;
+        end
+    end // debug_update
+
+
+  //----------------------------------------------------------------
   // debug_mux
+  //
+  // Select which of the sub modules that are connected to
+  // the debug port.
   //----------------------------------------------------------------
   always @*
     begin : debug_mux
@@ -377,7 +429,6 @@ module trng(
 
           end
       endcase // case (debug_mux_reg)
-
     end // debug_mux
 
 
@@ -471,6 +522,8 @@ module trng(
       test_mode_we       = 0;
       debug_mux_new      = 3'h0;
       debug_mux_we       = 0;
+      debug_delay_new    = 32'h00000000;
+      debug_delay_we     = 0;
       trng_api_read_data = 32'h00000000;
       trng_api_error     = 0;
 
@@ -492,6 +545,12 @@ module trng(
                   begin
                     debug_mux_new = write_data[2 : 0];
                     debug_mux_we  = 1;
+                  end
+
+                ADDR_DEBUG_DELAY:
+                  begin
+                    debug_delay_new = write_data;
+                    debug_delay_we  = 1;
                   end
 
                 default:
@@ -533,6 +592,11 @@ module trng(
                 ADDR_DEBUG_CTRL:
                   begin
                     trng_api_read_data = debug_mux_new;
+                  end
+
+                ADDR_DEBUG_DELAY:
+                  begin
+                    trng_api_read_data = debug_delay_reg;
                   end
 
                 default:
