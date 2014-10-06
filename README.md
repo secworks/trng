@@ -174,6 +174,16 @@ Debug access
 
 ## Status ##
 
+*** (2014-10-04) ***
+
+The first version of the CSPRNG now works. The TRNG includes two
+different entropy providers, SHA-512 as mixer and the ChaCha stream
+cipher as CSPRNG.
+
+The on-line test system is still missing and the performance is not
+optimized.
+
+
 *** (2014-09-10) ***
 
 The CSPRNG is close to completion and can now generate random numbers
