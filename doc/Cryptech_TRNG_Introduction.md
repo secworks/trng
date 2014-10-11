@@ -108,12 +108,10 @@ not only of the new entropy data, but also on previous hash operations.
 
 ### CSPRNG ###
 
-
-    
-
 The CSPRNG is responsible for generating the random numbers provided to
 applications by the TRNG.
 
+The Cryptech CSPRNG is based on the stream cipher ChaCha.
 
 
 The CSPRNG requires two 512 bit words from the mixer to seed the
