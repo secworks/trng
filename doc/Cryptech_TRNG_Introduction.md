@@ -136,6 +136,11 @@ The current implementation of the CSPRNG contains one instance of the
 ChaCha stream cipher. For higher performance more instances ca be added
 to allow interleaved generation of random number blocks.
 
+The CSPRNG contains a random number FIFO that provides the generated
+32-bit numbers to applications. This allows the CSPRNG to generate
+blocks of data fairly independently of the application consumption, and
+ensure a steady rate of random numbers.
+
 
 ### Test and Debug ###
 
