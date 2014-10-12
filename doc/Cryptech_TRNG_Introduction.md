@@ -111,8 +111,16 @@ not only of the new entropy data, but also on previous hash operations.
 The CSPRNG is responsible for generating the random numbers provided to
 applications by the TRNG.
 
-The Cryptech CSPRNG is based on the stream cipher ChaCha.
+The Cryptech CSPRNG is based on the stream cipher ChaCha. The key length
+is 256 bits and the default number of rounds is 20. Users that want to
+trade performance against security can adjust the numver of rounds by
+setting the appropriate control registers.
 
+The number of 512 bit blocks of random numbers generated is set to
+64'h1000000000000000, or 2**60. This means that 2**64 32-bit words will
+be generated between reseeds. The number of blocks between reseeds can
+be adjusted by writing the the appropriate control register. It is also
+possible to write to a control register that forces a reseed directly.
 
 The CSPRNG requires two 512 bit words from the mixer to seed the
 CSPRNG. These bits are used for:
@@ -123,6 +131,10 @@ CSPRNG. These bits are used for:
 - 64 bits initial counter value.
 
 In total 896 bits are used to seed the PRNG.
+
+The current implementation of the CSPRNG contains one instance of the
+ChaCha stream cipher. For higher performance more instances ca be added
+to allow interleaved generation of random number blocks.
 
 
 ### Test and Debug ###
