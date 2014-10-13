@@ -84,10 +84,11 @@ The mixer is based around a cryptographic hash function. The current
 implementation uses SHA-512 [5] but can be replaced with any other
 cryptographic hash function.
 
-Using a cryptographic hash function as a mixer makes it infeasible to
-determine the entropy from the seed. This makes it very hard from an
-attacker to determine how an attempt at manipulating a entropy source
-affected the seed and thus how effective the manipulatio was.
+Using a cryptographic hash function as a mixer makes it very hard
+(infeasible) to determine the entropy from the seed. This makes it very
+hard from an attacker to determine how an attempt at manipulating a
+entropy source affected the seed and thus how effective the manipulatio
+was.
 
 Entropy is provided to the Mixer as 32-bit data words. The words are
 accepted by the mixer in strict round robin order. This means that in an
@@ -101,8 +102,11 @@ Unless the TRNG state is reset, the hash function is never
 reinitialized. Instead all entropy are added as new blocks to the same
 message and the seeds extracted are intermediate digests. This means
 that the state of the hash function between seed data blocks are based
-not only of the new entropy data, but also on previous hash operations.
+not only on the new entropy data, but also on previous hash operations.
 
+Each hash block is 1024 bits of new entropy, which are needed when
+calculating one digest. A reseed requires two separate digests which
+means that we need two blocks for a total of 2048 bits of entropy.
 
 
 
