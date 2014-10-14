@@ -153,6 +153,9 @@ ensure a steady rate of random numbers.
 
 ### Test and Debug ###
 
+Each of the entropy sources are responsible for implementing on-line
+testing.
+
 
 
 
