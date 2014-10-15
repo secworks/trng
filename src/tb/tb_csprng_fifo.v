@@ -1,8 +1,8 @@
 //======================================================================
 //
-// tb_csprng.v
-// -----------
-// Testbench for the csprng module in the trng.
+// tb_csprng_fifo.v
+// ----------------
+// Testbench for the csprng fifo module in the trng.
 //
 //
 // Author: Joachim Strombergson
@@ -45,7 +45,7 @@
 //------------------------------------------------------------------
 // Test module.
 //------------------------------------------------------------------
-module tb_csprng();
+module tb_csprng_fifo();
 
   //----------------------------------------------------------------
   // Internal constant and parameter definitions.
@@ -347,10 +347,10 @@ module tb_csprng();
   // The main test functionality.
   //----------------------------------------------------------------
   initial
-    begin : csprng_test
+    begin : csprng_fifo_test
 
-      $display("   -= Testbench for csprng started =-");
-      $display("    ================================");
+      $display("   -= Testbench for csprng_fifo started =-");
+      $display("    ======================================");
       $display("");
 
       init_sim();
@@ -364,11 +364,11 @@ module tb_csprng();
       display_test_results();
 
       $display("");
-      $display("*** CSPRNG simulation done. ***");
+      $display("*** The csprng fifo simulation is done. ***");
       $finish;
-    end // csprng_test
-endmodule // tb_csprng
+    end // csprng_fifo_test
+endmodule // tb_csprng_fifo
 
 //======================================================================
-// EOF tb_csprng.v
+// EOF tb_csprng_fifo
 //======================================================================
