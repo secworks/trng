@@ -59,66 +59,38 @@ module tb_csprng_fifo();
   //----------------------------------------------------------------
   // Register and Wire declarations.
   //----------------------------------------------------------------
-  reg [31 : 0] cycle_ctr;
-  reg [31 : 0] error_ctr;
-  reg [31 : 0] tc_ctr;
+  reg [31 : 0]  cycle_ctr;
+  reg [31 : 0]  error_ctr;
+  reg [31 : 0]  tc_ctr;
 
   reg           tb_clk;
   reg           tb_reset_n;
-
-  reg           tb_cs;
-  reg           tb_we;
-  reg [7 : 0]   tb_address;
-  reg [31 : 0]  tb_write_data;
-  wire [31 : 0] tb_read_data;
-  wire          tb_error;
-
+  reg [511 : 0] tb_sprng_data;
+  reg           tb_sprng_data_valid;
   reg           tb_discard;
-  reg           tb_test_mode;
-
-  wire          tb_ready;
-  wire          tb_more_seed;
-  wire          tb_security_error;
-  reg           tb_seed_syn;
-  reg [511 : 0] tb_seed_data;
-  wire          tb_seed_ack;
-  wire [31: 0]  tb_rnd_data;
+  wire          tb_more_data;
   wire          tb_rnd_syn;
+  wire [31 : 0] tb_rnd_data;
   reg           tb_rnd_ack;
-
-  wire [7 : 0]  tb_debug;
-  reg           tb_debug_update;
-
-  reg [31 : 0]  read_data;
 
 
   //----------------------------------------------------------------
   // Device Under Test.
   //----------------------------------------------------------------
-  trng_csprng dut(
-                  .clk(tb_clk),
-                  .reset_n(tb_reset_n),
+  trng_csprng_fifo dut(
 
-                  .cs(tb_cs),
-                  .we(tb_we),
-                  .address(tb_address),
-                  .write_data(tb_write_data),
-                  .read_data(tb_read_data),
-                  .error(tb_error),
+                       .clk(tb_clk),
+                       .reset_n(tb_reset_n),
 
-                  .discard(tb_discard),
-                  .test_mode(tb_test_mode),
+                       .csprng_data(tb_csprng_data),
+                       .csprng_data_valid(tb_csprng_data_valid),
+                       .discard(tb_discard),
+                       .more_data(tb_more_data),
 
-                  .more_seed(tb_more_seed),
-                  .security_error(tb_security_error),
-
-                  .seed_data(tb_seed_data),
-                  .seed_syn(tb_seed_syn),
-                  .seed_ack(tb_seed_ack),
-
-                  .debug(tb_debug),
-                  .debug_update(tb_debug_update)
-                 );
+                       .rnd_syn(tb_rnd_syn),
+                       .rnd_data(tb_rnd_data),
+                       .rnd_ack(tb_rnd_ack)
+                      );
 
 
   //----------------------------------------------------------------
