@@ -55,7 +55,7 @@ module trng_csprng_fifo(
   //----------------------------------------------------------------
   // Internal constant and parameter definitions.
   //----------------------------------------------------------------
-  parameter FIFO_DEPTH = 32;
+  parameter FIFO_DEPTH = 4;
   parameter FIFO_MAX = FIFO_DEPTH - 1;
 
   parameter WR_IDLE    = 0;
@@ -71,8 +71,8 @@ module trng_csprng_fifo(
   //----------------------------------------------------------------
   // Registers including update variables and write enable.
   //----------------------------------------------------------------
-  reg [31 : 0] fifo_mem [0 : FIFO_MAX];
-  reg          fifo_mem_we;
+  reg [511 : 0] fifo_mem [0 : FIFO_MAX];
+  reg           fifo_mem_we;
 
   reg [3 : 0] mux_data_ptr_reg;
   reg [3 : 0] mux_data_ptr_new;
@@ -106,8 +106,8 @@ module trng_csprng_fifo(
   reg [2 : 0]  rd_ctrl_new;
   reg          rd_ctrl_we;
 
-  reg [5 : 0]  fifo_ctr_reg;
-  reg [5 : 0]  fifo_ctr_new;
+  reg [2 : 0]  fifo_ctr_reg;
+  reg [2 : 0]  fifo_ctr_new;
   reg          fifo_ctr_inc;
   reg          fifo_ctr_dec;
   reg          fifo_ctr_rst;
@@ -141,39 +141,10 @@ module trng_csprng_fifo(
     begin
       if (!reset_n)
         begin
-          fifo_mem[00]     <= 32'h00000000;
-          fifo_mem[01]     <= 32'h00000000;
-          fifo_mem[02]     <= 32'h00000000;
-          fifo_mem[03]     <= 32'h00000000;
-          fifo_mem[04]     <= 32'h00000000;
-          fifo_mem[05]     <= 32'h00000000;
-          fifo_mem[06]     <= 32'h00000000;
-          fifo_mem[07]     <= 32'h00000000;
-          fifo_mem[08]     <= 32'h00000000;
-          fifo_mem[09]     <= 32'h00000000;
-          fifo_mem[10]     <= 32'h00000000;
-          fifo_mem[11]     <= 32'h00000000;
-          fifo_mem[12]     <= 32'h00000000;
-          fifo_mem[13]     <= 32'h00000000;
-          fifo_mem[14]     <= 32'h00000000;
-          fifo_mem[15]     <= 32'h00000000;
-          fifo_mem[16]     <= 32'h00000000;
-          fifo_mem[17]     <= 32'h00000000;
-          fifo_mem[18]     <= 32'h00000000;
-          fifo_mem[19]     <= 32'h00000000;
-          fifo_mem[20]     <= 32'h00000000;
-          fifo_mem[21]     <= 32'h00000000;
-          fifo_mem[22]     <= 32'h00000000;
-          fifo_mem[23]     <= 32'h00000000;
-          fifo_mem[24]     <= 32'h00000000;
-          fifo_mem[25]     <= 32'h00000000;
-          fifo_mem[26]     <= 32'h00000000;
-          fifo_mem[27]     <= 32'h00000000;
-          fifo_mem[28]     <= 32'h00000000;
-          fifo_mem[29]     <= 32'h00000000;
-          fifo_mem[30]     <= 32'h00000000;
-          fifo_mem[31]     <= 32'h00000000;
-
+          fifo_mem[00]     <= {16{32'h00000000}};
+          fifo_mem[01]     <= {16{32'h00000000}};
+          fifo_mem[02]     <= {16{32'h00000000}};
+          fifo_mem[03]     <= {16{32'h00000000}};
           mux_data_ptr_reg <= 4'h0;
           wr_ptr_reg       <= 8'h00;
           rd_ptr_reg       <= 8'h00;
@@ -186,7 +157,7 @@ module trng_csprng_fifo(
         end
       else
         begin
-          rnd_data_reg <= fifo_mem[rd_ptr_reg];
+          rnd_data_reg <= muxed_data;
 
           if (rnd_syn_we)
             begin
@@ -195,7 +166,7 @@ module trng_csprng_fifo(
 
           if (fifo_mem_we)
             begin
-              fifo_mem[wr_ptr_reg] <= muxed_data;
+              fifo_mem[wr_ptr_reg] <= csprng_data;
             end
 
           if (mux_data_ptr_we)
@@ -237,29 +208,34 @@ module trng_csprng_fifo(
 
 
   //----------------------------------------------------------------
-  // data_mux
+  // output_data_mux
+  //
+  // Logic that reads out a 512 bit word from the fifo memory
+  // and then selects a 32-bit word as output data.
   //----------------------------------------------------------------
   always @*
-    begin : data_mux
+    begin : output_data_mux
+      fifo_rd_data = fifo_mem[rd_ptr_reg];
+
       case(mux_data_ptr_reg)
-        00: muxed_data = csprng_data[031 : 000];
-        01: muxed_data = csprng_data[063 : 032];
-        02: muxed_data = csprng_data[095 : 064];
-        03: muxed_data = csprng_data[127 : 096];
-        04: muxed_data = csprng_data[159 : 128];
-        05: muxed_data = csprng_data[191 : 160];
-        06: muxed_data = csprng_data[223 : 192];
-        07: muxed_data = csprng_data[255 : 224];
-        08: muxed_data = csprng_data[287 : 256];
-        09: muxed_data = csprng_data[313 : 282];
-        10: muxed_data = csprng_data[351 : 320];
-        11: muxed_data = csprng_data[383 : 352];
-        12: muxed_data = csprng_data[415 : 384];
-        13: muxed_data = csprng_data[447 : 416];
-        14: muxed_data = csprng_data[479 : 448];
-        15: muxed_data = csprng_data[511 : 480];
+        00: muxed_data = fifo_rd_data[031 : 000];
+        01: muxed_data = fifo_rd_data[063 : 032];
+        02: muxed_data = fifo_rd_data[095 : 064];
+        03: muxed_data = fifo_rd_data[127 : 096];
+        04: muxed_data = fifo_rd_data[159 : 128];
+        05: muxed_data = fifo_rd_data[191 : 160];
+        06: muxed_data = fifo_rd_data[223 : 192];
+        07: muxed_data = fifo_rd_data[255 : 224];
+        08: muxed_data = fifo_rd_data[287 : 256];
+        09: muxed_data = fifo_rd_data[313 : 282];
+        10: muxed_data = fifo_rd_data[351 : 320];
+        11: muxed_data = fifo_rd_data[383 : 352];
+        12: muxed_data = fifo_rd_data[415 : 384];
+        13: muxed_data = fifo_rd_data[447 : 416];
+        14: muxed_data = fifo_rd_data[479 : 448];
+        15: muxed_data = fifo_rd_data[511 : 480];
       endcase // case (mux_data_ptr_reg)
-    end // data_mux
+    end // output_data_mux
 
 
   //----------------------------------------------------------------
@@ -452,12 +428,13 @@ module trng_csprng_fifo(
           end
 
       endcase // case (rd_ctrl_reg)
-
     end // rd_ctrl
 
 
   //----------------------------------------------------------------
   // wr_ctrl
+  //
+  // FSM for controlling fifo write data.
   //----------------------------------------------------------------
   always @*
     begin : wr_ctrl
