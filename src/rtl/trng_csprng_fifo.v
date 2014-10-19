@@ -113,11 +113,9 @@ module trng_csprng_fifo(
   reg          fifo_ctr_rst;
   reg          fifo_ctr_we;
   reg          fifo_empty;
-  reg          fifo_full;
 
   reg          more_data_reg;
   reg          more_data_new;
-  reg          more_data_we;
 
 
   //----------------------------------------------------------------
@@ -129,8 +127,8 @@ module trng_csprng_fifo(
   //----------------------------------------------------------------
   // Concurrent connectivity for ports etc.
   //----------------------------------------------------------------
-  assign rnd_data = rnd_data_reg;
-  assign rnd_syn  = rnd_syn_reg;
+  assign rnd_data  = rnd_data_reg;
+  assign rnd_syn   = rnd_syn_reg;
   assign more_data = more_data_reg;
 
 
@@ -157,7 +155,8 @@ module trng_csprng_fifo(
         end
       else
         begin
-          rnd_data_reg <= muxed_data;
+          rnd_data_reg  <= muxed_data;
+          more_data_reg <= more_data_new;
 
           if (rnd_syn_we)
             begin
@@ -187,11 +186,6 @@ module trng_csprng_fifo(
           if (fifo_ctr_we)
             begin
               fifo_ctr_reg <= fifo_ctr_new;
-            end
-
-          if (more_data_we)
-            begin
-              more_data_reg <= more_data_new;
             end
 
           if (wr_ctrl_we)
@@ -328,14 +322,14 @@ module trng_csprng_fifo(
   //----------------------------------------------------------------
   always @*
     begin : fifo_ctr
-      fifo_empty = 0;
-      fifo_full = 0;
-      fifo_ctr_new = 6'h00;
-      fifo_ctr_we  = 0;
+      fifo_empty    = 0;
+      fifo_ctr_new  = 6'h00;
+      fifo_ctr_we   = 0;
+      more_data_new = 1;
 
       if (fifo_ctr_reg == FIFO_DEPTH)
         begin
-          fifo_full = 1;
+          more_data_new = 0;
         end
 
       if (fifo_ctr_reg < 6'h0f)
@@ -368,6 +362,8 @@ module trng_csprng_fifo(
   //----------------------------------------------------------------
   always @*
     begin : rd_ctrl
+      mux_data_ptr_rst = 0;
+      mux_data_ptr_inc = 0;
       fifo_ctr_dec = 0;
       rnd_syn_new  = 0;
       rnd_syn_we   = 0;
@@ -438,10 +434,6 @@ module trng_csprng_fifo(
   //----------------------------------------------------------------
   always @*
     begin : wr_ctrl
-      more_data_new    = 0;
-      more_data_we     = 0;
-      mux_data_ptr_rst = 0;
-      mux_data_ptr_inc = 0;
       wr_ptr_inc       = 0;
       wr_ptr_rst       = 0;
       fifo_mem_we      = 0;
@@ -458,66 +450,22 @@ module trng_csprng_fifo(
                 wr_ctrl_new = WR_DISCARD;
                 wr_ctrl_we  = 1;
               end
-            else if (!fifo_full)
-              begin
-                more_data_new = 1;
-                more_data_we  = 1;
-                wr_ctrl_new   = WR_WAIT;
-                wr_ctrl_we    = 1;
-              end
-          end
-
-        WR_WAIT:
-          begin
-            if (discard)
-              begin
-                wr_ctrl_new      = WR_DISCARD;
-                wr_ctrl_we       = 1;
-              end
             else if (csprng_data_valid)
-              begin
-                more_data_new    = 0;
-                more_data_we     = 1;
-                mux_data_ptr_rst = 1;
-                wr_ctrl_new      = WR_WRITE;
-                wr_ctrl_we       = 1;
-              end
-          end
-
-        WR_WRITE:
-          begin
-            if (discard)
-              begin
-                wr_ctrl_new      = WR_DISCARD;
-                wr_ctrl_we       = 1;
-              end
-            else if (!fifo_full)
               begin
                 fifo_mem_we      = 1;
                 wr_ptr_inc       = 1;
-                mux_data_ptr_inc = 1;
                 fifo_ctr_inc     = 1;
-
-                if (mux_data_ptr_new == 4'h0)
-                  begin
-                    wr_ctrl_new = WR_IDLE;
-                    wr_ctrl_we  = 1;
-                  end
               end
           end
 
         WR_DISCARD:
           begin
             fifo_ctr_rst     = 1;
-            more_data_new    = 0;
-            more_data_we     = 1;
-            mux_data_ptr_rst = 1;
             wr_ptr_rst       = 1;
             wr_ctrl_new      = WR_IDLE;
             wr_ctrl_we       = 1;
           end
       endcase // case (wr_ctrl_reg)
-
     end // wr_ctrl
 
 endmodule // trng_csprng_fifo
