@@ -232,6 +232,9 @@ module trng_csprng_fifo(
 
   //----------------------------------------------------------------
   // mux_data_ptr
+  //
+  // Pointer for selecting output data word from the 512 bit
+  // word currently being read in the FIFO.
   //----------------------------------------------------------------
   always @*
     begin : mux_data_ptr
@@ -254,6 +257,9 @@ module trng_csprng_fifo(
 
   //----------------------------------------------------------------
   // fifo_rd_ptr
+  //
+  // Pointer that selects the current 512 bit word in the FIFO
+  // to extract data from.
   //----------------------------------------------------------------
   always @*
     begin : fifo_rd_ptr
@@ -286,6 +292,8 @@ module trng_csprng_fifo(
 
   //----------------------------------------------------------------
   // fifo_wr_ptr
+  //
+  // Pointer to where to store a new 512 bit word in the FIFO.
   //----------------------------------------------------------------
   always @*
     begin : fifo_wr_ptr
