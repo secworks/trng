@@ -205,6 +205,8 @@ module trng_csprng_fifo(
   //----------------------------------------------------------------
   always @*
     begin : output_data_mux
+      reg [31 : 0] fifo_rd_data;
+
       fifo_rd_data = fifo_mem[rd_ptr_reg];
 
       case(mux_data_ptr_reg)
