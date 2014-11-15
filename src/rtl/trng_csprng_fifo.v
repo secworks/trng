@@ -414,7 +414,7 @@ module trng_csprng_fifo(
               begin
                 if (rnd_ack)
                   begin
-                    if (mux_dat_ptr_reg == 4'hf)
+                    if (mux_data_ptr_reg == 4'hf)
                       begin
                         rd_ptr_inc       = 1;
                         mux_data_ptr_rst = 1;
