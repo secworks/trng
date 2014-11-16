@@ -373,6 +373,8 @@ module trng_csprng_fifo(
 
   //----------------------------------------------------------------
   // rd_ctrl
+  //
+  // Control FSM for reading data as requested by the consumers.
   //----------------------------------------------------------------
   always @*
     begin : rd_ctrl
