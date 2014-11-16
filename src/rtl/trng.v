@@ -202,70 +202,70 @@ module trng(
   //----------------------------------------------------------------
   // core instantiations.
   //----------------------------------------------------------------
-  trng_mixer mixer(
-                   .clk(clk),
-                   .reset_n(reset_n),
+  trng_mixer mixer_inst(
+                        .clk(clk),
+                        .reset_n(reset_n),
 
-                   .cs(mixer_api_cs),
-                   .we(mixer_api_we),
-                   .address(api_address),
-                   .write_data(write_data),
-                   .read_data(mixer_api_read_data),
-                   .error(mixer_api_error),
+                        .cs(mixer_api_cs),
+                        .we(mixer_api_we),
+                        .address(api_address),
+                        .write_data(write_data),
+                        .read_data(mixer_api_read_data),
+                        .error(mixer_api_error),
 
-                   .discard(discard_reg),
-                   .test_mode(test_mode_reg),
-                   .security_error(mixer_security_error),
+                        .discard(discard_reg),
+                        .test_mode(test_mode_reg),
+                        .security_error(mixer_security_error),
 
-                   .more_seed(csprng_more_seed),
+                        .more_seed(csprng_more_seed),
 
-                   .entropy0_enabled(entropy0_entropy_enabled),
-                   .entropy0_syn(entropy0_entropy_syn),
-                   .entropy0_data(entropy0_entropy_data),
-                   .entropy0_ack(entropy0_entropy_ack),
+                        .entropy0_enabled(entropy0_entropy_enabled),
+                        .entropy0_syn(entropy0_entropy_syn),
+                        .entropy0_data(entropy0_entropy_data),
+                        .entropy0_ack(entropy0_entropy_ack),
 
-                   .entropy1_enabled(entropy1_entropy_enabled),
-                   .entropy1_syn(entropy1_entropy_syn),
-                   .entropy1_data(entropy1_entropy_data),
-                   .entropy1_ack(entropy1_entropy_ack),
+                        .entropy1_enabled(entropy1_entropy_enabled),
+                        .entropy1_syn(entropy1_entropy_syn),
+                        .entropy1_data(entropy1_entropy_data),
+                        .entropy1_ack(entropy1_entropy_ack),
 
-                   .entropy2_enabled(entropy2_entropy_enabled),
-                   .entropy2_syn(entropy2_entropy_syn),
-                   .entropy2_data(entropy2_entropy_data),
-                   .entropy2_ack(entropy2_entropy_ack),
+                        .entropy2_enabled(entropy2_entropy_enabled),
+                        .entropy2_syn(entropy2_entropy_syn),
+                        .entropy2_data(entropy2_entropy_data),
+                        .entropy2_ack(entropy2_entropy_ack),
 
-                   .seed_data(mixer_seed_data),
-                   .seed_syn(mixer_seed_syn),
-                   .seed_ack(csprng_seed_ack),
+                        .seed_data(mixer_seed_data),
+                        .seed_syn(mixer_seed_syn),
+                        .seed_ack(csprng_seed_ack),
 
-                   .debug(mixer_debug),
-                   .debug_update(mixer_debug_update)
-                  );
+                        .debug(mixer_debug),
+                        .debug_update(mixer_debug_update)
+                       );
 
-  trng_csprng csprng(
-                     .clk(clk),
-                     .reset_n(reset_n),
+  trng_csprng csprng_inst(
+                          .clk(clk),
+                          .reset_n(reset_n),
 
-                     .cs(csprng_api_cs),
-                     .we(csprng_api_we),
-                     .address(api_address),
-                     .write_data(write_data),
-                     .read_data(csprng_api_read_data),
-                     .error(csprng_api_error),
+                          .cs(csprng_api_cs),
+                          .we(csprng_api_we),
+                          .address(api_address),
+                          .write_data(write_data),
+                          .read_data(csprng_api_read_data),
+                          .error(csprng_api_error),
 
-                     .discard(discard_reg),
-                     .test_mode(test_mode_reg),
-                     .security_error(csprng_security_error),
+                          .discard(discard_reg),
+                          .test_mode(test_mode_reg),
+                          .security_error(csprng_security_error),
 
-                     .more_seed(csprng_more_seed),
+                          .more_seed(csprng_more_seed),
 
-                     .seed_data(mixer_seed_data),
-                     .seed_syn(mixer_seed_syn),
-                     .seed_ack(csprng_seed_ack),
+                          .seed_data(mixer_seed_data),
+                          .seed_syn(mixer_seed_syn),
+                          .seed_ack(csprng_seed_ack),
 
-                     .debug(csprng_debug),
-                     .debug_update(csprng_debug_update)
-                    );
+                          .debug(csprng_debug),
+                          .debug_update(csprng_debug_update)
+                         );
 
   avalanche_entropy entropy1(
                              .clk(clk),

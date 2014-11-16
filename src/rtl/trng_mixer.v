@@ -270,20 +270,20 @@ module trng_mixer(
   //----------------------------------------------------------------
   // core instantiation.
   //----------------------------------------------------------------
-  sha512_core hash(
-                   .clk(clk),
-                   .reset_n(reset_n),
+  sha512_core hash_inst(
+                        .clk(clk),
+                        .reset_n(reset_n),
 
-                   .init(hash_init),
-                   .next(hash_next),
-                   .mode(MODE_SHA_512),
+                        .init(hash_init),
+                        .next(hash_next),
+                        .mode(MODE_SHA_512),
 
-                   .block(hash_block),
+                        .block(hash_block),
 
-                   .ready(hash_ready),
-                   .digest(hash_digest),
-                   .digest_valid(hash_digest_valid)
-                  );
+                        .ready(hash_ready),
+                        .digest(hash_digest),
+                        .digest_valid(hash_digest_valid)
+                       );
 
 
   //----------------------------------------------------------------

@@ -198,40 +198,40 @@ module trng_csprng(
   //----------------------------------------------------------------
   // core instantiation.
   //----------------------------------------------------------------
-  chacha_core cipher(
-                     .clk(clk),
-                     .reset_n(reset_n),
+  chacha_core chacha_inst(
+                          .clk(clk),
+                          .reset_n(reset_n),
 
-                     .init(cipher_init),
-                     .next(cipher_next),
+                          .init(cipher_init),
+                          .next(cipher_next),
 
-                     .key(cipher_key_reg),
-                     .keylen(CIPHER_KEYLEN256),
-                     .iv(cipher_iv_reg),
-                     .ctr(cipher_ctr_reg),
-                     .rounds(num_rounds_reg),
+                          .key(cipher_key_reg),
+                          .keylen(CIPHER_KEYLEN256),
+                          .iv(cipher_iv_reg),
+                          .ctr(cipher_ctr_reg),
+                          .rounds(num_rounds_reg),
 
-                     .data_in(cipher_block_reg),
-                     .ready(cipher_ready),
+                          .data_in(cipher_block_reg),
+                          .ready(cipher_ready),
 
-                     .data_out(cipher_data_out),
-                     .data_out_valid(cipher_data_out_valid)
-                    );
+                          .data_out(cipher_data_out),
+                          .data_out_valid(cipher_data_out_valid)
+                         );
 
 
-  trng_csprng_fifo fifo(
-                        .clk(clk),
-                        .reset_n(reset_n),
+  trng_csprng_fifo fifo_inst(
+                             .clk(clk),
+                             .reset_n(reset_n),
 
-                        .csprng_data(cipher_data_out),
-                        .csprng_data_valid(fifo_cipher_data_valid),
-                        .discard(fifo_discard),
-                        .more_data(fifo_more_data),
+                             .csprng_data(cipher_data_out),
+                             .csprng_data_valid(fifo_cipher_data_valid),
+                             .discard(fifo_discard),
+                             .more_data(fifo_more_data),
 
-                        .rnd_syn(rnd_syn),
-                        .rnd_data(rnd_data),
-                        .rnd_ack(muxed_rnd_ack)
-                       );
+                             .rnd_syn(rnd_syn),
+                             .rnd_data(rnd_data),
+                             .rnd_ack(muxed_rnd_ack)
+                            );
 
 
   //----------------------------------------------------------------
