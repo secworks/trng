@@ -178,19 +178,15 @@ module tb_csprng();
       $display("cipher_block = 0x%064x", dut.cipher_block_reg);
       $display("csprng_ctrl  = 0x%02x", dut.csprng_ctrl_reg);
       $display("");
+
       $display("Cipher states:");
       $display("cipher init: 0x%01x, cipher next: 0x%01x",
-               dut.cipher.init, dut.cipher.next);
+               dut.cipher_inst.init, dut.cipher_inst.next);
       $display("cipher ctrl: 0x%01x, qr ctr: 0x%01x, dr ctr: 0x%02x",
-               dut.cipher.chacha_ctrl_reg, dut.cipher.qr_ctr_reg, dut.cipher.dr_ctr_reg);
+               dut.cipher_inst.chacha_ctrl_reg, dut.cipher_inst.qr_ctr_reg, dut.cipher_inst.dr_ctr_reg);
       $display("cipher ready: 0x%01x, cipher data out valid: 0x%01x",
-               dut.cipher.ready, dut.cipher.data_out_valid);
-      $display("cipher data out: 0x%064x", dut.cipher.data_out);
-      $display("");
-      $display("Cipher states:");
-      $display("mux ctr: 0x%02x, fifo ctr: 0x%02x, fifo_wr_ptr = 0x%02x, fifo_rd_ptr = 0x%02x",
-               dut.fifo.mux_data_ptr_reg, dut.fifo.fifo_ctr_reg, dut.fifo.wr_ptr_reg, dut.fifo.rd_ptr_reg,);
-      $display("fifo wr ctrl: 0x%02x, fifo rd ctrl: 0x%02x", dut.fifo.wr_ctrl_reg, dut.fifo.rd_ctrl_reg);
+               dut.cipher_inst.ready, dut.cipher_inst.data_out_valid);
+      $display("cipher data out: 0x%064x", dut.cipher_inst.data_out);
       $display("");
 
       $display("Outputs:");

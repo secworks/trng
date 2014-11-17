@@ -198,7 +198,7 @@ module trng_csprng(
   //----------------------------------------------------------------
   // core instantiation.
   //----------------------------------------------------------------
-  chacha_core chacha_inst(
+  chacha_core cipher_inst(
                           .clk(clk),
                           .reset_n(reset_n),
 
