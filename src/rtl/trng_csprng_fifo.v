@@ -152,8 +152,8 @@ module trng_csprng_fifo(
           rnd_data_reg     <= 32'h00000000;
           rnd_syn_reg      <= 0;
           more_data_reg    <= 0;
-          wr_ctrl_reg      <= 3'h0;
-          rd_ctrl_reg      <= 3'h0;
+          wr_ctrl_reg      <= WR_IDLE;
+          rd_ctrl_reg      <= RD_IDLE;
         end
       else
         begin
