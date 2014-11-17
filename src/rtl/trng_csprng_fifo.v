@@ -134,6 +134,8 @@ module trng_csprng_fifo(
 
   //----------------------------------------------------------------
   // reg_update
+  //
+  // Register update. All registers have asynchronous reset.
   //----------------------------------------------------------------
   always @ (posedge clk or negedge reset_n)
     begin
