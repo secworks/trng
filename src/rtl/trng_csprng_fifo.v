@@ -74,48 +74,48 @@ module trng_csprng_fifo(
   reg [511 : 0] fifo_mem [0 : FIFO_MAX];
   reg           fifo_mem_we;
 
-  reg [3 : 0] mux_data_ptr_reg;
-  reg [3 : 0] mux_data_ptr_new;
-  reg         mux_data_ptr_inc;
-  reg         mux_data_ptr_rst;
-  reg         mux_data_ptr_we;
+  reg [3 : 0]   mux_data_ptr_reg;
+  reg [3 : 0]   mux_data_ptr_new;
+  reg           mux_data_ptr_inc;
+  reg           mux_data_ptr_rst;
+  reg           mux_data_ptr_we;
 
-  reg [7 : 0] wr_ptr_reg;
-  reg [7 : 0] wr_ptr_new;
-  reg         wr_ptr_inc;
-  reg         wr_ptr_rst;
-  reg         wr_ptr_we;
+  reg [7 : 0]   wr_ptr_reg;
+  reg [7 : 0]   wr_ptr_new;
+  reg           wr_ptr_inc;
+  reg           wr_ptr_rst;
+  reg           wr_ptr_we;
 
-  reg [7 : 0] rd_ptr_reg;
-  reg [7 : 0] rd_ptr_new;
-  reg         rd_ptr_inc;
-  reg         rd_ptr_rst;
-  reg         rd_ptr_we;
+  reg [7 : 0]   rd_ptr_reg;
+  reg [7 : 0]   rd_ptr_new;
+  reg           rd_ptr_inc;
+  reg           rd_ptr_rst;
+  reg           rd_ptr_we;
 
-  reg [31 : 0] rnd_data_reg;
+  reg [31 : 0]  rnd_data_reg;
 
-  reg          rnd_syn_reg;
-  reg          rnd_syn_new;
-  reg          rnd_syn_we;
+  reg           rnd_syn_reg;
+  reg           rnd_syn_new;
+  reg           rnd_syn_we;
 
-  reg [2 : 0]  wr_ctrl_reg;
-  reg [2 : 0]  wr_ctrl_new;
-  reg          wr_ctrl_we;
+  reg [2 : 0]   wr_ctrl_reg;
+  reg [2 : 0]   wr_ctrl_new;
+  reg           wr_ctrl_we;
 
-  reg [2 : 0]  rd_ctrl_reg;
-  reg [2 : 0]  rd_ctrl_new;
-  reg          rd_ctrl_we;
+  reg [2 : 0]   rd_ctrl_reg;
+  reg [2 : 0]   rd_ctrl_new;
+  reg           rd_ctrl_we;
 
-  reg [2 : 0]  fifo_ctr_reg;
-  reg [2 : 0]  fifo_ctr_new;
-  reg          fifo_ctr_inc;
-  reg          fifo_ctr_dec;
-  reg          fifo_ctr_rst;
-  reg          fifo_ctr_we;
-  reg          fifo_empty;
+  reg [2 : 0]   fifo_ctr_reg;
+  reg [2 : 0]   fifo_ctr_new;
+  reg           fifo_ctr_inc;
+  reg           fifo_ctr_dec;
+  reg           fifo_ctr_rst;
+  reg           fifo_ctr_we;
+  reg           fifo_empty;
 
-  reg          more_data_reg;
-  reg          more_data_new;
+  reg           more_data_reg;
+  reg           more_data_new;
 
 
   //----------------------------------------------------------------
