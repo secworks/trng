@@ -320,6 +320,8 @@ module tb_trng();
 
       #(10 * CLK_PERIOD);
 
+      tb_debug_update = 0;
+
       // Enable the csprng and the mixer
       write_word({CSPRNG_PREFIX, ADDR_CSPRNG_CTRL}, 32'h00000001);
       write_word({MIXER_PREFIX, ADDR_MIXER_CTRL}, 32'h00000001);
@@ -332,7 +334,7 @@ module tb_trng();
       #(100 * CLK_PERIOD);
 
       i = 0;
-      while (i < 100000)
+      while (i < 10000)
         begin
           $display("Reading rnd word %08x.", i);
           i = i + 1;
