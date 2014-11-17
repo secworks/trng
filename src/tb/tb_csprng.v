@@ -183,7 +183,8 @@ module tb_csprng();
       $display("cipher init: 0x%01x, cipher next: 0x%01x",
                dut.cipher_inst.init, dut.cipher_inst.next);
       $display("cipher ctrl: 0x%01x, qr ctr: 0x%01x, dr ctr: 0x%02x",
-               dut.cipher_inst.chacha_ctrl_reg, dut.cipher_inst.qr_ctr_reg, dut.cipher_inst.dr_ctr_reg);
+               dut.cipher_inst.chacha_ctrl_reg, dut.cipher_inst.qr_ctr_reg,
+               dut.cipher_inst.dr_ctr_reg);
       $display("cipher ready: 0x%01x, cipher data out valid: 0x%01x",
                dut.cipher_inst.ready, dut.cipher_inst.data_out_valid);
       $display("cipher data out: 0x%064x", dut.cipher_inst.data_out);
