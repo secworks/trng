@@ -56,7 +56,7 @@ module trng_csprng_fifo(
   // Internal constant and parameter definitions.
   //----------------------------------------------------------------
   parameter FIFO_DEPTH = 4;
-  parameter FIFO_MAX = FIFO_DEPTH - 1;
+  parameter FIFO_MAX   = FIFO_DEPTH - 1;
 
   parameter WR_IDLE    = 0;
   parameter WR_WAIT    = 1;
