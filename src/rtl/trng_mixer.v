@@ -226,6 +226,10 @@ module trng_mixer(
   reg             hash_init;
   reg             hash_next;
 
+  wire            hash_work_factor;
+  wire [31 : 0]   hash_work_factor_num;
+
+
   wire [1023 : 0] hash_block;
   wire            hash_ready;
   wire [511 : 0]  hash_digest;
@@ -260,6 +264,9 @@ module trng_mixer(
                        block28_reg, block29_reg,
                        block30_reg, block31_reg};
 
+  assign hash_work_factor     = 0;
+  assign hash_work_factor_num = 32'h00000000;
+
   assign entropy0_ack = tmp_entropy0_ack;
   assign entropy1_ack = tmp_entropy1_ack;
   assign entropy2_ack = tmp_entropy2_ack;
@@ -277,6 +284,9 @@ module trng_mixer(
                         .init(hash_init),
                         .next(hash_next),
                         .mode(MODE_SHA_512),
+
+                        .work_factor(hash_work_factor),
+                        .work_factor_num(hash_work_factor_num),
 
                         .block(hash_block),
 
