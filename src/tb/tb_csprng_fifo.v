@@ -305,7 +305,7 @@ module tb_csprng_fifo();
       // tb_num_rounds = 5'h08;
       tb_rnd_ack    = 1;
 
-      #(2000 * CLK_PERIOD);
+      #(200 * CLK_PERIOD);
 
       $display("*** TC1: Test automatic init of cipher done.");
 
