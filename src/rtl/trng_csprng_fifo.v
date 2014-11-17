@@ -343,7 +343,7 @@ module trng_csprng_fifo(
       more_data_new = 0;
       rnd_syn_new   = 0;
 
-      if (fifo_ctr_reg < FIFO_DEPTH)
+      if (fifo_ctr_reg < FIFO_MAX)
         begin
           more_data_new = 1;
         end
@@ -353,13 +353,18 @@ module trng_csprng_fifo(
           rnd_syn_new = 1;
         end
 
-      if (fifo_ctr_inc)
+      if (fifo_ctr_reg == 6'h00)
+        begin
+          fifo_empty = 1;
+        end
+
+      if ((fifo_ctr_inc) && (fifo_ctr_reg < FIFO_MAX))
         begin
           fifo_ctr_new = fifo_ctr_reg + 1'b1;
           fifo_ctr_we  = 1;
         end
 
-      if (fifo_ctr_dec)
+      if ((fifo_ctr_dec)  && (fifo_ctr_reg > 6'h00))
         begin
           fifo_ctr_new = fifo_ctr_reg - 1'b1;
           fifo_ctr_we  = 1;
