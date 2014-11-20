@@ -397,7 +397,7 @@ module trng_csprng(
 
                 ADDR_STATUS:
                   begin
-                    tmp_read_data = {ready_reg, rnd_syn};
+                    tmp_read_data = {30'h00000000, ready_reg, rnd_syn};
                   end
 
                 ADDR_RND_DATA:

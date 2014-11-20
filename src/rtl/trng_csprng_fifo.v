@@ -80,14 +80,14 @@ module trng_csprng_fifo(
   reg           mux_data_ptr_rst;
   reg           mux_data_ptr_we;
 
-  reg [7 : 0]   wr_ptr_reg;
-  reg [7 : 0]   wr_ptr_new;
+  reg [2 : 0]   wr_ptr_reg;
+  reg [2 : 0]   wr_ptr_new;
   reg           wr_ptr_inc;
   reg           wr_ptr_rst;
   reg           wr_ptr_we;
 
-  reg [7 : 0]   rd_ptr_reg;
-  reg [7 : 0]   rd_ptr_new;
+  reg [2 : 0]   rd_ptr_reg;
+  reg [2 : 0]   rd_ptr_new;
   reg           rd_ptr_inc;
   reg           rd_ptr_rst;
   reg           rd_ptr_we;
@@ -113,6 +113,7 @@ module trng_csprng_fifo(
   reg           fifo_ctr_rst;
   reg           fifo_ctr_we;
   reg           fifo_empty;
+  reg           fifo_full;
 
   reg           more_data_reg;
   reg           more_data_new;
@@ -146,9 +147,9 @@ module trng_csprng_fifo(
           fifo_mem[02]     <= {16{32'h00000000}};
           fifo_mem[03]     <= {16{32'h00000000}};
           mux_data_ptr_reg <= 4'h0;
-          wr_ptr_reg       <= 8'h00;
-          rd_ptr_reg       <= 8'h00;
-          fifo_ctr_reg     <= 6'h00;
+          wr_ptr_reg       <= 3'h0;
+          rd_ptr_reg       <= 3'h0;
+          fifo_ctr_reg     <= 3'h0;
           rnd_data_reg     <= 32'h00000000;
           rnd_syn_reg      <= 0;
           more_data_reg    <= 0;
@@ -159,7 +160,11 @@ module trng_csprng_fifo(
         begin
           rnd_data_reg  <= muxed_data;
           more_data_reg <= more_data_new;
-          rnd_syn_reg   <= rnd_syn_new;
+
+          if (rnd_syn_we)
+            begin
+              rnd_syn_reg <= rnd_syn_new;
+            end
 
           if (fifo_mem_we)
             begin
@@ -265,13 +270,13 @@ module trng_csprng_fifo(
   //----------------------------------------------------------------
   always @*
     begin : fifo_rd_ptr
-      rd_ptr_new   = 8'h00;
+      rd_ptr_new   = 3'h0;
       rd_ptr_we    = 0;
       fifo_ctr_dec = 0;
 
       if (rd_ptr_rst)
         begin
-          rd_ptr_new = 8'h00;
+          rd_ptr_new = 3'h0;
           rd_ptr_we  = 1;
         end
 
@@ -280,7 +285,7 @@ module trng_csprng_fifo(
           fifo_ctr_dec  = 1;
           if (rd_ptr_reg == FIFO_MAX)
             begin
-              rd_ptr_new = 8'h00;
+              rd_ptr_new = 3'h0;
               rd_ptr_we  = 1;
             end
           else
@@ -299,24 +304,20 @@ module trng_csprng_fifo(
   //----------------------------------------------------------------
   always @*
     begin : fifo_wr_ptr
-      wr_ptr_new   = 8'h00;
+      wr_ptr_new   = 3'h0;
       wr_ptr_we    = 0;
-      fifo_ctr_inc = 0;
-      fifo_ctr_rst = 0;
 
       if (wr_ptr_rst)
         begin
-          fifo_ctr_rst = 1;
-          wr_ptr_new   = 8'h00;
+          wr_ptr_new   = 3'h0;
           wr_ptr_we    = 1;
         end
 
       if (wr_ptr_inc)
         begin
-          fifo_ctr_inc = 1;
           if (wr_ptr_reg == FIFO_MAX)
             begin
-              wr_ptr_new = 8'h00;
+              wr_ptr_new = 3'h0;
               wr_ptr_we  = 1;
             end
           else
@@ -337,25 +338,19 @@ module trng_csprng_fifo(
   //----------------------------------------------------------------
   always @*
     begin : fifo_ctr
-      fifo_empty    = 0;
-      fifo_ctr_new  = 6'h00;
+      fifo_ctr_new  = 3'h0;
       fifo_ctr_we   = 0;
-      more_data_new = 0;
-      rnd_syn_new   = 0;
+      fifo_empty    = 0;
+      fifo_full     = 0;
 
-      if (fifo_ctr_reg < FIFO_MAX)
-        begin
-          more_data_new = 1;
-        end
-
-      if (fifo_ctr_reg > 6'h00)
-        begin
-          rnd_syn_new = 1;
-        end
-
-      if (fifo_ctr_reg == 6'h00)
+      if (fifo_ctr_reg == 3'h0)
         begin
           fifo_empty = 1;
+        end
+
+      if (fifo_ctr_reg == FIFO_MAX)
+        begin
+          fifo_full = 1;
         end
 
       if ((fifo_ctr_inc) && (fifo_ctr_reg < FIFO_MAX))
@@ -364,7 +359,7 @@ module trng_csprng_fifo(
           fifo_ctr_we  = 1;
         end
 
-      if ((fifo_ctr_dec)  && (fifo_ctr_reg > 6'h00))
+      if ((fifo_ctr_dec)  && (fifo_ctr_reg > 3'h0))
         begin
           fifo_ctr_new = fifo_ctr_reg - 1'b1;
           fifo_ctr_we  = 1;
@@ -372,7 +367,7 @@ module trng_csprng_fifo(
 
       if (fifo_ctr_rst)
         begin
-          fifo_ctr_new = 6'h00;
+          fifo_ctr_new = 3'h0;
           fifo_ctr_we  = 1;
         end
     end // fifo_ctr
@@ -387,6 +382,8 @@ module trng_csprng_fifo(
     begin : rd_ctrl
       mux_data_ptr_rst = 0;
       mux_data_ptr_inc = 0;
+      rnd_syn_new      = 0;
+      rnd_syn_we       = 0;
       rd_ptr_inc       = 0;
       rd_ptr_rst       = 0;
       rd_ctrl_new      = RD_IDLE;
@@ -456,15 +453,18 @@ module trng_csprng_fifo(
   //----------------------------------------------------------------
   // wr_ctrl
   //
-  // FSM for controlling fifo write data.
+  // FSM for requesting data and writing new data to the fifo.
   //----------------------------------------------------------------
   always @*
     begin : wr_ctrl
-      wr_ptr_inc       = 0;
-      wr_ptr_rst       = 0;
-      fifo_mem_we      = 0;
-      wr_ctrl_new      = WR_IDLE;
-      wr_ctrl_we       = 0;
+      wr_ptr_inc    = 0;
+      wr_ptr_rst    = 0;
+      fifo_mem_we   = 0;
+      fifo_ctr_inc  = 0;
+      fifo_ctr_rst  = 0;
+      more_data_new = 0;
+      wr_ctrl_new   = WR_IDLE;
+      wr_ctrl_we    = 0;
 
       case (wr_ctrl_reg)
         WR_IDLE:
@@ -474,11 +474,19 @@ module trng_csprng_fifo(
                 wr_ctrl_new = WR_DISCARD;
                 wr_ctrl_we  = 1;
               end
-            else if (csprng_data_valid)
+            else
               begin
-                fifo_mem_we      = 1;
-                wr_ptr_inc       = 1;
-                fifo_ctr_inc     = 1;
+                if (!fifo_full)
+                  begin
+                    more_data_new = 1;
+                  end
+
+                if (csprng_data_valid)
+                  begin
+                    fifo_mem_we      = 1;
+                    wr_ptr_inc       = 1;
+                    fifo_ctr_inc     = 1;
+                  end
               end
           end
 

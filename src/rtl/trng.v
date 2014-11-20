@@ -107,7 +107,7 @@ module trng(
 
   reg [2 : 0] debug_mux_reg;
   reg [2 : 0] debug_mux_new;
-  reg [2 : 0] debug_mux_we;
+  reg         debug_mux_we;
 
   reg [31 : 0] debug_delay_ctr_reg;
   reg [31 : 0] debug_delay_ctr_new;

@@ -110,69 +110,69 @@ module trng_mixer(
   // Registers including update variables and write enable.
   //----------------------------------------------------------------
   reg [31 : 0] block00_reg;
-  reg [31 : 0] block00_we;
+  reg          block00_we;
   reg [31 : 0] block01_reg;
-  reg [31 : 0] block01_we;
+  reg          block01_we;
   reg [31 : 0] block02_reg;
-  reg [31 : 0] block02_we;
+  reg          block02_we;
   reg [31 : 0] block03_reg;
-  reg [31 : 0] block03_we;
+  reg          block03_we;
   reg [31 : 0] block04_reg;
-  reg [31 : 0] block04_we;
+  reg          block04_we;
   reg [31 : 0] block05_reg;
-  reg [31 : 0] block05_we;
+  reg          block05_we;
   reg [31 : 0] block06_reg;
-  reg [31 : 0] block06_we;
+  reg          block06_we;
   reg [31 : 0] block07_reg;
-  reg [31 : 0] block07_we;
+  reg          block07_we;
   reg [31 : 0] block08_reg;
-  reg [31 : 0] block08_we;
+  reg          block08_we;
   reg [31 : 0] block09_reg;
-  reg [31 : 0] block09_we;
+  reg          block09_we;
   reg [31 : 0] block10_reg;
-  reg [31 : 0] block10_we;
+  reg          block10_we;
   reg [31 : 0] block11_reg;
-  reg [31 : 0] block11_we;
+  reg          block11_we;
   reg [31 : 0] block12_reg;
-  reg [31 : 0] block12_we;
+  reg          block12_we;
   reg [31 : 0] block13_reg;
-  reg [31 : 0] block13_we;
+  reg          block13_we;
   reg [31 : 0] block14_reg;
-  reg [31 : 0] block14_we;
+  reg          block14_we;
   reg [31 : 0] block15_reg;
-  reg [31 : 0] block15_we;
+  reg          block15_we;
   reg [31 : 0] block16_reg;
-  reg [31 : 0] block16_we;
+  reg          block16_we;
   reg [31 : 0] block17_reg;
-  reg [31 : 0] block17_we;
+  reg          block17_we;
   reg [31 : 0] block18_reg;
-  reg [31 : 0] block18_we;
+  reg          block18_we;
   reg [31 : 0] block19_reg;
-  reg [31 : 0] block19_we;
+  reg          block19_we;
   reg [31 : 0] block20_reg;
-  reg [31 : 0] block20_we;
+  reg          block20_we;
   reg [31 : 0] block21_reg;
-  reg [31 : 0] block21_we;
+  reg          block21_we;
   reg [31 : 0] block22_reg;
-  reg [31 : 0] block22_we;
+  reg          block22_we;
   reg [31 : 0] block23_reg;
-  reg [31 : 0] block23_we;
+  reg          block23_we;
   reg [31 : 0] block24_reg;
-  reg [31 : 0] block24_we;
+  reg          block24_we;
   reg [31 : 0] block25_reg;
-  reg [31 : 0] block25_we;
+  reg          block25_we;
   reg [31 : 0] block26_reg;
-  reg [31 : 0] block26_we;
+  reg          block26_we;
   reg [31 : 0] block27_reg;
-  reg [31 : 0] block27_we;
+  reg          block27_we;
   reg [31 : 0] block28_reg;
-  reg [31 : 0] block28_we;
+  reg          block28_we;
   reg [31 : 0] block29_reg;
-  reg [31 : 0] block29_we;
+  reg          block29_we;
   reg [31 : 0] block30_reg;
-  reg [31 : 0] block30_we;
+  reg          block30_we;
   reg [31 : 0] block31_reg;
-  reg [31 : 0] block31_we;
+  reg          block31_we;
 
   reg [4 : 0] word_ctr_reg;
   reg [4 : 0] word_ctr_new;
@@ -604,7 +604,7 @@ module trng_mixer(
                 // Read operations.
                 ADDR_MIXER_CTRL:
                   begin
-                    tmp_read_data = {restart_reg, enable_reg};
+                    tmp_read_data = {30'h00000000, restart_reg, enable_reg};
                   end
 
                 ADDR_MIXER_STATUS:
@@ -614,7 +614,7 @@ module trng_mixer(
 
                 ADDR_MIXER_TIMEOUT:
                   begin
-                    tmp_read_data = entropy_timeout_reg;
+                    tmp_read_data = {8'h00, entropy_timeout_reg};
                   end
 
                 default:
