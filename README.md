@@ -70,7 +70,7 @@ There shall also be possible to read out the raw entropy collected from
 a given entropy generator. This MUST ONLY be possible in a specific
 debug mode when no random generation is allowed. Also the entropy
 provided in debug mode MUST NOT be used for later random number
-generation. 
+generation.
 
 The entropy generator SHALL perform whitening on the collected entropy
 before providing it as 32-bit values to the entropy accumulator.
@@ -152,6 +152,14 @@ the user/system implementer to provide physical entropy souces. We will
 suggest and provide info on how to design at least one such source.
 
 
+### Xilinx Spartan-6 ###
+Device:     xc6slx45-3csg324
+Regs:       9253
+Slice LUTs: 9153
+
+
+
+
 ## API ##
 
 Normal operation:
@@ -200,5 +208,3 @@ TRNG. This to allow discussions about the TRNG to be started.
 
 So far very little has been done. What will appear here soonish is a top
 level wrapper with 32-bit interface to allow API development to start.
-
-
