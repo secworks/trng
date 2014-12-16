@@ -212,11 +212,11 @@ class tc:
         self.get_read_resp()
 
 # Helper functions that use the tc class.
-def tc_write(i2c, addr0, addr1, data):
-    tc(i2c, addr0, addr1).write(data)
+def tc_write(i2c, prefix, addr, data):
+    tc(i2c, prefix, addr).write(data)
 
-def tc_read(i2c, addr0, addr1, data):
-    tc(i2c, addr0, addr1).read(data)
+def tc_read(i2c, prefix, addr, data):
+    tc(i2c, prefix, addr).read(data)
 
 def tc_init(i2c, addr0):
     tc(i2c, addr0, ADDR_CTRL).write(CTRL_INIT_CMD)
