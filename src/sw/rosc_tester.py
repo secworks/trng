@@ -331,9 +331,9 @@ def main():
 #    get_avalanche_delta()
 
     get_rosc_entropy()
-    get_rosc_raw()
+#    get_rosc_raw()
 
-    get_rng_data()
+#    get_rng_data()
 
 
 #-------------------------------------------------------------------
