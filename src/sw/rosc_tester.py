@@ -64,9 +64,8 @@ ADDR_STATUS      = 0x09
 STATUS_READY_BIT = 0
 STATUS_VALID_BIT = 1
 
-#----------------------------------------------------------------
-# NIST sample message blocks and expected digests
-#----------------------------------------------------------------
+VERBOSE       = False
+BINARY_OUTPUT = False
 
 
 #----------------------------------------------------------------
@@ -327,20 +326,14 @@ def TC16(i2c):
 # main
 #----------------------------------------------------------------
 def main():
-    all_tests = [TC16]
 
-    parser = argparse.ArgumentParser()
-    parser.add_argument('-d', '--debug', action='store_true',
-                        help='add debugging/trace information')
-    parser.add_argument('-i', dest='dev', default=I2C_dev,
-                        help='I2C device name (default ' + I2C_dev + ')')
-    parser.add_argument('-a', dest='addr', type=lambda x:int(x,0), default=I2C_addr,
-                        help='I2C device address (default ' + hex(I2C_addr) + ')')
-                        help='I2C device address (default ' + hex(I2C_addr) + ')')
-    args = parser.parse_args()
+#    get_avalanche_entropy()
+#    get_avalanche_delta()
 
-    DEBUG = args.debug
-    i = I2C(args.dev, args.addr)
+    get_rosc_entropy()
+    get_rosc_raw()
+
+    get_rng_data()
 
 
 #-------------------------------------------------------------------
