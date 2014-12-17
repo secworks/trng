@@ -67,6 +67,44 @@ STATUS_VALID_BIT = 1
 VERBOSE       = False
 BINARY_OUTPUT = False
 
+AVALANCHE_ADDR_PREFIX      = 0x20
+AVALANCHE_NOISE            = 0x20
+AVALANCHE_DELTA            = 0x30
+
+# TRNG tests
+TRNG_PREFIX       = 0x00
+TRNG_ADDR_NAME0   = 0x00
+TRNG_ADDR_NAME1   = 0x01
+TRNG_ADDR_VERSION = 0x02
+ENT1_PREFIX       = 0x05
+ENT2_PREFIX       = 0x06
+CSPRNG_PREFIX     = 0x0b
+CSPRNG_DATA       = 0x20
+ENT1_DATA         = 0x20
+ENT2_DATA         = 0x20
+
+
+# command codes
+SOC                   = 0x55
+EOC                   = 0xaa
+READ_CMD              = 0x10
+WRITE_CMD             = 0x11
+RESET_CMD             = 0x01
+
+# response codes
+SOR                   = 0xaa
+EOR                   = 0x55
+READ_OK               = 0x7f
+WRITE_OK              = 0x7e
+RESET_OK              = 0x7d
+UNKNOWN               = 0xfe
+ERROR                 = 0xfd
+
+# from /usr/include/linux/i2c-dev.h
+I2C_SLAVE = 0x0703
+
+# Number of 32 bit data words extracted in a run.
+NUM_WORDS = 40000000
 
 #----------------------------------------------------------------
 # I2C class
@@ -74,9 +112,6 @@ BINARY_OUTPUT = False
 # default configuration
 I2C_dev = "/dev/i2c-2"
 I2C_addr = 0x0f
-
-# from /usr/include/linux/i2c-dev.h
-I2C_SLAVE = 0x0703
 
 def hexlist(list):
     return "[ " + ' '.join('%02x' % b for b in list) + " ]"
@@ -121,21 +156,6 @@ class I2C:
 #----------------------------------------------------------------
 # test-case class
 #----------------------------------------------------------------
-# command codes
-SOC                   = 0x55
-EOC                   = 0xaa
-READ_CMD              = 0x10
-WRITE_CMD             = 0x11
-RESET_CMD             = 0x01
-
-# response codes
-SOR                   = 0xaa
-EOR                   = 0x55
-READ_OK               = 0x7f
-WRITE_OK              = 0x7e
-RESET_OK              = 0x7d
-UNKNOWN               = 0xfe
-ERROR                 = 0xfd
 
 class TcError(Exception):
     pass
@@ -243,10 +263,6 @@ def tc_wait_valid(i2c, addr0):
 #----------------------------------------------------------------
 # Avalanche entropy tests
 
-AVALANCHE_ADDR_PREFIX      = 0x20
-AVALANCHE_NOISE            = 0x20
-AVALANCHE_DELTA            = 0x30
-
 def avalanche_read(i2c, addr, data):
     tc_read(i2c, AVALANCHE_ADDR_PREFIX, addr, data)
 
@@ -272,17 +288,6 @@ def TC12(i2c):
 
 #----------------------------------------------------------------
 #----------------------------------------------------------------
-# TRNG tests
-TRNG_PREFIX       = 0x00
-TRNG_ADDR_NAME0   = 0x00
-TRNG_ADDR_NAME1   = 0x01
-TRNG_ADDR_VERSION = 0x02
-ENT1_PREFIX       = 0x05
-ENT2_PREFIX       = 0x06
-CSPRNG_PREFIX     = 0x0b
-CSPRNG_DATA       = 0x20
-ENT1_DATA         = 0x20
-ENT2_DATA         = 0x20
 
 def general_read(i2c, prefix, addr, data):
     tc_read(i2c, prefix, addr, data)
@@ -306,19 +311,26 @@ def TC14(i2c):
     for i in range(20):
         general_read(i2c, CSPRNG_PREFIX, CSPRNG_DATA,   0xffffffff)
 
-# TC15 Read entropy numbers from TRNG core avalanche noise entropy provider.
-def TC15(i2c):
-    print "TC15: Reading avalanche data."
-    for i in range(20):
+
+#----------------------------------------------------------------
+# get_avalanche_entropy()
+#----------------------------------------------------------------
+def get_avalanche_entropy():
+    if VERBOSE:
+        print "Reading avalanche entropy data."
+
+    for i in range(NUM_WORDS):
         general_read(i2c, ENT1_PREFIX, ENT1_DATA,   0xffffffff)
 
 
 #----------------------------------------------------------------
+# get_rosc_entropy()
 #----------------------------------------------------------------
-# TC16 Read entropy numbers from TRNG core ROSC noise entropy provider.
-def TC16(i2c):
-    print "TC15: Reading rosc data."
-    for i in range(20000000):
+def get_rosc_entropy():
+    if VERBOSE:
+        print "Reading rosc entropy data."
+
+    for i in range(NUM_WORDS):
         general_read(i2c, ENT2_PREFIX, ENT2_DATA,   0xffffffff)
 
 
