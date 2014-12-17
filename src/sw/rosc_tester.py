@@ -318,7 +318,23 @@ def TC14(i2c):
 # Print either text or binary data to std out.
 #----------------------------------------------------------------
 def print_data(my_data):
-    pass
+    my_bytes = []
+    my_bytes.append(int(my_data[23 : 25], 16))
+    my_bytes.append(int(my_data[26 : 28], 16))
+    my_bytes.append(int(my_data[29 : 31], 16))
+    my_bytes.append(int(my_data[32 : 34], 16))
+
+    if (BINARY_OUTPUT):
+        for my_byte in my_bytes:
+            print(bytes(chr(my_byte), 'latin_1'))
+
+    else:
+        if (VERBOSE):
+            print("Bytes extracted: ", end='')
+
+        for my_byte in my_bytes:
+            print('0x%02x' % my_byte, end=' ')
+        print("")
 
 
 #----------------------------------------------------------------
