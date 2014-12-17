@@ -344,7 +344,10 @@ def print_data(my_data):
 # given core to be set.
 #----------------------------------------------------------------
 def wait_ready(prefix):
-    pass
+    my_status = False
+    while not my_status:
+        my_status = read_datai2c, prefix, ADDR_STATUS)
+        print("Status: %s" % my_status)
 
 
 #----------------------------------------------------------------
