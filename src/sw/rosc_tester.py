@@ -153,14 +153,16 @@ class I2C:
         return ord(self.file.read(1))
 
 
-#----------------------------------------------------------------
-# test-case class
-#----------------------------------------------------------------
 
-class TcError(Exception):
+class Commrror(Exception):
     pass
 
-class tc:
+#----------------------------------------------------------------
+# Comm
+#
+# Class for communicating with the HW.
+#----------------------------------------------------------------
+class Comm:
     def __init__(self, i2c, addr0, addr1):
         self.i2c = i2c
         self.addr0 = addr0
@@ -194,7 +196,7 @@ class tc:
                 except KeyError:  # unknown response code
                     # we've gotten out of sync, and there's probably nothing we can do
                     print "unknown response code 0x%02x" % b
-                    raise TcError()
+                    raise CommError()
             buf.append(b)
             i += 1
         if DEBUG:
@@ -205,7 +207,7 @@ class tc:
         buf = self.get_resp()
         if (buf != expected):
             print "expected %s,\nreceived %s" % (hexlist(expected), hexlist(buf))
-            # raise TcError()
+            # raise CommError()
 
     def get_write_resp(self):
         expected = [SOR, WRITE_OK, self.addr0, self.addr1, EOR]
@@ -256,60 +258,6 @@ def tc_wait_ready(i2c, addr0):
 
 def tc_wait_valid(i2c, addr0):
     tc_wait(i2c, addr0, STATUS_VALID_BIT)
-
-
-
-#----------------------------------------------------------------
-#----------------------------------------------------------------
-# Avalanche entropy tests
-
-def avalanche_read(i2c, addr, data):
-    tc_read(i2c, AVALANCHE_ADDR_PREFIX, addr, data)
-
-def avalanche_write(i2c, addr, data):
-    tc_write(i2c, AVALANCHE_ADDR_PREFIX, addr, data)
-
-
-# TC11 Read name and version from Avalanche core.
-def TC11(i2c):
-    print "TC1: Reading name, type and version words from SHA-1 core."
-
-    avalanche_read(i2c, ADDR_NAME0,   0x73686131)    # "sha1"
-    avalanche_read(i2c, ADDR_NAME1,   0x20202020)    # "    "
-    avalanche_read(i2c, ADDR_VERSION, 0x302e3530)    # "0.50"
-
-
-# TC12 Read noise from Avalanche core.
-def TC12(i2c):
-    for i in range(10):
-        avalanche_read(i2c, AVALANCHE_NOISE,   0xffffffff)
-
-
-
-#----------------------------------------------------------------
-#----------------------------------------------------------------
-
-def general_read(i2c, prefix, addr, data):
-    tc_read(i2c, prefix, addr, data)
-
-def general_write(i2c, prefix, addr, data):
-    tc_write(i2c, prefix, addr, data)
-
-
-# TC13 Read name and version from TRNG core.
-def TC13(i2c):
-    print "TC13: Reading name, type and version words from TRNG."
-
-    general_read(i2c, TRNG_PREFIX, TRNG_ADDR_NAME0,   0x74726e67)
-    general_read(i2c, TRNG_PREFIX, TRNG_ADDR_NAME1,   0x20202020)
-    general_read(i2c, TRNG_PREFIX, TRNG_ADDR_VERSION, 0x302e3031)
-
-
-# TC14 Read random numbers from TRNG core.
-def TC14(i2c):
-    print "TC14: Reading TRNG data."
-    for i in range(20):
-        general_read(i2c, CSPRNG_PREFIX, CSPRNG_DATA,   0xffffffff)
 
 
 #----------------------------------------------------------------
