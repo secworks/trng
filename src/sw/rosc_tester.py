@@ -313,6 +313,25 @@ def TC14(i2c):
 
 
 #----------------------------------------------------------------
+# print_data()
+#
+# Print either text or binary data to std out.
+#----------------------------------------------------------------
+def print_data(my_data):
+    pass
+
+
+#----------------------------------------------------------------
+# wait_ready()
+#
+# Wait for the ready bit in the status register for the
+# given core to be set.
+#----------------------------------------------------------------
+def wait_ready(prefix):
+    pass
+
+
+#----------------------------------------------------------------
 # get_avalanche_entropy()
 #----------------------------------------------------------------
 def get_avalanche_entropy():
@@ -331,7 +350,9 @@ def get_rosc_entropy():
         print "Reading rosc entropy data."
 
     for i in range(NUM_WORDS):
-        general_read(i2c, ENT2_PREFIX, ENT2_DATA,   0xffffffff)
+        wait_ready(ENT2_PREFIX)
+        my_data = read_data(i2c, ENT2_PREFIX, ENT2_DATA)
+        print_data(my_data)
 
 
 #----------------------------------------------------------------
