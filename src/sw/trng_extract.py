@@ -10,7 +10,7 @@
 # based on code from the Cryptech project written by Paul Selkirk and
 # Joachim Strömbergson
 #
-#
+# Author: Joachim Strömbergson, Paul Sekirk
 # Copyright (c) 2014, Secworks Sweden AB (Secworks)
 #
 # Redistribution and use in source and binary forms, with or
@@ -65,7 +65,8 @@ STATUS_READY_BIT = 0
 STATUS_VALID_BIT = 1
 
 VERBOSE       = False
-BINARY_OUTPUT = False
+DEBUG         = False
+BINARY_OUTPUT = True
 
 AVALANCHE_ADDR_PREFIX      = 0x20
 AVALANCHE_NOISE            = 0x20
@@ -77,12 +78,16 @@ TRNG_ADDR_NAME0   = 0x00
 TRNG_ADDR_NAME1   = 0x01
 TRNG_ADDR_VERSION = 0x02
 ENT1_PREFIX       = 0x05
-ENT2_PREFIX       = 0x06
 CSPRNG_PREFIX     = 0x0b
 CSPRNG_DATA       = 0x20
-ENT1_DATA         = 0x20
-ENT2_DATA         = 0x20
 
+ENT2_PREFIX       = 0x06
+ENT1_DATA         = 0x20
+ENT2_CTRL         = 0x10
+ENT2_STATUS       = 0x11
+ENT2_ENT_DATA     = 0x20
+ENT2_ENT_RAW      = 0x21
+ENT2_ROSC_OUT     = 0x22
 
 # command codes
 SOC                   = 0x55
@@ -106,6 +111,14 @@ I2C_SLAVE = 0x0703
 # Number of 32 bit data words extracted in a run.
 NUM_WORDS = 40000000
 
+
+#----------------------------------------------------------------
+# hexlist()
+#----------------------------------------------------------------
+def hexlist(list):
+    return "[ " + ' '.join('%02x' % b for b in list) + " ]"
+
+
 #----------------------------------------------------------------
 # I2C class
 #----------------------------------------------------------------
@@ -113,15 +126,12 @@ NUM_WORDS = 40000000
 I2C_dev = "/dev/i2c-2"
 I2C_addr = 0x0f
 
-def hexlist(list):
-    return "[ " + ' '.join('%02x' % b for b in list) + " ]"
-
 class I2C:
     # file handle for the i2c device
     file = None
 
     # constructor: initialize the i2c communications channel
-    def __init__(self, dev=I2C_dev, addr=I2C_addr):
+    def __init__(self, dev, addr):
         self.dev = dev
         self.addr = addr
         try:
@@ -154,8 +164,14 @@ class I2C:
 
 
 
-class Commrror(Exception):
+#----------------------------------------------------------------
+# Commerror()
+#
+# Empty class exception eater.
+#----------------------------------------------------------------
+class Commerror(Exception):
     pass
+
 
 #----------------------------------------------------------------
 # Comm
@@ -163,20 +179,18 @@ class Commrror(Exception):
 # Class for communicating with the HW.
 #----------------------------------------------------------------
 class Comm:
-    def __init__(self, i2c, addr0, addr1):
-        self.i2c = i2c
-        self.addr0 = addr0
-        self.addr1 = addr1
+    def __init__(self):
+        self.i2c = I2C(I2C_dev, I2C_addr)
 
-    def send_write_cmd(self, data):
-        buf = [SOC, WRITE_CMD, self.addr0, self.addr1]
+    def send_write_cmd(self, prefix, addr, data):
+        buf = [SOC, WRITE_CMD, prefix, addr]
         for s in (24, 16, 8, 0):
             buf.append(data >> s & 0xff)
         buf.append(EOC)
         self.i2c.write(buf)
 
-    def send_read_cmd(self):
-        buf = [SOC, READ_CMD, self.addr0, self.addr1, EOC]
+    def send_read_cmd(self, prefix, addr):
+        buf = [SOC, READ_CMD, prefix, addr, EOC]
         self.i2c.write(buf)
 
     def get_resp(self):
@@ -188,7 +202,7 @@ class Comm:
             if ((i == 0) and (b != SOR)):
                 # we've gotten out of sync, and there's probably nothing we can do
                 print "response byte 0: expected 0x%02x (SOR), got 0x%02x" % (SOR, b)
-                raise TcError()
+                raise CommError()
             elif (i == 1):        # response code
                 try:
                     # anonymous dictionary of message lengths
@@ -203,61 +217,13 @@ class Comm:
             print "read  %s" % hexlist(buf)
         return buf
 
-    def get_expected(self, expected):
-        buf = self.get_resp()
-        if (buf != expected):
-            print "expected %s,\nreceived %s" % (hexlist(expected), hexlist(buf))
-            # raise CommError()
+    def write_data(self, prefix, addr, data):
+        self.send_write_cmd(prefix, addr, data)
+        return self.get_resp()
 
-    def get_write_resp(self):
-        expected = [SOR, WRITE_OK, self.addr0, self.addr1, EOR]
-        self.get_expected(expected)
-
-    def get_read_resp(self, data):
-        expected = [SOR, READ_OK, self.addr0, self.addr1]
-        for s in (24, 16, 8, 0):
-            expected.append(data >> s & 0xff)
-        expected.append(EOR)
-        self.get_expected(expected)
-
-    def write(self, data):
-        self.send_write_cmd(data)
-        self.get_write_resp()
-
-    def read(self, data):
-        self.send_read_cmd()
-        self.get_read_resp(data)
-
-    def read2(self, data):
-        self.send_read_cmd()
-        self.get_read_resp()
-
-# Helper functions that use the tc class.
-def tc_write(i2c, prefix, addr, data):
-    tc(i2c, prefix, addr).write(data)
-
-def tc_read(i2c, prefix, addr, data):
-    tc(i2c, prefix, addr).read(data)
-
-def tc_init(i2c, addr0):
-    tc(i2c, addr0, ADDR_CTRL).write(CTRL_INIT_CMD)
-
-def tc_next(i2c, addr0):
-    tc(i2c, addr0, ADDR_CTRL).write(CTRL_NEXT_CMD)
-
-def tc_wait(i2c, addr0, status):
-    t = tc(i2c, addr0, ADDR_STATUS)
-    while 1:
-        t.send_read_cmd()
-        buf = t.get_resp()
-        if ((buf[7] & status) == status):
-            break
-
-def tc_wait_ready(i2c, addr0):
-    tc_wait(i2c, addr0, STATUS_READY_BIT)
-
-def tc_wait_valid(i2c, addr0):
-    tc_wait(i2c, addr0, STATUS_VALID_BIT)
+    def read_data(self, prefix, addr):
+        self.send_read_cmd(prefix, addr)
+        return self.get_resp()
 
 
 #----------------------------------------------------------------
@@ -266,71 +232,87 @@ def tc_wait_valid(i2c, addr0):
 # Print either text or binary data to std out.
 #----------------------------------------------------------------
 def print_data(my_data):
-    my_bytes = []
-    my_bytes.append(int(my_data[23 : 25], 16))
-    my_bytes.append(int(my_data[26 : 28], 16))
-    my_bytes.append(int(my_data[29 : 31], 16))
-    my_bytes.append(int(my_data[32 : 34], 16))
+    my_bytes = my_data[4 : 8]
 
     if (BINARY_OUTPUT):
         for my_byte in my_bytes:
-            print(bytes(chr(my_byte), 'latin_1'))
+            sys.stdout.write(chr(my_byte))
 
     else:
-        if (VERBOSE):
-            print("Bytes extracted: ", end='')
-
-        for my_byte in my_bytes:
-            print('0x%02x' % my_byte, end=' ')
-        print("")
+        print("0x%02x 0x%02x 0x%02x 0x%02x" % 
+              (my_bytes[0], my_bytes[1], my_bytes[2], my_bytes[3]))
 
 
 #----------------------------------------------------------------
 # wait_ready()
 #
 # Wait for the ready bit in the status register for the
-# given core to be set.
+# given core to be set accessible via the given device.
 #----------------------------------------------------------------
-def wait_ready(prefix):
+def wait_ready(dev, prefix, addr):
     my_status = False
     while not my_status:
-        my_status = read_datai2c, prefix, ADDR_STATUS)
-        print("Status: %s" % my_status)
+        my_status = dev.read_data(prefix, addr)[7]
+        if VERBOSE:
+            print("Status: %s" % my_status)
 
 
 #----------------------------------------------------------------
 # get_avalanche_entropy()
 #----------------------------------------------------------------
-def get_avalanche_entropy():
+def get_avalanche_entropy(dev):
     if VERBOSE:
         print "Reading avalanche entropy data."
 
     for i in range(NUM_WORDS):
-        general_read(i2c, ENT1_PREFIX, ENT1_DATA,   0xffffffff)
+        dev.read_data(ENT1_PREFIX, ENT1_DATA)
 
 
 #----------------------------------------------------------------
 # get_rosc_entropy()
 #----------------------------------------------------------------
-def get_rosc_entropy():
+def get_rosc_entropy(dev):
     if VERBOSE:
         print "Reading rosc entropy data."
 
-    for i in range(NUM_WORDS):
-        wait_ready(ENT2_PREFIX)
-        my_data = read_data(i2c, ENT2_PREFIX, ENT2_DATA)
+#    for i in range(NUM_WORDS):
+    for i in range(10):
+        wait_ready(dev, ENT2_PREFIX, ENT2_STATUS)
+        my_data = dev.read_data(ENT2_PREFIX, ENT2_ENT_DATA)
         print_data(my_data)
 
+
+#----------------------------------------------------------------
+# looptest()
+#
+# Simple test that loops a large number of times to see
+# if the ready bit is ever cleared.
+#----------------------------------------------------------------
+def looptest(dev):
+    print("TRNG name: ", my_commdev.read_data(TRNG_PREFIX, TRNG_ADDR_NAME0))
+    print("ENT2 status: ", my_commdev.read_data(ENT2_PREFIX, ENT2_STATUS))
+
+    for i in range(100000000):
+        ent_data = dev.read_data(ENT2_PREFIX, ENT2_ENT_DATA)
+        ent_status = dev.read_data(ENT2_PREFIX, ENT2_STATUS)
+        if not ent_status[7]:
+            print("Got: %d" % ent_status[7])
 
 #----------------------------------------------------------------
 # main
 #----------------------------------------------------------------
 def main():
+    if VERBOSE:
+        print("Starting trng data extraction.")
+
+    my_commdev = Comm()
+
+    # looptest(my_commdev)
 
 #    get_avalanche_entropy()
 #    get_avalanche_delta()
-
-    get_rosc_entropy()
+    
+    get_rosc_entropy(my_commdev)
 #    get_rosc_raw()
 
 #    get_rng_data()
