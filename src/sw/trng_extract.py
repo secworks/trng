@@ -6,9 +6,8 @@
 # --------------
 # This program extracts data values from the trng. The program supports
 # reading from the entropy providers as well as the rng output.
-# Extraxted data can be delivered in text or binary form. The code is
-# based on code from the Cryptech project written by Paul Selkirk and
-# Joachim Strömbergson
+# Extraxted data can be delivered in text or binary form.
+#
 #
 # Author: Joachim Strömbergson, Paul Sekirk
 # Copyright (c) 2014, Secworks Sweden AB (Secworks)
@@ -53,26 +52,13 @@ import argparse
 # Defines.
 #-------------------------------------------------------------------
 
-# addresses and codes common to all hash cores
-ADDR_NAME0       = 0x00
-ADDR_NAME1       = 0x01
-ADDR_VERSION     = 0x02
-ADDR_CTRL        = 0x08
-CTRL_INIT_CMD    = 1
-CTRL_NEXT_CMD    = 2
-ADDR_STATUS      = 0x09
-STATUS_READY_BIT = 0
-STATUS_VALID_BIT = 1
-
+# Output control. Shall be flags set by the argument parser.
 VERBOSE       = False
 DEBUG         = False
 BINARY_OUTPUT = True
 
-AVALANCHE_ADDR_PREFIX      = 0x20
-AVALANCHE_NOISE            = 0x20
-AVALANCHE_DELTA            = 0x30
 
-# TRNG tests
+# TRNG defines.
 TRNG_PREFIX       = 0x00
 TRNG_ADDR_NAME0   = 0x00
 TRNG_ADDR_NAME1   = 0x01
@@ -81,22 +67,44 @@ ENT1_PREFIX       = 0x05
 CSPRNG_PREFIX     = 0x0b
 CSPRNG_DATA       = 0x20
 
+
+# ENT1 defines. This is the Avalanche noise based entropy provider.
+ENT11_PREFIX      = 0x05
+ENT1_NOISE        = 0x20
+ENT1_DELTA        = 0x30
+
+
+# ENT2 defines. This is the ROSC entropy provider.
 ENT2_PREFIX       = 0x06
-ENT1_DATA         = 0x20
+ENT2_ADDR_NAME0   = 0x00
+ENT2_ADDR_NAME1   = 0x01
+ENT2_ADDR_VERSION = 0x02
+ENT2_DATA         = 0x20
 ENT2_CTRL         = 0x10
 ENT2_STATUS       = 0x11
 ENT2_ENT_DATA     = 0x20
 ENT2_ENT_RAW      = 0x21
 ENT2_ROSC_OUT     = 0x22
 
-# command codes
+
+# Mixer defines
+MIXER_PREFIX      = 0x0a
+
+
+# CSPRNG defines
+CSPRNG_PREFIX     = 0x0b
+
+
+
+# Command codes
 SOC                   = 0x55
 EOC                   = 0xaa
 READ_CMD              = 0x10
 WRITE_CMD             = 0x11
 RESET_CMD             = 0x01
 
-# response codes
+
+# Response codes
 SOR                   = 0xaa
 EOR                   = 0x55
 READ_OK               = 0x7f
@@ -105,15 +113,24 @@ RESET_OK              = 0x7d
 UNKNOWN               = 0xfe
 ERROR                 = 0xfd
 
+
+# I2C interface defines
 # from /usr/include/linux/i2c-dev.h
 I2C_SLAVE = 0x0703
+I2C_DEVICE = "/dev/i2c-2"
+I2C_ADDR   = 0x0f
+
 
 # Number of 32 bit data words extracted in a run.
+# Should be set by the arg parser.
 NUM_WORDS = 40000000
 
 
 #----------------------------------------------------------------
 # hexlist()
+#
+# Helper function to cretae a list of hex numbers from a
+# given list of values.
 #----------------------------------------------------------------
 def hexlist(list):
     return "[ " + ' '.join('%02x' % b for b in list) + " ]"
@@ -121,11 +138,10 @@ def hexlist(list):
 
 #----------------------------------------------------------------
 # I2C class
+#
+# Handles the actual device including reading and writing
+# bytes from the device.
 #----------------------------------------------------------------
-# default configuration
-I2C_dev = "/dev/i2c-2"
-I2C_addr = 0x0f
-
 class I2C:
     # file handle for the i2c device
     file = None
@@ -163,7 +179,6 @@ class I2C:
         return ord(self.file.read(1))
 
 
-
 #----------------------------------------------------------------
 # Commerror()
 #
@@ -176,11 +191,11 @@ class Commerror(Exception):
 #----------------------------------------------------------------
 # Comm
 #
-# Class for communicating with the HW.
+# Class for communicating with the HW via the I2C interface
 #----------------------------------------------------------------
 class Comm:
     def __init__(self):
-        self.i2c = I2C(I2C_dev, I2C_addr)
+        self.i2c = I2C(I2C_DEVICE, I2C_ADDR)
 
     def send_write_cmd(self, prefix, addr, data):
         buf = [SOC, WRITE_CMD, prefix, addr]
@@ -239,7 +254,7 @@ def print_data(my_data):
             sys.stdout.write(chr(my_byte))
 
     else:
-        print("0x%02x 0x%02x 0x%02x 0x%02x" % 
+        print("0x%02x 0x%02x 0x%02x 0x%02x" %
               (my_bytes[0], my_bytes[1], my_bytes[2], my_bytes[3]))
 
 
@@ -311,7 +326,7 @@ def main():
 
 #    get_avalanche_entropy()
 #    get_avalanche_delta()
-    
+
     get_rosc_entropy(my_commdev)
 #    get_rosc_raw()
 
