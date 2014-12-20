@@ -11,6 +11,7 @@
 #
 # Author: Joachim Strömbergson, Paul Sekirk
 # Copyright (c) 2014, Secworks Sweden AB (Secworks)
+# All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or
 # without modification, are permitted provided that the following
@@ -290,8 +291,7 @@ def get_rosc_entropy(dev):
     if VERBOSE:
         print "Reading rosc entropy data."
 
-#    for i in range(NUM_WORDS):
-    for i in range(10):
+    for i in range(NUM_WORDS):
         wait_ready(dev, ENT2_PREFIX, ENT2_STATUS)
         my_data = dev.read_data(ENT2_PREFIX, ENT2_ENT_DATA)
         print_data(my_data)
@@ -313,24 +313,48 @@ def looptest(dev):
         if not ent_status[7]:
             print("Got: %d" % ent_status[7])
 
+
 #----------------------------------------------------------------
 # main
 #----------------------------------------------------------------
 def main():
-    if VERBOSE:
-        print("Starting trng data extraction.")
-
-    my_commdev = Comm()
+    # my_commdev = Comm()
 
     # looptest(my_commdev)
 
 #    get_avalanche_entropy()
 #    get_avalanche_delta()
 
-    get_rosc_entropy(my_commdev)
+    # get_rosc_entropy(my_commdev)
 #    get_rosc_raw()
 
 #    get_rng_data()
+
+
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument('-d', '--debug', dest='debug',
+                        action='store_true',
+                        help='Pring debug information.')
+
+    parser.add_argument('-v', '--verbose', dest='verbose',
+                        action='store_true',
+                        help='Increase verbosity.')
+
+    parser.add_argument('-i', dest='device', default=I2C_DEVICE,
+                        help='I2C device name (default '
+                        + I2C_DEVICE + ')')
+
+    parser.add_argument('-n', dest='num_words', default=NUM_WORDS,
+                        help='Number of 32-bit words to extract (default ' +
+                        str(NUM_WORDS) + ')')
+
+    parser.add_argument('target',
+                        help='target to extract from, "rng", "rosc", or "avalanche"')
+
+    args = parser.parse_args()
+    DEBUG = args.debug
+    VERBOSE = args.verbose
 
 
 #-------------------------------------------------------------------
