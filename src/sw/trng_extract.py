@@ -320,16 +320,6 @@ def looptest(dev):
 def main():
     # my_commdev = Comm()
 
-    # looptest(my_commdev)
-
-#    get_avalanche_entropy()
-#    get_avalanche_delta()
-
-    # get_rosc_entropy(my_commdev)
-#    get_rosc_raw()
-
-#    get_rng_data()
-
 
     parser = argparse.ArgumentParser()
 
@@ -355,6 +345,18 @@ def main():
     args = parser.parse_args()
     DEBUG = args.debug
     VERBOSE = args.verbose
+
+    if (args.target == 'rng'):
+        pass
+
+    elif (args.target == 'rosc'):
+        get_rosc_entropy(my_commdev)
+
+    elif (args.target == 'avalanche'):
+        pass
+
+    else:
+        print("Unknown target: %s" % args.target)
 
 
 #-------------------------------------------------------------------
