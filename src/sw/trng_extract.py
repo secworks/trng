@@ -274,6 +274,19 @@ def wait_ready(dev, prefix, addr):
 
 
 #----------------------------------------------------------------
+# get_rng()
+#----------------------------------------------------------------
+def get_rng(dev):
+    if VERBOSE:
+        print "Reading random data."
+
+    for i in range(NUM_WORDS):
+        wait_ready(dev, CSPRNG_PREFIX, CRSPRNG_STATUS)
+        my_data = dev.read_data(CSPRNG_PREFIX, CSPRNG_DATA)
+        print_data(my_data)
+
+
+#----------------------------------------------------------------
 # get_avalanche_entropy()
 #----------------------------------------------------------------
 def get_avalanche_entropy(dev):
@@ -281,7 +294,9 @@ def get_avalanche_entropy(dev):
         print "Reading avalanche entropy data."
 
     for i in range(NUM_WORDS):
-        dev.read_data(ENT1_PREFIX, ENT1_DATA)
+        wait_ready(dev, ENT1_PREFIX, ENT1_STATUS)
+        my_data = dev.read_data(ENT1_PREFIX, ENT1_DATA)
+        print_data(my_data)
 
 
 #----------------------------------------------------------------
@@ -320,7 +335,6 @@ def looptest(dev):
 def main():
     # my_commdev = Comm()
 
-
     parser = argparse.ArgumentParser()
 
     parser.add_argument('-d', '--debug', dest='debug',
@@ -345,15 +359,16 @@ def main():
     args = parser.parse_args()
     DEBUG = args.debug
     VERBOSE = args.verbose
+    NUM_WORDS = args.nu_words
 
     if (args.target == 'rng'):
-        pass
+        get_rng(my_commdev)
 
     elif (args.target == 'rosc'):
         get_rosc_entropy(my_commdev)
 
     elif (args.target == 'avalanche'):
-        pass
+        get_avalanche_entropy(my_commdev)
 
     else:
         print("Unknown target: %s" % args.target)
