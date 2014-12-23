@@ -59,7 +59,7 @@ DEBUG         = False
 BINARY_OUTPUT = True
 
 
-# TRNG defines.
+# TRNG defines.b
 TRNG_PREFIX       = 0x00
 TRNG_ADDR_NAME0   = 0x00
 TRNG_ADDR_NAME1   = 0x01
@@ -70,8 +70,13 @@ CSPRNG_DATA       = 0x20
 
 
 # ENT1 defines. This is the Avalanche noise based entropy provider.
-ENT11_PREFIX      = 0x05
-ENT1_NOISE        = 0x20
+ENT1_PREFIX       = 0x05
+ENT1_ADDR_NAME0   = 0x00
+ENT1_ADDR_NAME1   = 0x01
+ENT1_ADDR_VERSION = 0x02
+ENT1_CTRL         = 0x10
+ENT1_STATUS       = 0x11
+ENT1_ENTROPY      = 0x20
 ENT1_DELTA        = 0x30
 
 
