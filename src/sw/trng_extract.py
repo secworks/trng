@@ -76,7 +76,7 @@ ENT1_ADDR_NAME1   = 0x01
 ENT1_ADDR_VERSION = 0x02
 ENT1_CTRL         = 0x10
 ENT1_STATUS       = 0x11
-ENT1_ENTROPY      = 0x20
+ENT1_DATA         = 0x20
 ENT1_DELTA        = 0x30
 
 
