@@ -182,7 +182,7 @@ module tb_trng();
   //
   // Dump the state of the dump when needed.
   //----------------------------------------------------------------
-  task dump_dut_state();
+  task dump_dut_state;
     begin
       $display("cycle: 0x%016x", cycle_ctr);
       $display("State of DUT");
@@ -247,7 +247,7 @@ module tb_trng();
   //
   // Toggle reset to put the DUT into a well known state.
   //----------------------------------------------------------------
-  task reset_dut();
+  task reset_dut;
     begin
       $display("*** Toggle reset.");
       tb_reset_n = 0;
@@ -264,7 +264,7 @@ module tb_trng();
   //
   // Display the accumulated test results.
   //----------------------------------------------------------------
-  task display_test_results();
+  task display_test_results;
     begin
       if (error_ctr == 0)
         begin
@@ -285,7 +285,7 @@ module tb_trng();
   // Initialize all counters and testbed functionality as well
   // as setting the DUT inputs to defined values.
   //----------------------------------------------------------------
-  task init_sim();
+  task init_sim;
     begin
       cycle_ctr          = 0;
       error_ctr          = 0;
@@ -310,7 +310,7 @@ module tb_trng();
   // A simple first testcase that tries to make the DUT generate
   // a number of random values.
   //----------------------------------------------------------------
-  task tc1_gen_rnd();
+  task tc1_gen_rnd;
     reg [31 : 0] i;
 
     begin

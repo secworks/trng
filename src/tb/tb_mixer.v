@@ -73,7 +73,7 @@ module tb_mixer();
   reg [31 : 0]   tb_write_data;
   wire [31 : 0]  tb_read_data;
   wire           tb_error;
-  
+
   reg            tb_discard;
   reg            tb_test_mode;
   reg            tb_more_seed;
@@ -114,7 +114,7 @@ module tb_mixer();
                  .write_data(tb_write_data),
                  .read_data(tb_read_data),
                  .error(tb_error),
-                 
+
                  .discard(tb_discard),
                  .test_mode(tb_test_mode),
                  .security_error(tb_security_error),
@@ -178,7 +178,7 @@ module tb_mixer();
   //
   // Dump the state of the dump when needed.
   //----------------------------------------------------------------
-  task dump_dut_state();
+  task dump_dut_state;
     begin
       $display("cycle: 0x%016x", cycle_ctr);
       $display("State of DUT");
@@ -243,7 +243,7 @@ module tb_mixer();
   //
   // Toggle reset to put the DUT into a well known state.
   //----------------------------------------------------------------
-  task reset_dut();
+  task reset_dut;
     begin
       $display("*** Toggle reset.");
       tb_reset_n = 0;
@@ -260,7 +260,7 @@ module tb_mixer();
   //
   // Display the accumulated test results.
   //----------------------------------------------------------------
-  task display_test_results();
+  task display_test_results;
     begin
       if (error_ctr == 0)
         begin
@@ -281,7 +281,7 @@ module tb_mixer();
   // Initialize all counters and testbed functionality as well
   // as setting the DUT inputs to defined values.
   //----------------------------------------------------------------
-  task init_sim();
+  task init_sim;
     begin
       cycle_ctr           = 0;
       error_ctr           = 0;
@@ -293,7 +293,7 @@ module tb_mixer();
       tb_we               = 0;
       tb_address          = 8'h00;
       tb_write_data       = 32'h00000000;
-  
+
       tb_discard          = 0;
       tb_test_mode        = 0;
       tb_more_seed        = 0;
@@ -321,7 +321,7 @@ module tb_mixer();
   // A simple first testcase that tries to make the DUT generate
   // a number of seeds based on entropy from source 0 and 2.
   //----------------------------------------------------------------
-  task tc1_gen_seeds();
+  task tc1_gen_seeds;
     begin
       $display("*** Starting TC1: Setting continious seed generation.");
       tb_entropy0_enabled = 1;

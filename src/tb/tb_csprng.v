@@ -157,7 +157,7 @@ module tb_csprng();
   //
   // Dump the state of the dump when needed.
   //----------------------------------------------------------------
-  task dump_dut_state();
+  task dump_dut_state;
     begin
       $display("cycle: 0x%016x", cycle_ctr);
       $display("State of DUT");
@@ -253,7 +253,7 @@ module tb_csprng();
   //
   // Toggle reset to put the DUT into a well known state.
   //----------------------------------------------------------------
-  task reset_dut();
+  task reset_dut;
     begin
       $display("*** Toggle reset.");
       tb_reset_n = 0;
@@ -270,7 +270,7 @@ module tb_csprng();
   //
   // Display the accumulated test results.
   //----------------------------------------------------------------
-  task display_test_results();
+  task display_test_results;
     begin
       if (error_ctr == 0)
         begin
@@ -291,7 +291,7 @@ module tb_csprng();
   // Initialize all counters and testbed functionality as well
   // as setting the DUT inputs to defined values.
   //----------------------------------------------------------------
-  task init_sim();
+  task init_sim;
     begin
       cycle_ctr       = 0;
       error_ctr       = 0;
@@ -322,7 +322,7 @@ module tb_csprng();
   // TC1: Test that the DUT automatically starts initialize when
   // enable is set.
   //----------------------------------------------------------------
-  task tc1_test_init_cipher();
+  task tc1_test_init_cipher;
     begin
       $display("*** TC1: Test automatic init of cipher started.");
       // tb_num_blocks = 64'h0000000000000004;
