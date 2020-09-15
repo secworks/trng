@@ -216,25 +216,7 @@ module trng_csprng_fifo(
       reg [511 : 0] fifo_rd_data;
 
       fifo_rd_data = fifo_mem[rd_ptr_reg];
-
-      case(mux_data_ptr_reg)
-        00: muxed_data = fifo_rd_data[031 : 000];
-        01: muxed_data = fifo_rd_data[063 : 032];
-        02: muxed_data = fifo_rd_data[095 : 064];
-        03: muxed_data = fifo_rd_data[127 : 096];
-        04: muxed_data = fifo_rd_data[159 : 128];
-        05: muxed_data = fifo_rd_data[191 : 160];
-        06: muxed_data = fifo_rd_data[223 : 192];
-        07: muxed_data = fifo_rd_data[255 : 224];
-        08: muxed_data = fifo_rd_data[287 : 256];
-        09: muxed_data = fifo_rd_data[319 : 288];
-        10: muxed_data = fifo_rd_data[351 : 320];
-        11: muxed_data = fifo_rd_data[383 : 352];
-        12: muxed_data = fifo_rd_data[415 : 384];
-        13: muxed_data = fifo_rd_data[447 : 416];
-        14: muxed_data = fifo_rd_data[479 : 448];
-        15: muxed_data = fifo_rd_data[511 : 480];
-      endcase // case (mux_data_ptr_reg)
+      muxed_data = fifo_rd_data[mux_data_ptr_reg * 32 +: 32];
     end // output_data_mux
 
 
