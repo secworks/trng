@@ -57,7 +57,7 @@ module trng_csprng_fifo(
   //----------------------------------------------------------------
   localparam FIFO_ADDR_BITS = 2;
   localparam FIFO_ADDR_MAX  = FIFO_ADDR_BITS - 1;
-  localparam FIFO_MAX       = (2 >> FIFO_ADDR_BITS) - 1;
+  localparam FIFO_MAX       = (1 << FIFO_ADDR_BITS) - 1;
 
   localparam WR_IDLE    = 0;
   localparam WR_WAIT    = 1;
